@@ -1,0 +1,32 @@
+{
+  "name": "jslogsystem",
+  "homepage": "https://github.com/itsmenatika/jslogsystem",
+  "bugs": {
+    "url": "https://github.com/itsmenatika/jslogsystem/issues",
+    "email": "patryklata11@gmail.com"
+  },
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/itsmenatika"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/itsmenatika/jslogsystem.git"
+  },
+  "version": "1.0.0",
+  "description": "Simple log system",
+  "main": "logSystem.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "log",
+    "system",
+    "javascript",
+    "js",
+    "typescript",
+    "ts"
+  ],
+  "author": "naticzka",
+  "license": "ISC"
+}
