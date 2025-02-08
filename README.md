@@ -45,10 +45,11 @@ you can later run it while being in the correct directory by using: ```node logS
 
 1. first either clone it (by using ```git clone https://github.com/itsmenatika/jslogsystem.git```) or download it via this website.
 2. move logSystem.js (and logSystem.ts if you're using typescript) into your own project
-3. import it via ES Modules (```import "logSystem"``` or something. It depends where you've moved the files) or via NODE require (not recommended)
-4. change config if you need to
-5. import things that you actually need (if you want)
-6. compile or run your program as usual
+3. import it via ES Modules (```import "logSystem"``` or something. It depends where you've moved the files) or via NODE require (not recommended).
+   we recommend you import either console or newConsole 
+5. change config if you need to
+6. import things that you actually need (if you want)
+7. compile or run your program as usual
 
 ### via npm
 
