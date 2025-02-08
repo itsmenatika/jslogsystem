@@ -111,7 +111,7 @@ process.stdin.on('data', async (key) => {
         // reappearing of the textbox
         if (!viewTextBox) {
             viewTextBox = true;
-            process.stdout.write("> \x1b[35m");
+            process.stdout.write("\x1b[0m> \x1b[35m");
         }
         // backspace
         if (key.includes("\b")) {
@@ -127,9 +127,10 @@ process.stdin.on('data', async (key) => {
             let tempText = text;
             text = "";
             process.stdout.write("\x1b[0m");
-            if (!handleEnter(tempText) && viewTextBox) {
-                // process.stdout.write("> \x1b[35m");
-            }
+            handleEnter(tempText);
+            // if(!handleEnter(tempText) && viewTextBox){
+            // process.stdout.write("> \x1b[35m");
+            // }
         }
         // adding keys
         else if (allowedKeysToWrite.includes(key)) {
@@ -347,7 +348,7 @@ function clearConsole() {
     process.stdout.cursorTo(0, 0);
     process.stdout.clearScreenDown();
     if (viewTextBox) {
-        process.stdout.write("> \x1b[35m" + text);
+        process.stdout.write("\x1b[0m> \x1b[35m" + text);
     }
 }
 /**
@@ -454,6 +455,13 @@ function blockLogs(status) {
 function textboxVisibility(status) {
     if (typeof status === "boolean")
         viewTextBox = status;
+    if (status === false) {
+        process.stdout.clearLine(0);
+        process.stdout.write("\r");
+    }
+    else {
+        process.stdout.write("\x1b[0m> \x1b[35m" + text);
+    }
     return viewTextBox;
 }
 /**
