@@ -93,7 +93,7 @@ if ((0, node_fs_1.existsSync)(finalLatest)) {
 (0, node_fs_1.appendFileSync)(finalLatest, "----------------\n");
 // vars to store info
 let text = "";
-const allowedKeysToWrite = "abcdefghijklmnopqrstuxwvyz" + "abcdefghijklmnopqrstuxwvyz".toUpperCase() + "1234567890" + "!@#$%^*()" + "`~-_+\\|'\";:,<.>?" + "[{}]";
+const allowedKeysToWrite = "abcdefghijklmnopqrstuxwvyz" + "abcdefghijklmnopqrstuxwvyz".toUpperCase() + "1234567890" + "!@#$%^*()" + "`~-_+\\|'\";:,<.>?" + "[{}]" + " ";
 // display the textbox at the start
 if (viewTextBox) {
     process.stdout.write("> \x1b[35m" + text);
@@ -305,7 +305,7 @@ function log(type, message, who = "core") {
             break;
         }
         case LogType.COUNTER: {
-            toWrite = `${formattedDate} C ${who}: ${message}\n`;
+            toWrite = `${formattedDate} COUNTER ${who}: ${message}\n`;
             break;
         }
         default: {
@@ -370,7 +370,7 @@ function counterCount(name, startFrom = 1, increaseBy = 1, who) {
     else {
         counterTable[name] += increaseBy;
     }
-    log(LogType.COUNTER, `${name}: ${counterTable[name]}`, who);
+    log(LogType.COUNTER, `${name} -> ${counterTable[name]}`, who);
     return counterTable[name];
 }
 /**

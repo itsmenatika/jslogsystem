@@ -96,7 +96,7 @@ appendFileSync(finalLatest, "----------------\n");
 // vars to store info
 let text: string = "";
 
-const allowedKeysToWrite: string = "abcdefghijklmnopqrstuxwvyz" + "abcdefghijklmnopqrstuxwvyz".toUpperCase() + "1234567890" + "!@#$%^*()" + "`~-_+\\|'\";:,<.>?" + "[{}]";
+const allowedKeysToWrite: string = "abcdefghijklmnopqrstuxwvyz" + "abcdefghijklmnopqrstuxwvyz".toUpperCase() + "1234567890" + "!@#$%^*()" + "`~-_+\\|'\";:,<.>?" + "[{}]" + " ";
 
 // display the textbox at the start
 if(viewTextBox){
@@ -342,7 +342,7 @@ function log(type: LogType, message: string, who: string = "core") {
             break;
         }
 		case LogType.COUNTER: {
-            toWrite = `${formattedDate} C ${who}: ${message}\n`;
+            toWrite = `${formattedDate} COUNTER ${who}: ${message}\n`;
             break;
         }
         default: {
@@ -423,7 +423,7 @@ function counterCount(name: string, startFrom: number = 1, increaseBy: number = 
         counterTable[name] += increaseBy;
     }
 
-    log(LogType.COUNTER, `${name}: ${ counterTable[name]}`, who);
+    log(LogType.COUNTER, `${name} -> ${ counterTable[name]}`, who);
 
     return counterTable[name];
 }
