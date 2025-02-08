@@ -298,6 +298,10 @@ function log(type, message, who = "core") {
             toWrite = `${formattedDate} CRASH ${who}: ${message}\n`;
             break;
         }
+        case LogType.COUNTER: {
+            toWrite = `${formattedDate} COUNTER ${who}: ${message}\n`;
+            break;
+        }
         default: {
             throw new logSystemError("???");
         }
