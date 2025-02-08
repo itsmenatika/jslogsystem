@@ -1,4 +1,6 @@
 "use strict";
+// LOG SYSTEM
+// created by naticzka ;3
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -27,6 +29,10 @@ const LATESTLOGNAME = "latest.txt";
 const getMoreStartInformation = () => {
     const dateObj = new Date();
     return `----------------\nLOGS FROM ${dateObj.toISOString()} UTC TIME ${dateObj.getHours()}:${dateObj.getMinutes()}:${dateObj.getSeconds()}\n`;
+};
+// callback which is used to what to do with the previous log file
+const saveTheLatest = (date, previousFilePath) => {
+    (0, node_fs_1.renameSync)(previousFilePath, (0, node_path_1.join)((0, node_process_1.cwd)(), LOGDIRECTORY, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()} ${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`));
 };
 let viewTextBox = true; // if the textbox should be visible at the start
 let blockLogsVar = false; // if the logs should be displayed
@@ -70,22 +76,21 @@ if ((0, node_fs_1.existsSync)(finalLatest)) {
     const data = (0, node_fs_1.readFileSync)(tempFinal).toString();
     const piecesOfData = data.split("\n");
     const date = new Date(Number(String(piecesOfData[0])));
+    // calling the callback to do stuff with previous one
+    saveTheLatest(date, finalLatest);
     // moving latest
-    (0, node_fs_1.renameSync)(finalLatest, (0, node_path_1.join)((0, node_process_1.cwd)(), LOGDIRECTORY, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()} ${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`));
+    // renameSync(
+    //    finalLatest, 
+    //    join(cwd(), LOGDIRECTORY, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()} ${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
+    //);
     // removing temp
     (0, node_fs_1.unlinkSync)(tempFinal);
 }
+// create new temp file
 (0, node_fs_1.writeFileSync)(tempFinal, `${Date.now()}\n`);
+// create a new latest log file
 (0, node_fs_1.writeFileSync)(finalLatest, getMoreStartInformation());
 (0, node_fs_1.appendFileSync)(finalLatest, "----------------\n");
-// if(existsSync(join(cwd(),"logs.txt"))){
-//     const currentDate: Date = new Date();
-//     renameSync(
-//         join(cwd(),"logs.txt"),
-//         join(cwd()+"dev"+"logs", Date.now()
-//     )
-//     unlinkSync(join(cwd(),"logs.txt"));
-// }
 // vars to store info
 let text = "";
 const allowedKeysToWrite = "abcdefghijklmnopqrstuxwvyz" + "abcdefghijklmnopqrstuxwvyz".toUpperCase() + "1234567890" + "!@#$%^*()" + "`~-_+\\|'\";:,<.>?" + "[{}]";
@@ -299,7 +304,7 @@ function log(type, message, who = "core") {
             break;
         }
         case LogType.COUNTER: {
-            toWrite = `${formattedDate} COUNTER ${who}: ${message}\n`;
+            toWrite = `${formattedDate} C ${who}: ${message}\n`;
             break;
         }
         default: {

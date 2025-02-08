@@ -17,6 +17,14 @@ const getMoreStartInformation = (): string => {
     return `----------------\nLOGS FROM ${dateObj.toISOString()} UTC TIME ${dateObj.getHours()}:${dateObj.getMinutes()}:${dateObj.getSeconds()}\n`;
 }
 
+// callback which is used to what to do with the previous log file
+const saveTheLatest = (date: Date, previousFilePath: string): void => {
+    renameSync(
+        previousFilePath, 
+        join(cwd(), LOGDIRECTORY, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()} ${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
+    );
+}
+
 let viewTextBox: boolean = true; // if the textbox should be visible at the start
 let blockLogsVar: boolean = false; // if the logs should be displayed
 
@@ -64,35 +72,26 @@ if(existsSync(finalLatest)){
 
     const date = new Date(Number(String(piecesOfData[0])));
 
+	// calling the callback to do stuff with previous one
+	saveTheLatest(date, finalLatest);
+
     // moving latest
-    renameSync(
-        finalLatest, 
-        join(cwd(), LOGDIRECTORY, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()} ${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
-    );
+    // renameSync(
+    //    finalLatest, 
+    //    join(cwd(), LOGDIRECTORY, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()} ${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
+    //);
 
     // removing temp
     unlinkSync(tempFinal);
 }
 
+// create new temp file
 writeFileSync(tempFinal, `${Date.now()}\n`);
 
+// create a new latest log file
 writeFileSync(finalLatest, getMoreStartInformation());
 
 appendFileSync(finalLatest, "----------------\n");
-
-
-
-
-// if(existsSync(join(cwd(),"logs.txt"))){
-//     const currentDate: Date = new Date();
-    
-
-//     renameSync(
-//         join(cwd(),"logs.txt"),
-//         join(cwd()+"dev"+"logs", Date.now()
-//     )
-//     unlinkSync(join(cwd(),"logs.txt"));
-// }
 
 // vars to store info
 let text: string = "";
