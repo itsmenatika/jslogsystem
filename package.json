@@ -28,5 +28,8 @@
     "ts"
   ],
   "author": "naticzka",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^22.13.1"
+  }
 }
