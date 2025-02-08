@@ -1,0 +1,29 @@
+Copyright (C) 2025 Patryk Łata.
+
+This repository and files are part of the rpkit project and were extracted only because of their usefullness.
+
+That license only involves the log system file(-s) from my personal rpkit project that were added to that repository. 
+Everything else can be licensed under completely different license. 
+You don't get a license to other parts of the project.
+
+I'm allowed to change the license without a previous notice and to offer different companies or people different conditions of the license. 
+
+You can't change the license of that and/or remove any author notice.
+You have to explicitly say of using that log System. You cannot hide it from customers/users and others.
+You cannot remove any information that would say that it was my work.
+
+You cannot use it to train any AI, unless you use to log the results/progress and you're not feeding them this code.
+
+You're only allowed to use it if at least one of these conditions are met:
+	- You're doing it non-commercialy
+	- You get allowance from me (which i can revoke unless it said otherwise in an agreement)
+	- You're using it for educational purposes that are not done by company with more than 10 employes
+	- You're a teacher or a pupil of a public institution and you're not earning privately more than 10$ in project that uses that (that excludes your salary)
+	- I work for you
+
+The  project can not be copied and/or distributed without the express
+permission of Patryk Łata.
+
+You can contact with me via email adress patryklata11@gmail.com or that github https://github.com/itsmenatika
+
+orginal github repository: https://github.com/itsmenatika/jslogsystem
