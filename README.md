@@ -58,3 +58,7 @@ IT WILL BE POSSIBLE IN THE FUTURE
 
 ## CONFIG
 
+you can configure that thing in the top of file:
+![the image that shows config](https://github.com/itsmenatika/jslogsystem/blob/main/docs/config.png?raw=true)
+
+I don't know what to say more
