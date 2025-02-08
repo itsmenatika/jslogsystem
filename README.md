@@ -14,4 +14,4 @@ the logging system allows you to add your own commands via simple API
 
 you can use it either with or without typescript. The choice is yours, but i would recommed using typescript.
 
-with typescript you need to run following commands: [CODE]tsc && node logSystem.js[/CODE]
+with typescript you need to run following commands: ```tsc && node logSystem.js```
