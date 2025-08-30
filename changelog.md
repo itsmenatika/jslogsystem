@@ -2,6 +2,17 @@
 
 ## 1.X
 
+### 1.11
+
+just small changes :3
+
+changes:
+* command "info" now works (i forgot to add it to a new system)
+* info has been rebuilded and it now uses colors and says information about logical processors
+* added aliases for "info" -> sysinf, sysinfo, inf
+* added getCurrentVersionOfLogSystem()
+
+
 ### 1.1
 
 changes:
@@ -56,6 +67,9 @@ the whole thing is mostly compatible with the previous version. The only excepti
 TODO:
 * optimizations
 * more code comments and code
+
+
+C:\Users\Acer\Desktop\jslogsystem\jslogsystem
 
 
 a lot of interesting improvements
