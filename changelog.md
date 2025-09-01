@@ -12,6 +12,7 @@ changes:
 * added aliases for "info" -> sysinf, sysinfo, inf
 * added getCurrentVersionOfLogSystem()
 
+download: [TS](old/1.11/logSystem.ts) [JS](old/1.11/logSystem.js)
 
 ### 1.1
 
@@ -68,16 +69,11 @@ TODO:
 * optimizations
 * more code comments and code
 
-
-C:\Users\Acer\Desktop\jslogsystem\jslogsystem
-
-
 a lot of interesting improvements
 
-download: TODO
-
+download: [TS](old/1.1/logSystem.ts) [JS](old/1.1/logSystem.js)
 
 ### 1.0 
 
 The first public release
-download: TODO
+download: [TS](old/1.0/logSystem.ts) [JS](old/1.0/logSystem.js)
