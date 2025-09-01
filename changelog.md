@@ -8,6 +8,8 @@
 
 compatibility: full compatibility
 
+download: [TS](old/1.13/logSystem.ts) [JS](old/1.13/logSystem.js)
+
 ### 1.12
 
 it's overall very small update
