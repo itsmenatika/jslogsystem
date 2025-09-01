@@ -16,6 +16,8 @@ changes:
 
 compatibility: it actually increased
 
+download: [TS](old/1.12/logSystem.ts) [JS](old/1.12/logSystem.js)
+
 ### 1.11
 
 just small changes :3
