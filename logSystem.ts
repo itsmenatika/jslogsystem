@@ -1808,7 +1808,8 @@ const newConsole = {
     versionInfo,
     showCursor,
     hideCursor,
-    getCurrentVersionOfLogSystem
+    getCurrentVersionOfLogSystem,
+    combineColors
 }   
 
 
@@ -1893,5 +1894,6 @@ export {LogType, log, formatError,
     multiDisplayer,
     getCurrentVersionOfLogSystem,
     registerCommandLegacy,
-    registerCommandLegacyForceUse
+    registerCommandLegacyForceUse,
+    combineColors
 }
