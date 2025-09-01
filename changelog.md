@@ -2,6 +2,12 @@
 
 ## 1.X
 
+### 1.13
+
+* bugfix: you can now write "/" in console
+
+compatibility: full compatibility
+
 ### 1.12
 
 it's overall very small update
