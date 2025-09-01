@@ -9,7 +9,7 @@ it's overall very small update
 changes:
 * more comments
 * added registerCommandLegacy() for legacy reasons and registerCommandLegacyForceUse() to force using it, even tho it technically shouldn't (THIS IS ONLY FOR LEGACY REASONS)
-	NOTE: editing commands is disabled with commands legacy
+	* NOTE: editing commands is disabled with commands legacy
 * added combineColors() to combine colors. It is to increase the compatibility in the future. We recommend using it
 * commands can finally be edited properly and attribute "changeable" is not ignored anymore
 * some small changes not worth mentioning
