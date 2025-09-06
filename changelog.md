@@ -2,6 +2,29 @@
 
 ## 1.X
 
+### 1.14
+
+The legacy and binding update.
+
+changes:
+* new commands: 
+	* bind -> it allows you to bind command to execute command(-s). Alias is b
+	* write -> it's the copy of previous "echo". Alias is wtr
+* new functions:
+	* getLegacyInformation -> gets information about compability settings
+	* setLegacyInformation -> allows you to manually set compatibility settings
+	* validateLegacyProperty -> it's more internal, but it also exported to help moders. It validates whether setLegacy will produce error if given that value
+	* registerCommandShort -> allows you to register a command using commandCompound (shorthand for commandRegister)
+	* multiCommandRegister -> allows you to register a list of commands using an array of commandCompounds (shorthand for commandRegister)
+* command changes:
+	* hide -> it now has an argument "-h" that hides the message that is displayed 
+	* echo -> it now supports \n
+* removed unncessary comments that wasted 2kbs of space
+* handling commands is now possible in silent mode (though it's mostly internal)
+
+bugfixes:
+	* echo -> it now displays the correct description instead of the wrong one
+
 ### 1.13
 
 * bugfix: you can now write "/" in console
