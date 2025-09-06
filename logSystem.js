@@ -2,7 +2,7 @@
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
-// version: 1.13
+// version: 1.14
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -34,6 +34,9 @@ exports.getCurrentVersionOfLogSystem = getCurrentVersionOfLogSystem;
 exports.registerCommandLegacy = registerCommandLegacy;
 exports.registerCommandLegacyForceUse = registerCommandLegacyForceUse;
 exports.combineColors = combineColors;
+exports.validateLegacyProperty = validateLegacyProperty;
+exports.setLegacyInformation = setLegacyInformation;
+exports.getLegacyInformation = getLegacyInformation;
 const node_child_process_1 = require("node:child_process");
 const node_fs_1 = require("node:fs");
 const node_os_1 = __importDefault(require("node:os"));
@@ -88,7 +91,7 @@ var LogType;
 })(LogType || (exports.LogType = LogType = {}));
 let commandHistory = []; // user command history history
 let indexCommandHistory = null; // the index of current selected
-const logSystemVer = "1.13"; // current version of the log system
+const logSystemVer = "1.14"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
 class logSystemError extends Error {
 }
@@ -116,11 +119,6 @@ if ((0, node_fs_1.existsSync)(finalLatest)) {
     const date = new Date(Number(String(piecesOfData[0]))); // the first line is the date line
     // calling the callback to do stuff with previous one
     saveTheLatest(date, finalLatest);
-    // moving latest
-    // renameSync(
-    //    finalLatest, 
-    //    join(cwd(), LOGDIRECTORY, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()} ${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
-    //);
     // removing temp
     (0, node_fs_1.unlinkSync)(tempFinal);
 }
@@ -261,6 +259,7 @@ function showCursor() {
  */
 const blankCallback = (args) => false;
 exports.blankCallback = blankCallback;
+let bindInfo = {};
 // interface commandData extends commandDataSeter{
 //     "usageinfo": string
 //     "desc": string,
@@ -271,6 +270,9 @@ exports.blankCallback = blankCallback;
 //     "aliasName"?: string,
 //     "callback": cmdcallback
 // }
+const numberLookUp = (char) => {
+    return char == "1" || char == "2" || char == "3" || char == "4" || char == "5" || char == "6" || char == "7" || char == "8" || char == "9" || char == "0";
+};
 // the list of commands
 let commands = {
     exit: {
@@ -314,15 +316,35 @@ let commands = {
         hidden: true,
         changeable: false
     },
-    echo: {
-        usageinfo: "echo",
-        desc: "allows you to print on the screen",
-        longdesc: "It clears the whole screen using clearConsole()",
+    write: {
+        usageinfo: "write <data>",
+        desc: "allows you to print raw characters on the screen",
+        longdesc: "It prints the characters into the screen",
         hidden: false,
         changeable: false,
         isAlias: false,
         callback: (args) => {
             let theString = args.slice(1).join(" ");
+            consoleWrite(theString + "\n", consoleColors.FgWhite);
+            return false;
+        }
+    },
+    wrt: {
+        isAlias: true,
+        aliasName: "write",
+        hidden: true,
+        changeable: false
+    },
+    echo: {
+        usageinfo: "echo <data>",
+        desc: "allows you to print on the screen with special characters",
+        longdesc: "It prints the characters into the screen. It supports \\n\n\nThe alternative command is `write` that does not support special characters",
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: (args) => {
+            let theString = args.slice(1).join(" ");
+            theString = theString.replaceAll("\\\\", "%SLASH%").replaceAll("\\n", "\n").replaceAll("%SLASH%", "\\");
             consoleWrite(theString + "\n", consoleColors.FgWhite);
             return false;
         }
@@ -336,12 +358,18 @@ let commands = {
     hide: {
         usageinfo: "hide",
         desc: "hides the textbox that allows you to write",
-        longdesc: "hides the textbox that is used to write. It will appear again when you start typing.",
+        longdesc: "It hides the textbox that shows what you are writting. It also displays the message about what has happened.\nThe message is as follows: \n\nThe textbox was hidden. Start writting to make it appear again!\n\nuse: `hide -h` to remove the message",
         hidden: false,
         changeable: false,
         isAlias: false,
         callback: (args) => {
-            consoleWrite("The textbox was hidden. Start writting to make it appear again!\n");
+            let vis = true;
+            if (args.includes("-h")) {
+                vis = false;
+            }
+            if (vis) {
+                consoleWrite("The textbox was hidden. Start writting to make it appear again!\n");
+            }
             textboxVisibility(false);
             return false;
         }
@@ -377,50 +405,6 @@ let commands = {
         hidden: true,
         changeable: false
     },
-    //         let code = parts.slice(1).join(" ").trim();
-    //         let evalParent = new logNode("eval");
-    //         // @ts-ignore
-    //         newConsole.useWith("using eval", () => {
-    //             let g = globalEval(code);
-    //             log(LogType.INFO, `eval returned with: ${g}`, evalParent);
-    //         }, evalParent as any as string);
-    //         // }
-    //         break;
-    //     case "ver":
-    //     case "version": 
-    //         let prev = textboxVisibility();
-    //         textboxVisibility(false);
-    //         consoleWrite("logSystemVer: ");
-    //         consoleWrite(logSystemVer, consoleColors.BgCyan);
-    //         consoleWrite("\n");
-    //         consoleWrite(getversionInfoData(), consoleColors.BgGray);
-    //         consoleWrite("\n");
-    //         textboxVisibility(prev);
-    //         break;
-    //     case "cmd":
-    //     case "c":
-    //         let codeC = parts.slice(1).join(" ").trim();
-    //         let evalParentC = new logNode("cmd");
-    //         // @ts-ignore
-    //         newConsole.useWith("using cmd", () => {
-    //             let g = execSync(codeC);
-    //             log(LogType.INFO, `cmd returned with: ${g}`, evalParentC);
-    //         }, evalParentC as any as string);
-    //         break;
-    //     case "reload":
-    //     case "r":
-    //         log(LogType.INFO, "restarting the process...");
-    //         processRestart();
-    //         break;
-    //     case "uptime":
-    //         let current = Date.now() - currentUpTime;
-    //         let mili = current % 1000;
-    //         let seconds = Math.floor((current / 1000) % 60);
-    //         let minutes = Math.floor((current / 1000 / 60) % 60);
-    //         let hours = Math.floor((current / 1000 / 60 / 60) % 24);
-    //         let days = Math.floor((current / 1000 / 60 / 60 / 24));
-    //         newConsole.log(`current uptime: ${days}d ${hours}h ${minutes}m ${seconds}s ${mili}m (exmili: ${current})`);
-    //         break;
     version: {
         usageinfo: "version",
         desc: "shows the version information",
@@ -526,6 +510,105 @@ let commands = {
     "upt": {
         isAlias: true,
         aliasName: "help",
+        hidden: true,
+        changeable: false
+    },
+    "bind": {
+        usageinfo: `bind [\`<executor>\`:\`<commands...;>\`]`,
+        desc: "allows you to set binds or list them",
+        longdesc: `If it's used without parameters, then it will print the list of binds.\n\nUsing parameters will result in changing those binds\n\nTo add a new bind use: 'bind \`<executor>\`:\`<commands...;>\`'.\nThe example: 'bind \`meow\`:\`echo meow!\`'\n\nIt's also possible to set more than one command using ; as the seperator.\n\nTo remove bind use: 'bind \`<executor>\`:\`\``,
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: (args) => {
+            if (args.length === 1) {
+                let s = new multiDisplayer();
+                s.push("bind list", combineColors(consoleColors.BgMagenta, consoleColors.FgBlack));
+                s.push("\n");
+                for (const [name, commandD] of Object.entries(bindInfo)) {
+                    s.push("* ", consoleColors.FgYellow);
+                    s.push(commandD.executor, consoleColors.FgRed);
+                    s.push(" -> ", consoleColors.FgGray);
+                    s.push(commandD.commands.toString() + "\n", consoleColors.FgBlue);
+                }
+                s.useConsoleWrite();
+                return false;
+            }
+            const data = args.slice(1).join(" ");
+            if (data[0] != "`") {
+                log(LogType.ERROR, "invalid syntax", "console.bind");
+                return false;
+            }
+            let it = 2;
+            while (true) {
+                let char = data[it];
+                if (!char || char == "`")
+                    break;
+                it++;
+            }
+            let executor = data.slice(1, it);
+            if (executor.length === 0) {
+                log(LogType.ERROR, "invalid syntax", "console.bind");
+                return false;
+            }
+            if (data[it] != "`") {
+                log(LogType.ERROR, "invalid syntax", "console.bind");
+                return false;
+            }
+            if (data[it + 1] != ":") {
+                log(LogType.ERROR, "invalid syntax", "console.bind");
+                return false;
+            }
+            if (data[it + 2] != "`") {
+                log(LogType.ERROR, "invalid syntax", "console.bind");
+                return false;
+            }
+            let name = executor.split(" ")[0];
+            let it2 = it + 4;
+            while (true) {
+                let char = data[it2];
+                if (!char || char == "`")
+                    break;
+                it2++;
+            }
+            if (it + 4 === it2) {
+                delete bindInfo[name];
+                log(LogType.SUCCESS, "the bind was removed!", "console.bind");
+                return false;
+            }
+            let commandData = data.slice(it + 3, it2);
+            // let toRegex: string = "";
+            // let i = 0;
+            // while(i < commandData.length){
+            //     let x = commandData.indexOf("%", i);
+            //     let num: number | void = void 0;
+            //     let prev = x;
+            //     while(x < commandData.length){
+            //         if(!numberLookUp(commandData[x])) break;
+            //         x++;
+            //     }
+            //     let numStr = commandData.slice(prev);
+            //     toRegex += "(<"
+            // }
+            //  log(LogType.INFO, commandData.split(";").toString());
+            if (commandData.length === 0) {
+                delete bindInfo[name];
+                log(LogType.SUCCESS, "the bind was removed!", "console.bind");
+                return false;
+            }
+            let commandListToExecute = commandData.split(";").map((val) => val.trim());
+            bindInfo[name] = {
+                name,
+                commands: commandListToExecute,
+                executor
+            };
+            log(LogType.SUCCESS, "the bind was set!", "console.bind");
+            return false;
+        }
+    },
+    "b": {
+        isAlias: true,
+        aliasName: "bind",
         hidden: true,
         changeable: false
     },
@@ -772,6 +855,33 @@ function removeCommand(name) {
     delete commands[name];
 }
 /**
+ * register a command using an object
+ *
+ * NOTE: IT DOESNT WORK IN LEGACY register MODE!
+ *
+ * @param cmdCom command Compound
+ * @param edit whether it is in edit mode
+ */
+function registerCommandShort(cmdCom, edit = false) {
+    if (legacyData.registerMode <= 1.13) {
+        throw new logSystemError("Legacy: registerMode has to be at least 1.14");
+    }
+    registerCommand(cmdCom.name, cmdCom.data, edit);
+}
+/**
+ * allows you to quickly regiser commands
+ * @param data an array of commands compounds
+ * @param edit whether it is in edit mode
+ */
+function multiCommandRegister(data, edit = false) {
+    if (legacyData.registerMode <= 1.13) {
+        throw new logSystemError("Legacy: registerMode has to be at least 1.14");
+    }
+    for (const oneD of data) {
+        registerCommand(oneD.name, oneD.data, edit);
+    }
+}
+/**
  * allows you to register command
  * @param name the command name
  * @param data the command data
@@ -816,6 +926,64 @@ function registerCommand(name, data, edit = false) {
     // ];
 }
 const __registerCommand = registerCommand;
+/** the legacy Data */
+const legacyData = {
+    initialized: false,
+    currentVersion: getCurrentVersionOfLogSystem("number"),
+    registerMode: getCurrentVersionOfLogSystem("number")
+};
+/** allows you to get legacyInformation */
+function getLegacyInformation() {
+    return { ...legacyData };
+}
+/**
+ * check possibility of setting the value to that property
+ *
+ * it refers to the legacy modes!
+ *
+ * @param propertyName the name of property
+ * @param value the value that you is needed to be set
+ * @returns whether it's legal to do so
+ */
+function validateLegacyProperty(propertyName, value) {
+    switch (propertyName) {
+        case "intialized":
+            return false;
+        case "currentVersion":
+            return false;
+        case "registerMode":
+            return typeof value === "number";
+        default:
+            throw new Error("not existing property!");
+    }
+}
+/**
+ * allows you to set manually legacy information
+ *
+ * NOTE: some behaviour won't be changed
+ * it only changes the behaviour of commands! Not their parameters
+ *
+ * If you want to get the previous command register api, use:
+registerCommandLegacyForceUse()
+ *
+ * @param propertyName the name of property
+ * @param value the new value
+ * @param bypassSafety whether to bypass safety mechanism
+ */
+function setLegacyInformation(propertyName, value, bypassSafety = false) {
+    if (legacyData.initialized && !bypassSafety) {
+        throw new logSystemError("Legacy: you can't change legacy data after intialization!");
+    }
+    if (!Object.hasOwn(legacyData, propertyName)) {
+        throw new logSystemError("Legacy: that property name does not exist!");
+    }
+    if (!validateLegacyProperty(propertyName, value)) {
+        throw new logSystemError("Legacy: You can't set that value to that property!");
+    }
+    // @ts-ignore
+    legacyData[propertyName] = value;
+}
+// legacyData.usedOldRegisterSystem = true;
 /**
  * legacy register command
  *
@@ -848,8 +1016,12 @@ function registerCommandLegacy(name, usage, shortdesc, longdesc, callback) {
  * ITS NOT TYPESCRIPT AND JAVASCRIPT SAFE
  */
 function registerCommandLegacyForceUse() {
+    if (legacyData.registerMode == 1.0) {
+        throw new logSystemError("The system already use it");
+    }
     // @ts-ignore
     exports.registerCommand = registerCommand = registerCommandLegacy;
+    legacyData.registerMode = 1.0;
 }
 /**
  * interface to allow easily manipulation of the list of commands
@@ -863,9 +1035,7 @@ const commandInterface = {
     registerCommandLegacyForceUse
 };
 // that functions handles commands. It's for internal usage
-function handleEnter(text) {
-    // print the info as log about that cmd
-    log(LogType.INFO, `This command has been executed: '${text}'`, "console");
+function handleEnter(text, silent = false) {
     // handle command history
     if (commandHistory.length > 50)
         commandHistory = commandHistory.slice(commandHistory.length - 50, commandHistory.length);
@@ -874,6 +1044,9 @@ function handleEnter(text) {
     let parts = text.split(" ");
     // try to execute it
     if (Object.hasOwn(commands, parts[0])) {
+        // print the info as log about that cmd
+        if (!silent)
+            log(LogType.INFO, `This command has been executed: '${text}'`, "console");
         try {
             const cmdData = commands[parts[0]];
             if (cmdData.isAlias) {
@@ -894,9 +1067,25 @@ function handleEnter(text) {
             return false;
         }
     }
+    else if (parts[0] in bindInfo) {
+        // print the info as log about that bind
+        if (!silent)
+            log(LogType.INFO, `This bind has been executed: '${text}'`, "console");
+        let bindD = bindInfo[parts[0]];
+        try {
+            for (const command of bindD.commands) {
+                handleEnter(command, true);
+            }
+        }
+        catch (error) {
+            log(LogType.ERROR, "The error has occured during the bind execution:\n" + formatError(error), "console");
+            return false;
+        }
+    }
     // catch unkown command
     else {
-        log(LogType.ERROR, "unknown command", "console");
+        if (!silent)
+            log(LogType.ERROR, "unknown command", "console");
         return true;
     }
     // switch(parts[0]){
