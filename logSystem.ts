@@ -1202,7 +1202,9 @@ const commandInterface = {
     removeCommand,
     registerCommand,
     registerCommandLegacy,
-    registerCommandLegacyForceUse
+    registerCommandLegacyForceUse,
+    registerCommandShort,
+    multiCommandRegister
 };
 
 // that functions handles commands. It's for internal usage
@@ -2146,6 +2148,9 @@ export {LogType, log, formatError,
     getCurrentVersionOfLogSystem,
     registerCommandLegacy,
     registerCommandLegacyForceUse,
+    multiCommandRegister,
+    commandCompound,
+    registerCommandShort,
     combineColors,
     legacyDataType,
     validateLegacyProperty,
