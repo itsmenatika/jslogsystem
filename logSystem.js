@@ -33,6 +33,8 @@ exports.consoleMultiWrite = consoleMultiWrite;
 exports.getCurrentVersionOfLogSystem = getCurrentVersionOfLogSystem;
 exports.registerCommandLegacy = registerCommandLegacy;
 exports.registerCommandLegacyForceUse = registerCommandLegacyForceUse;
+exports.multiCommandRegister = multiCommandRegister;
+exports.registerCommandShort = registerCommandShort;
 exports.combineColors = combineColors;
 exports.validateLegacyProperty = validateLegacyProperty;
 exports.setLegacyInformation = setLegacyInformation;
@@ -1032,7 +1034,9 @@ const commandInterface = {
     removeCommand,
     registerCommand,
     registerCommandLegacy,
-    registerCommandLegacyForceUse
+    registerCommandLegacyForceUse,
+    registerCommandShort,
+    multiCommandRegister
 };
 // that functions handles commands. It's for internal usage
 function handleEnter(text, silent = false) {
