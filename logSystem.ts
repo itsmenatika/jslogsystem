@@ -1,7 +1,7 @@
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
-// version: 1.14
+// version: 1.15
 
 import { ChildProcess, exec, execSync, fork, spawn, spawnSync } from "node:child_process";
 import { appendFileSync, createReadStream, existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
@@ -37,6 +37,10 @@ const saveTheLatest = (date: Date, previousFilePath: string): void => {
 
 let viewTextBox: boolean = true; // if the textbox should be visible at the start
 let blockLogsVar: boolean = false; // if the logs should be displayed
+let singleLogGroupText: string = "┄┅"; // the indicator used to indicate a single log group
+let lastLogGroupText: string = "░"; // the string that gets added to the last group. It only gets added if there's at least log grpoup
+const useAddToGlobalAs: boolean = false; // whether to newConsole as a global automatically. It defaults to false
+const addToGlobalAs: string[] = ["newConsole"]; // addsnewConsole as listed keys to globalThis. Works only with useAddToGlobalAs enabled.
 
 // ___________________________________________
 //
@@ -63,14 +67,17 @@ enum LogType {
     INIT = 4,
     INT = 4,
     CRASH = 5,
-    COUNTER = 6
+    COUNTER = 6,
+    GROUP = 7
 }
 
 let commandHistory: string[] = []; // user command history history
 let indexCommandHistory: null | number = null; // the index of current selected
-const logSystemVer: string = "1.14"; // current version of the log system
+const logSystemVer: string = "1.15"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
-
+let currentGroupString: string = ""; // the current string for groups to make it run faster (you can name it cache, i guess?)
+let logGroups: string[] = []; // groups for console.group()
+const timers: Record<string, number> = {}; // the list of timers used with console.time()
 
 class logSystemError extends Error{}; // the easy error wrapper to log errors
 
@@ -1420,6 +1427,8 @@ function resolveLogType(type: LogType): string {
             return "INIT";
         case LogType.CRASH:
             return "CRASH";
+        case LogType.GROUP:
+            return "GROUP";
         default: return "UNKNOWN";
     }
 }
@@ -1445,6 +1454,8 @@ function resolveLogColor(type: LogType): consoleColor {
             return colorTable.init;
         case LogType.CRASH:
             return colorTable.crash;
+        case LogType.GROUP:
+            return colorTable.group;
         default: return consoleColors.Reset;
     }
 }
@@ -1469,8 +1480,8 @@ function log(type: LogType, message: string, who: string | logNode = "core") {
     const logTypeString: string = resolveLogType(type);
     const logColor: consoleColor = resolveLogColor(type);
     
-    const toWrite: string = `${formattedDate} ${logTypeString} ${who}: ${message}\n`;
-    const toDisplay: string = `${colorTable.date}${formattedDate}${consoleColors.Reset} ${logTypeString} ${colorTable.who}${who}${consoleColors.Reset}: ${logColor}${message}${consoleColors.Reset}\n`;
+    const toWrite: string = `${formattedDate} ${logTypeString} ${who}: ${currentGroupString}${message}\n`;
+    const toDisplay: string = `${colorTable.date}${formattedDate}${consoleColors.Reset} ${logTypeString} ${colorTable.who}${who}${consoleColors.Reset}: ${consoleColors.FgGray}${currentGroupString}${consoleColors.Reset}${logColor}${message}${consoleColors.Reset}\n`;
 
     if(viewTextBox){
         process.stdout.clearLine(0);
@@ -1483,57 +1494,6 @@ function log(type: LogType, message: string, who: string | logNode = "core") {
 
     if(viewTextBox)
         process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
-
-
-    // const printWho = `${consoleColors.FgMagenta}${who}`;
-    // switch(type){
-    //     case LogType.INFO: {
-    //         toWrite = `${formattedDate} INFO ${printWho}${consoleColors.Reset}: ${message}\n`;
-    //         break;
-    //     }
-    //     case LogType.ERROR: {
-    //         toWrite = `${formattedDate} ERROR ${printWho}${consoleColors.Reset}: ${consoleColors.FgRed}${message}\n`;
-    //         break;
-    //     }
-    //     case LogType.SUCCESS: {
-    //         toWrite = `${formattedDate} SUCCESS ${printWho}${consoleColors.Reset}: ${consoleColors.FgGreen}${message}\n`;
-    //         break;
-    //     }
-    //     case LogType.INIT: {
-    //         toWrite = `${formattedDate} INIT ${printWho}${consoleColors.Reset}: ${message}\n`;
-    //         break;
-    //     }
-    //     case LogType.WARNING: {
-    //         toWrite = `${formattedDate} WARNING ${printWho}${consoleColors.Reset}: ${consoleColors.FgYellow}${message}\n`;
-    //         break;
-    //     }
-    //     case LogType.CRASH: {
-    //         toWrite = `${formattedDate} CRASH ${printWho}${consoleColors.Reset}: ${consoleColors.FgRed}${message}\n`;
-    //         break;
-    //     }
-	// 	case LogType.COUNTER: {
-    //         toWrite = `${formattedDate} COUNTER ${printWho}${consoleColors.Reset}: ${message}\n`;
-    //         break;
-    //     }
-    //     default: {
-    //         throw new logSystemError("???");
-    //     }
-    // }
-
-    // appendFileSync(finalLatest, toWrite);
-
-
-    // if(blockLogsVar) return;
-
-
-
-    // process.stdout.clearLine(0);
-    // process.stdout.write("\r\x1b[0m");
-
-    // process.stdout.write(toWrite);
-
-    // if(viewTextBox)
-    // process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
 }
 
 
@@ -1852,6 +1812,7 @@ let colorTable: Record<string, consoleColor> = {
     "counter": consoleColors.FgCyan,
     "init": consoleColors.FgWhite,
     "crash": consoleColors.FgRed,
+    "group": consoleColors.FgGray,
 
     "date": consoleColors.FgGray,
     "who": consoleColors.FgMagenta
@@ -2023,6 +1984,136 @@ function getCurrentVersionOfLogSystem(as: "number" | "string" = "string"): strin
     else return -1;
 }
 
+interface groupSettings{
+    messageVisible?: boolean,
+    messageWho?: string | logNode,
+    error?: boolean
+}
+
+/**
+ * creates (joins) a new group for that log
+ * @param name the group name
+ * @returns the new current group string
+ */
+function logGroup(name: string, info: Omit<groupSettings, "error"> = {}): string{
+
+    if(!("messageVisible" in info) || info.messageVisible){
+        const whoS = info.messageWho ? info.messageWho : undefined;
+        log(LogType.GROUP, name, whoS);
+    }
+
+    logGroups.push(name);
+
+    // return currentGroupString = currentGroupString.slice(0, currentGroupString.indexOf(lastLogGroupText)) + singleLogGroupText + lastLogGroupText;
+
+    return reconstructLogGroup();
+}
+
+/**
+ * leaves the group created with logGroup / group
+ * @returns the new current group group string
+ */
+function logGroupEnd(info: Omit<groupSettings, "messageVisible" | "messageWho"> = {}): string {
+
+    
+    // currentGroupString = currentGroupString.slice(0, currentGroupString.lastIndexOf(singleLogGroupText)) + lastLogGroupText;
+
+    // // TODO: MAYBE IN THE FUTURE? better group ending
+
+    // return currentGroupString;
+
+
+    if(logGroups.length === 0){
+        if("error" in info && info.error){
+            throw new logSystemError("there's no group");
+        }
+
+        return currentGroupString;
+    }
+
+    logGroups.pop();
+
+    return reconstructLogGroup();
+}
+
+function reconstructLogGroup(): string{
+    currentGroupString = "";
+
+    for(let i = 0; i < logGroups.length; i++){
+        currentGroupString += singleLogGroupText;
+    }
+
+    if(logGroups.length !== 0)
+    currentGroupString += lastLogGroupText + " ";
+
+    return currentGroupString;
+}
+
+/**
+ * creates a new timer with specified name
+ * @param label the timer name
+ * @param info configuration information
+ * @returns the start time
+ */
+function logTimeStart(label: string, info: Omit<groupSettings, "error"> = {}): number{
+    const time = Date.now();
+
+    timers[label] = time;
+
+    if(!("messageVisible" in info) || info.messageVisible){
+        const whoS = info.messageWho ? info.messageWho : undefined;
+        log(LogType.GROUP, `timer '${label}' started`, whoS);
+    }
+
+    return time;
+}
+
+/**
+ * stops a timer with specified name
+ * 
+ * if info.error set to true, it causes an error if there's no timer with that name, otherwise it just ignores it
+ * 
+ * @param label the timer name
+ * @param info configuration information
+ * @returns elapsed time
+ */
+function logTimeEnd(label: string, info: groupSettings = {}): number{
+    if(!(label in timers) && "error" in info && info.error){
+        throw new logSystemError("there's no timer with that name");
+    }
+
+    const elapsed = Date.now() - timers[label];
+    delete timers[label];
+
+    if(!("messageVisible" in info) || info.messageVisible){
+        const whoS = info.messageWho ? info.messageWho : undefined;
+        log(LogType.GROUP, `timer '${label}' ended. ${elapsed}ms`, whoS);
+    }
+
+    return elapsed;
+}
+
+/**
+ * returns the current time of the timer
+ * @param label the timer name
+ * @param info configuration information
+ * @returns the current time
+ */
+function logTimeStamp(label: string, info: groupSettings = {}): number{
+    if(!(label in timers) && "error" in info && info.error){
+        throw new logSystemError("there's no timer with that name");
+    }
+
+    const elapsed = Date.now() - timers[label];
+
+    if(!("messageVisible" in info) || info.messageVisible){
+        const whoS = info.messageWho ? info.messageWho : undefined;
+        log(LogType.GROUP, `timer '${label}' stamp: ${elapsed}ms`, whoS);
+    }
+
+    return elapsed;
+}
+
 /**
  * Simple interface for the fast use of console utilities
  */
@@ -2062,8 +2153,27 @@ const newConsole = {
     showCursor,
     hideCursor,
     getCurrentVersionOfLogSystem,
-    combineColors
+    combineColors,
+    group: logGroup,
+    logGroup,
+    groupEnd: logGroupEnd,
+    logGroupEnd,
+    groupCollapsed: logGroup,
+    time: logTimeStart,
+    logTimeStart,
+    timeEnd: logTimeEnd,
+    logTimeEnd,
+    timeStamp: logTimeStamp,
+    logTimeStamp
 }   
+
+if(useAddToGlobalAs){
+    const obj: Record<string, typeof newConsole> = {};
+    for(const part of addToGlobalAs){
+        obj[part] = newConsole;
+    }
+    Object.assign(globalThis, obj);
+}
 
 
 process.addListener("exit", () => {
@@ -2089,7 +2199,7 @@ process.addListener("warning", (warn: unknown) => {
  * allows you to replace old console with fairly new
  */
 function replaceConsole(){
-    Object.assign(globalThis, {console: newConsole, orginalConsole: globalThis.console});
+    Object.assign(globalThis, {console: newConsole, orginalConsole: globalThis.console, newConsole});
 }
 
 
@@ -2155,5 +2265,16 @@ export {LogType, log, formatError,
     legacyDataType,
     validateLegacyProperty,
     setLegacyInformation,
-    getLegacyInformation
+    getLegacyInformation,
+    logGroup as group,
+    logGroup,
+    logGroupEnd as groupEnd,
+    logGroupEnd,
+    logGroup as groupCollapsed,
+    logTimeStart as time,
+    logTimeStart,
+    logTimeEnd as timeEnd,
+    logTimeEnd,
+    logTimeStamp as timeStamp,
+    logTimeStamp
 }
