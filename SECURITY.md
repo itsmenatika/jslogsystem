@@ -12,4 +12,4 @@ current version being watched:
 | 1.12    | :white_check_mark: | NOT SPECIFIED    |  
 | 1.11    | :white_check_mark: | 26.09.2025       |
 | 1.1     | :white_check_mark: | 20.09.2025       |
-| 1.0     | :x:                | WITH RELEASE OF 1.1|
+| 1.0     | :x:                | WITH THE RELEASE OF 1.1|
