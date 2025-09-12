@@ -2,6 +2,23 @@
 
 ## 1.X
 
+### 1.15
+
+release date: 12.09.2025
+
+The timers and groups UPDATE
+
+changes:
+* removed no longer used comments
+* added "autoadd to globalThis" configurations options that can be used instead of replaceConsole:
+	* useAddToGlobalAs
+	* addToGlobalAs
+* added time() (also as logTimeStart), timeEnd() (also as logTimeEnd), timeStamp() (also as logTimeStamp)
+* added group() (also as logGroup), groupEnd() (also as logGroupEnd()
+* added configuration options for groups:
+	* lastLogGroupText
+	* singleLogGroupText
+
 ### 1.14
 
 The legacy and binding update.
