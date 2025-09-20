@@ -2,7 +2,7 @@
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
-// version: 1.15
+// version: 1.16
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -109,7 +109,7 @@ var LogType;
 })(LogType || (exports.LogType = LogType = {}));
 let commandHistory = []; // user command history history
 let indexCommandHistory = null; // the index of current selected
-const logSystemVer = "1.15"; // current version of the log system
+const logSystemVer = "1.16"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
 let currentGroupString = ""; // the current string for groups to make it run faster (you can name it cache, i guess?)
 let logGroups = []; // groups for console.group()
@@ -216,11 +216,13 @@ process.stdin.on('data', async (key) => {
                 if (indexCommandHistory < 0)
                     indexCommandHistory = 0;
             }
-            text = commandHistory[indexCommandHistory];
-            hideCursor();
-            process.stdout.clearLine(0);
-            process.stdout.write("\r\x1b[0m> \x1b[35m" + text);
-            showCursor();
+            if (commandHistory.length > 0) {
+                text = commandHistory[indexCommandHistory];
+                hideCursor();
+                process.stdout.clearLine(0);
+                process.stdout.write("\r\x1b[0m> \x1b[35m" + text);
+                showCursor();
+            }
         }
         // down
         else if (key == '\u001B\u005B\u0042') {
@@ -280,6 +282,9 @@ function showCursor() {
  */
 const blankCallback = (args) => false;
 exports.blankCallback = blankCallback;
+function isCommandAlias(command) {
+    return typeof command === "object" && command.isAlias == true && typeof command.aliasName === "string";
+}
 let bindInfo = {};
 // interface commandData extends commandDataSeter{
 //     "usageinfo": string
@@ -372,7 +377,7 @@ let commands = {
     },
     ech: {
         isAlias: true,
-        aliasName: "clear",
+        aliasName: "echo",
         hidden: true,
         changeable: false
     },
@@ -770,8 +775,15 @@ let commands = {
                     colors.push(consoleColors.FgWhite);
                     toDisplay.push(" -> ");
                     colors.push(consoleColors.FgMagenta);
-                    toDisplay.push(commandData.desc + "\n");
-                    colors.push(consoleColors.FgWhite);
+                    if (isCommandAlias(commandData)) {
+                        toDisplay.push(`alias for ${commandData.aliasName}\n`);
+                        colors.push(consoleColors.FgGray);
+                    }
+                    else {
+                        const description = commandData.desc ? commandData.desc + "\n" : "no description specified" + "\n";
+                        toDisplay.push(description);
+                        colors.push(consoleColors.FgWhite);
+                    }
                 }
                 consoleMultiWrite(toDisplay, colors);
             }
@@ -799,7 +811,8 @@ let commands = {
                     forMulti.push("changable: ", consoleColors.FgGray);
                     forMulti.push(String(cmdTouse.changeable) + "\n", consoleColors.FgWhite);
                     forMulti.push("short desc: ", consoleColors.FgGray);
-                    forMulti.push(cmdTouse.desc + "\n", consoleColors.FgWhite);
+                    const description = "desc" in cmdTouse ? cmdTouse.desc : "no description specified";
+                    forMulti.push(description + "\n", consoleColors.FgWhite);
                     forMulti.push("long desc: ", consoleColors.FgGray);
                     forMulti.push(cmdTouse.longdesc + "\n", consoleColors.FgWhite);
                     forMulti.push("_______________", consoleColors.BgYellow + consoleColors.FgYellow);
@@ -929,10 +942,14 @@ function registerCommand(name, data, edit = false) {
             hidden: typeof data.hidden === "boolean" ? data.hidden : true,
             changeable: typeof data.changeable === "boolean" ? data.changeable : true,
             isAlias: true,
-            callback: undefined
+            aliasName: data.aliasName,
+            callback: undefined,
+            async: undefined
         };
         return;
     }
+    // it will WORK, i wont waste 5 hours to try convince typescript
+    // @ts-ignore
     commands[name] = {
         usageinfo: data.usageinfo ? data.usageinfo : `${name} [<arguments...>] ~(usage not specified)`,
         desc: data.desc ? data.desc : "no description",
@@ -940,7 +957,9 @@ function registerCommand(name, data, edit = false) {
         hidden: typeof data.hidden === "boolean" ? data.hidden : false,
         changeable: typeof data.changeable === "boolean" ? data.changeable : true,
         isAlias: false,
-        callback: data.callback
+        aliasName: undefined,
+        callback: data.callback,
+        async: typeof data.async === "boolean" ? data.async : false
     };
     // commands[name] = [
     //     callback, usage, desc, longdesc
@@ -1072,15 +1091,28 @@ function handleEnter(text, silent = false) {
             log(LogType.INFO, `This command has been executed: '${text}'`, "console");
         try {
             const cmdData = commands[parts[0]];
+            // get the orginal command if that is an alias
+            let orginalCmd;
             if (cmdData.isAlias) {
-                const orginalCmd = commands[cmdData.aliasName];
+                orginalCmd = commands[cmdData.aliasName];
                 if (!orginalCmd) {
                     throw new logSystemError("invalid alias");
                 }
-                return orginalCmd.callback(parts);
+                if (orginalCmd.async) {
+                }
+                else
+                    return orginalCmd.callback(parts);
+            }
+            else
+                orginalCmd = cmdData;
+            const cmdToUse = orginalCmd;
+            // execute it
+            if (orginalCmd.async) {
+                cmdToUse.callback(parts);
+                return true;
             }
             else {
-                return cmdData.callback(parts);
+                return cmdToUse.callback(parts);
             }
             // return commands[parts[0]].callback(parts);
             // catch errors
@@ -1921,4 +1953,19 @@ function processRestart() {
     //  const subprocess = spawn(process.argv[0], process.argv.slice(1), {detached: true, stdio: "inherit"});
     //     subprocess.unref();
     //     process.exit(0);
+}
+// log(LogType.INIT, "new log session completely created!");
+// writting the welcome message
+{
+    const s = new multiDisplayer();
+    s.push("Log system has been properly loaded!\n", consoleColors.FgGreen);
+    s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
+    s.push("\n\n");
+    s.push(`Welcome to the log system v${logSystemVer} `, consoleColors.FgCyan);
+    s.push("by Naticzka\n", combineColors(consoleColors.FgMagenta, consoleColors.Blink));
+    s.push("\n");
+    s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
+    s.push("\n");
+    s.push("start using it by writting 'help' or '?'\n");
+    s.useConsoleWrite(false);
 }
