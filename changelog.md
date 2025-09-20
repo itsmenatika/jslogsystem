@@ -2,6 +2,15 @@
 
 ## 1.X
 
+### 1.16
+
+changes:
+* fixed a bug that allowed you to check the command history for undefined if there was no occurances of anything
+* aliases now can be properly displayed on help command
+* ech no longer points improperly to "clear"
+* there's now displayed a welcome message at the start
+* types are better verified during command registering (typescript wise)
+
 ### 1.15
 
 release date: 12.09.2025
