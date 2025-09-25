@@ -1,13 +1,14 @@
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
-// version: 1.16
+// version: 1.17
 
 import { ChildProcess, exec, execSync, fork, spawn, spawnSync } from "node:child_process";
 import { appendFileSync, createReadStream, existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import os, { version } from "node:os";
 import { join } from "node:path";
 import { cwd } from "node:process";
+import { inspect } from "node:util";
 
 // CONFIG
 // USE JOIN for paths
@@ -73,7 +74,7 @@ enum LogType {
 
 let commandHistory: string[] = []; // user command history history
 let indexCommandHistory: null | number = null; // the index of current selected
-const logSystemVer: string = "1.16"; // current version of the log system
+const logSystemVer: string = "1.17"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
 let currentGroupString: string = ""; // the current string for groups to make it run faster (you can name it cache, i guess?)
 let logGroups: string[] = []; // groups for console.group()
@@ -478,6 +479,32 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: true,
         changeable: false
     },
+    inspect: {
+        usageinfo: "inspect <structure>",
+        desc: "allows you to inspect a javascript structure",
+        longdesc: "it uses internal node.js inspect and JSON parser to allow you to inspect the structure",
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: (args: string[]): boolean => {
+            let toFormat = args.slice(1).join(" ");
+
+            let reCreateObject = JSON.parse(toFormat);
+
+            let formatedAnswer = inspect(reCreateObject, true, null, true);
+
+            log(LogType.INFO, `${formatedAnswer}`, "console.inspect");
+
+            return false;
+            // }
+        }                
+    },
+    insp: {
+        isAlias: true,
+        aliasName: "inspect",
+        hidden: true,
+        changeable: false
+    },    
     eval: {
         usageinfo: "eval <code...>",
         desc: "allows you to execute javascript",
@@ -490,8 +517,11 @@ let commands: Record<string, unifiedCommandTypes> = {
             let evalParent = new logNode("eval");
             // @ts-ignore
             newConsole.useWith("using eval", () => {
-                let g = globalEval(code);
-                log(LogType.INFO, `eval returned with: ${g}`, evalParent);
+                let answer = globalEval(code);
+
+                let formatedAnswer = inspect(answer, true, null, true);
+
+                log(LogType.INFO, `eval returned with: ${formatedAnswer}`, evalParent);
             }, evalParent as any as string);
 
             return false;
@@ -644,6 +674,23 @@ let commands: Record<string, unifiedCommandTypes> = {
             const data = args.slice(1).join(" ");
 
             if(data[0] != "`"){
+                let bindName = data;
+
+                if(bindName in bindInfo){
+                    let s = new multiDisplayer();
+
+                    s.push(`bind '${bindName}'`, combineColors(consoleColors.BgMagenta, consoleColors.FgBlack));
+
+                    s.push("\n");
+
+                    s.push(`\`${bindInfo[bindName].executor}\`:\`${bindInfo[bindName].commands.toString()}\``);
+                    s.push("\n");
+
+                    s.useConsoleWrite();
+
+                    return false;
+                }
+
                 log(LogType.ERROR, "invalid syntax", "console.bind");
                 return false;
             }
@@ -689,7 +736,7 @@ let commands: Record<string, unifiedCommandTypes> = {
 
             if(it + 4 === it2){
                 delete bindInfo[name];
-                log(LogType.SUCCESS, "the bind was removed!", "console.bind");
+                log(LogType.SUCCESS, "the bind has been removed!", "console.bind");
                 return false;
             }
 
@@ -1260,6 +1307,14 @@ function registerCommandLegacyForceUse(){
     legacyData.registerMode = 1.0
 }
 
+interface commandExecOptions{
+    silent?: boolean,
+    logNode?: logNode | string
+}
+
+async function commandExec(command: string, options: commandExecOptions = {}) {
+    handleCommandInternal(command, options.silent, options.logNode);
+}
 
 /**
  * interface to allow easily manipulation of the list of commands
@@ -1272,16 +1327,22 @@ const commandInterface = {
     registerCommandLegacy,
     registerCommandLegacyForceUse,
     registerCommandShort,
-    multiCommandRegister
+    multiCommandRegister,
+    commandExec,
+    exec: commandExec
 };
 
-// that functions handles commands. It's for internal usage
-function handleEnter(text: string, silent: boolean = false): boolean | void{
+function handleEnter(text: string, silent: boolean = false){
     // handle command history
     if(commandHistory.length > 50) 
         commandHistory = commandHistory.slice(commandHistory.length - 50, commandHistory.length);
     commandHistory.push(text);
 
+    handleCommandInternal(text, silent);
+}
+
+// that functions handles commands. It's for internal usage
+function handleCommandInternal(text: string, silent: boolean = false, logNode: string | logNode = "console"): boolean | void{
     // get parts
     let parts = text.split(" ");
 
@@ -1289,7 +1350,7 @@ function handleEnter(text: string, silent: boolean = false): boolean | void{
     if(Object.hasOwn(commands, parts[0])){
         // print the info as log about that cmd
         if(!silent)
-        log(LogType.INFO, `This command has been executed: '${text}'`, "console");
+        log(LogType.INFO, `This command has been executed: '${text}'`, logNode);
 
         try {
             const cmdData = commands[parts[0]];
@@ -1327,14 +1388,14 @@ function handleEnter(text: string, silent: boolean = false): boolean | void{
         
         // catch errors
         } catch (error) {
-            log(LogType.ERROR, "The error has occured during the command execution:\n" + formatError(error), "console");
+            log(LogType.ERROR, "The error has occured during the command execution:\n" + formatError(error), logNode);
             return false;
         }
     }
     else if(parts[0] in bindInfo){
         // print the info as log about that bind
         if(!silent)
-        log(LogType.INFO, `This bind has been executed: '${text}'`, "console");
+        log(LogType.INFO, `This bind has been executed: '${text}'`, logNode);
 
         let bindD = bindInfo[parts[0]];
         try {
@@ -1342,14 +1403,14 @@ function handleEnter(text: string, silent: boolean = false): boolean | void{
                 handleEnter(command, true);
             }
         } catch (error) {
-            log(LogType.ERROR, "The error has occured during the bind execution:\n" + formatError(error), "console");
+            log(LogType.ERROR, "The error has occured during the bind execution:\n" + formatError(error), logNode);
             return false;
         }
     }
     // catch unkown command
     else{
         if(!silent)
-        log(LogType.ERROR, "unknown command", "console");
+        log(LogType.ERROR, "unknown command", logNode);
         return true;  
     }
 
