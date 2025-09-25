@@ -1,32 +1,5 @@
 import { keepProcessAlive, newConsole } from "./logSystem";
 
 
-
-newConsole.log("hello!");
-
-
-// (async () => {
-//     while(true){
-//         newConsole.log("test");
-//         await new Promise((res) => setTimeout(res, 200));
-//     }
-// })();
-
-newConsole.commands.registerCommand("test", {
-
-    callback: async (args: string[]) => {
-        await new Promise((res) => setTimeout(res, 600));
-        newConsole.log("test");
-
-        return true;
-    },
-    async: true
-});
-
-newConsole.commandInterface.registerCommand("secondtest", {
-    isAlias: true,
-    aliasName: "test",
-    hidden: false
-});
-
+// it will keep the process alive even though there's no error for it to be kept alive
 keepProcessAlive();
