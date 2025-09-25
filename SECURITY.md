@@ -6,6 +6,7 @@ current version being watched:
 
 | Version | Supported          | expiration date  |
 | ------- | ------------------ | ---------------- |
+| 1.17    | :white_check_mark: | NOT SPECIFIED    |  
 | 1.16    | :white_check_mark: | NOT SPECIFIED    |  
 | 1.15    | :white_check_mark: | NOT SPECIFIED    |   
 | 1.14    | :white_check_mark: | NOT SPECIFIED    |                   
