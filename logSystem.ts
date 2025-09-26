@@ -74,7 +74,7 @@ enum LogType {
 
 let commandHistory: string[] = []; // user command history history
 let indexCommandHistory: null | number = null; // the index of current selected
-const logSystemVer: string = "1.17"; // current version of the log system
+const logSystemVer: string = "1.171"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
 let currentGroupString: string = ""; // the current string for groups to make it run faster (you can name it cache, i guess?)
 let logGroups: string[] = []; // groups for console.group()
@@ -2343,10 +2343,10 @@ function replaceConsole(){
 /**
  * allows you to create a fake loop to keep the process alive. It was used mostly for testing
  */
-function keepProcessAlive(){
+function keepProcessAlive(resolveTime: number = 20){
     (async () => {
         while(true){
-            await new Promise((resolve) => setTimeout(resolve, 20));
+            await new Promise((resolve) => setTimeout(resolve, resolveTime));
         }
     })();
 }

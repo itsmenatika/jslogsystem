@@ -2,6 +2,11 @@
 
 ## 1.X
 
+### 1.171
+
+**changes:**
+* keepProcessAlive() now accepts the time for the fake task. It defaults to 20ms
+
 ### 1.17
 
 **changes:**
