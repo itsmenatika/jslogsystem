@@ -25,7 +25,7 @@ available for: 1.1+
 
 ## what it does?
 
-It creates a fake async function that keeps the current process running. It's useful for tasking if you don't want to load your entire application or if you want to run the log System standalone.
+It creates a fake async function that keeps the current process running. It's useful for testing if you don't want to load your entire application or if you want to run the log System standalone.
 
 Internal implemention currently looks like this:
 ```typescript
