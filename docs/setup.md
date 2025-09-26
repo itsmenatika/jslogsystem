@@ -1,4 +1,10 @@
-[HOME](home.md)
+# [HOME](home.md)/[setup](setup.md)
+
+> [!NOTE]
+> Currently, there's no correct way to unload it.
+
+> [!IMPORTANT]
+> remember to use the correct import path!
 
 > [!TIP]
 > It's recommended to use only one system at the time (let it be either standard ESM MODULES or node.js modules)
@@ -11,7 +17,7 @@
 
 To start working with log system you can use that minimal setup that will work out of the box:
 
-###standard JS module system (ESM modules):
+### standard JS module system (ESM modules):
 
 ```typescript
 import { keepProcessAlive } from "./logSystem";
@@ -21,7 +27,7 @@ import { keepProcessAlive } from "./logSystem";
 keepProcessAlive();
 ```
 
-###commonJS node.js system
+### commonJS node.js system
 
 ```typescript
 const logSystem = require("./logSystem");
