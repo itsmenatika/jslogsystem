@@ -1,19 +1,17 @@
-The most minimal startup code is:
-
+[HOME](home.md)
 
 > [!TIP]
->
 > It's recommended to use only one system at the time (let it be either standard ESM MODULES or node.js modules)
 
 > [!TIP]
->
 > it's recommended to use standard JS modules.
 
 > [!WARNING]
->
 > function keepProcessAlive() creates a fake async task that sole purpose is to keep your application running. Don't use it if your application already has something to do as it may slightly impact your performance!
 
-standard JS module system (ESM modules):
+To start working with log system you can use that minimal setup that will work out of the box:
+
+###standard JS module system (ESM modules):
 
 ```typescript
 import { keepProcessAlive } from "./logSystem";
@@ -23,7 +21,7 @@ import { keepProcessAlive } from "./logSystem";
 keepProcessAlive();
 ```
 
-commonJS node.js system
+###commonJS node.js system
 
 ```typescript
 const logSystem = require("./logSystem");
