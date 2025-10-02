@@ -1,7 +1,7 @@
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
-// version: 1.15
+// version: 1.16
 
 import { ChildProcess, exec, execSync, fork, spawn, spawnSync } from "node:child_process";
 import { appendFileSync, createReadStream, existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
@@ -73,7 +73,7 @@ enum LogType {
 
 let commandHistory: string[] = []; // user command history history
 let indexCommandHistory: null | number = null; // the index of current selected
-const logSystemVer: string = "1.15"; // current version of the log system
+const logSystemVer: string = "1.16"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
 let currentGroupString: string = ""; // the current string for groups to make it run faster (you can name it cache, i guess?)
 let logGroups: string[] = []; // groups for console.group()
@@ -204,11 +204,14 @@ process.stdin.on('data', async (key: string) => {
                 indexCommandHistory--;
                 if(indexCommandHistory < 0) indexCommandHistory = 0;
             }
-            text = commandHistory[indexCommandHistory];
-            hideCursor();
-            process.stdout.clearLine(0);
-            process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
-            showCursor();
+
+            if(commandHistory.length > 0){
+                text = commandHistory[indexCommandHistory];
+                hideCursor();
+                process.stdout.clearLine(0);
+                process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
+                showCursor();
+            }
         }
 
         // down
@@ -281,7 +284,10 @@ function showCursor(){
 }
 
 // type for typescript
-type cmdcallback = (args: string[]) => boolean;
+type cmdCallbackResponse = boolean;
+
+type cmdcallback = ((args: string[]) => cmdCallbackResponse);
+type cmdCallbackAsync = ((args: string[]) => Promise<cmdCallbackResponse>);
 
 /**
  * blank callback, that can be used for testing purposes
@@ -296,8 +302,42 @@ interface commandData{
     "changeable"?: boolean,
     "isAlias"?: boolean,
     "aliasName"?: string,
-    "callback"?: cmdcallback
+    "callback"?: cmdcallback | cmdCallbackAsync,
+    "async"?: boolean
 }
+
+interface commandDataAsync extends commandData{
+    isAlias?: false,
+    aliasName?: undefined,
+    "async": true,
+    "callback": cmdCallbackAsync,
+}
+
+// interface commandDataAsyncInMemory extends Pick<commandDataAsync, "desc"
+
+interface commandDataRegular extends commandData{
+    isAlias?: false,
+    aliasName?: undefined,
+    "async"?: false,
+    "callback": cmdcallback
+}
+
+interface commandAlias extends commandData {
+    usageInfo?: undefined,
+    desc?: undefined,
+    longDesc?: undefined,
+    callback?: undefined,
+    async?: undefined,
+    isAlias: true
+    aliasName: string
+}
+
+type unifiedCommandTypes = commandDataRegular | commandDataAsync | commandAlias;
+
+function isCommandAlias(command: commandData): command is commandAlias{
+    return typeof command === "object" && command.isAlias == true && typeof command.aliasName === "string";
+}
+
 
 interface bindDetail{
     name: string,
@@ -325,7 +365,7 @@ const numberLookUp = (char: string): boolean => {
 }
 
 // the list of commands
-let commands: Record<string, commandData> = {
+let commands: Record<string, unifiedCommandTypes> = {
     exit: {
         usageinfo: "exit <exit code...>",
         desc: "allows you to stop the process",
@@ -407,7 +447,7 @@ let commands: Record<string, commandData> = {
     },
     ech: {
         isAlias: true,
-        aliasName: "clear",
+        aliasName: "echo",
         hidden: true,
         changeable: false
     },
@@ -476,7 +516,7 @@ let commands: Record<string, commandData> = {
             textboxVisibility(false);
             consoleWrite("logSystemVer: ");
             consoleWrite(logSystemVer, consoleColors.BgCyan);
-            consoleWrite(" by naticzka", [consoleColors.FgMagenta, consoleColors.Blink])
+            consoleWrite(" by naticzka", [consoleColors.FgMagenta, consoleColors.Blink]);
             consoleWrite("\n");
             consoleWrite(getversionInfoData(), consoleColors.BgGray);
             consoleWrite("\n");
@@ -854,11 +894,23 @@ let commands: Record<string, commandData> = {
 
                 for(let [commandName, commandData] of Object.entries(commands)){
                     if(commandData.hidden) continue;
+
+
                     
                     toDisplay.push("* "); colors.push(consoleColors.FgYellow);
                     toDisplay.push(commandName); colors.push(consoleColors.FgWhite);
                     toDisplay.push(" -> "); colors.push(consoleColors.FgMagenta);
-                    toDisplay.push(commandData.desc + "\n"); colors.push(consoleColors.FgWhite);
+
+                    if(isCommandAlias(commandData)){
+                        toDisplay.push(`alias for ${commandData.aliasName}\n`);
+                        colors.push(consoleColors.FgGray); 
+                    }
+                    else{
+                        const description = commandData.desc ? commandData.desc + "\n" : "no description specified" + "\n";
+
+                        toDisplay.push(description); 
+                        colors.push(consoleColors.FgWhite);
+                    }
                 }
 
 
@@ -899,7 +951,10 @@ let commands: Record<string, commandData> = {
                     forMulti.push(String(cmdTouse.changeable) + "\n", consoleColors.FgWhite);
 
                     forMulti.push("short desc: ", consoleColors.FgGray);
-                    forMulti.push(cmdTouse.desc + "\n", consoleColors.FgWhite);
+
+                    const description = "desc" in cmdTouse ? cmdTouse.desc : "no description specified";
+
+                    forMulti.push(description + "\n", consoleColors.FgWhite);
 
                     forMulti.push("long desc: ", consoleColors.FgGray);
                     forMulti.push(cmdTouse.longdesc + "\n", consoleColors.FgWhite);
@@ -989,7 +1044,7 @@ function removeCommand(name: string){
 
 interface commandCompound{
     name: string,
-    data: commandData
+    data: unifiedCommandTypes
 }
 
 /**
@@ -1032,7 +1087,7 @@ function multiCommandRegister(data: Array<commandCompound>,
  * @param edit whether it is in edit mode
  * @returns 
  */
-function registerCommand(name: string, data: commandData, edit: boolean = false) {
+function registerCommand(name: string, data: unifiedCommandTypes, edit: boolean = false) {
     if(Object.hasOwn(commands, name)){
         if(!edit){
             throw new logSystemError(`The command '${name}' does exist!`);
@@ -1055,12 +1110,16 @@ function registerCommand(name: string, data: commandData, edit: boolean = false)
             hidden: typeof data.hidden === "boolean" ? data.hidden : true,
             changeable: typeof data.changeable === "boolean" ? data.changeable : true,
             isAlias: true,
-            callback: undefined
+            aliasName: data.aliasName as string,
+            callback: undefined,
+            async: undefined
         }
 
         return;
     }
 
+    // it will WORK, i wont waste 5 hours to try convince typescript
+    // @ts-ignore
     commands[name] = {
         usageinfo: data.usageinfo ? data.usageinfo : `${name} [<arguments...>] ~(usage not specified)`,
         desc: data.desc ? data.desc : "no description",
@@ -1068,7 +1127,9 @@ function registerCommand(name: string, data: commandData, edit: boolean = false)
         hidden: typeof data.hidden === "boolean" ? data.hidden : false,
         changeable: typeof data.changeable === "boolean" ? data.changeable : true,
         isAlias: false,
-        callback: data.callback
+        aliasName: undefined,
+        callback: data.callback,
+        async: typeof data.async === "boolean" ? data.async : false
     };
 
     // commands[name] = [
@@ -1233,17 +1294,32 @@ function handleEnter(text: string, silent: boolean = false): boolean | void{
         try {
             const cmdData = commands[parts[0]];
 
+            // get the orginal command if that is an alias
+            let orginalCmd;
             if(cmdData.isAlias){
-                const orginalCmd = commands[cmdData.aliasName as string];
+                orginalCmd = commands[cmdData.aliasName as string] as commandDataAsync | commandDataRegular;
 
                 if(!orginalCmd){
                     throw new logSystemError("invalid alias");
                 }
 
+                if(orginalCmd.async){
+
+                }
+                else
                 return (orginalCmd.callback as cmdcallback)(parts);
             }
+            else orginalCmd = cmdData;
+
+            const cmdToUse = orginalCmd as commandDataRegular | commandDataAsync;
+
+            // execute it
+            if(orginalCmd.async){
+                (cmdToUse.callback as cmdCallbackAsync)(parts);
+                return true;
+            }
             else{
-                return (cmdData.callback as cmdcallback)(parts);
+                return (cmdToUse.callback as cmdcallback)(parts);
             }
 
 
@@ -2231,6 +2307,24 @@ function processRestart(){
 //     subprocess.unref();
 //     process.exit(0);
 
+}
+
+// log(LogType.INIT, "new log session completely created!");
+
+// writting the welcome message
+{
+const s = new multiDisplayer();
+
+s.push("Log system has been properly loaded!\n", consoleColors.FgGreen);
+s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
+s.push("\n\n");
+s.push(`Welcome to the log system v${logSystemVer} `, consoleColors.FgCyan);
+s.push("by Naticzka\n", combineColors(consoleColors.FgMagenta, consoleColors.Blink));
+s.push("\n")
+s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
+s.push("\n");
+s.push("start using it by writting 'help' or '?'\n")
+s.useConsoleWrite(false);
 }
 
 // exports

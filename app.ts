@@ -1,17 +1,32 @@
-/**
-
-RELEASE 1.15 IS HEADING TO BE LONGER SUPPORTED
-
-USE AT YOUR OWN RISK
-
-app.ts was not orginally shipped with 1.15 version. It was created afterwards!
-
-logSystemMIN also was not orginally SHIPPED!
+import { keepProcessAlive, newConsole } from "./logSystem";
 
 
-
-**/
-
-import { newConsole } from "./logSystem";
 
 newConsole.log("hello!");
+
+
+// (async () => {
+//     while(true){
+//         newConsole.log("test");
+//         await new Promise((res) => setTimeout(res, 200));
+//     }
+// })();
+
+newConsole.commands.registerCommand("test", {
+
+    callback: async (args: string[]) => {
+        await new Promise((res) => setTimeout(res, 600));
+        newConsole.log("test");
+
+        return true;
+    },
+    async: true
+});
+
+newConsole.commandInterface.registerCommand("secondtest", {
+    isAlias: true,
+    aliasName: "test",
+    hidden: false
+});
+
+keepProcessAlive();
