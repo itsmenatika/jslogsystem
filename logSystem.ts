@@ -1,7 +1,7 @@
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
-// version: 1.11
+// version: 1.13
 
 import { ChildProcess, exec, execSync, fork, spawn, spawnSync } from "node:child_process";
 import { appendFileSync, createReadStream, existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
@@ -68,7 +68,7 @@ enum LogType {
 
 let commandHistory: string[] = []; // user command history history
 let indexCommandHistory: null | number = null; // the index of current selected
-const logSystemVer: string = "1.12"; // current version of the log system
+const logSystemVer: string = "1.13"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
 
 
@@ -128,7 +128,7 @@ let text: string = "";
 // relative cursor change
 let relativePos: number = 0;
 
-const allowedKeysToWrite: string = "abcdefghijklmnopqrstuxwvyz" + "abcdefghijklmnopqrstuxwvyz".toUpperCase() + "1234567890" + "!@#$%^*()" + "`~-_+\\|'\";:,<.>?" + "[{}]" + " " + "!@#$%^&*=~`'";
+const allowedKeysToWrite: string = "abcdefghijklmnopqrstuxwvyz" + "abcdefghijklmnopqrstuxwvyz".toUpperCase() + "1234567890" + "!@#$%^*()" + "`~-_+\\|'\";:,<.>?" + "[{}]" + " " + "!@#$%^&*=~`'/";
 
 // display the textbox at the start
 if(viewTextBox){
@@ -1808,7 +1808,8 @@ const newConsole = {
     versionInfo,
     showCursor,
     hideCursor,
-    getCurrentVersionOfLogSystem
+    getCurrentVersionOfLogSystem,
+    combineColors
 }   
 
 
@@ -1893,5 +1894,6 @@ export {LogType, log, formatError,
     multiDisplayer,
     getCurrentVersionOfLogSystem,
     registerCommandLegacy,
-    registerCommandLegacyForceUse
+    registerCommandLegacyForceUse,
+    combineColors
 }

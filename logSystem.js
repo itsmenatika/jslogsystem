@@ -2,7 +2,7 @@
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
-// version: 1.11
+// version: 1.13
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -88,7 +88,7 @@ var LogType;
 })(LogType || (exports.LogType = LogType = {}));
 let commandHistory = []; // user command history history
 let indexCommandHistory = null; // the index of current selected
-const logSystemVer = "1.12"; // current version of the log system
+const logSystemVer = "1.13"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
 class logSystemError extends Error {
 }
@@ -133,7 +133,7 @@ if ((0, node_fs_1.existsSync)(finalLatest)) {
 let text = "";
 // relative cursor change
 let relativePos = 0;
-const allowedKeysToWrite = "abcdefghijklmnopqrstuxwvyz" + "abcdefghijklmnopqrstuxwvyz".toUpperCase() + "1234567890" + "!@#$%^*()" + "`~-_+\\|'\";:,<.>?" + "[{}]" + " " + "!@#$%^&*=~`'";
+const allowedKeysToWrite = "abcdefghijklmnopqrstuxwvyz" + "abcdefghijklmnopqrstuxwvyz".toUpperCase() + "1234567890" + "!@#$%^*()" + "`~-_+\\|'\";:,<.>?" + "[{}]" + " " + "!@#$%^&*=~`'/";
 // display the textbox at the start
 if (viewTextBox) {
     process.stdout.write("> \x1b[35m" + text);
