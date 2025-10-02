@@ -38,9 +38,17 @@ const saveTheLatest = (date: Date, previousFilePath: string): void => {
 let viewTextBox: boolean = true; // if the textbox should be visible at the start
 let blockLogsVar: boolean = false; // if the logs should be displayed
 
+// ___________________________________________
+//
 // CODE
+//
+// DONT TOUCH IT!
+//
 // ___________________________________________
 
+/**
+ * the type of log
+ */
 enum LogType {
     INFO = 0,
     INFORMATION = 0,
@@ -58,36 +66,40 @@ enum LogType {
     COUNTER = 6
 }
 
-let commandHistory: string[] = [];
-let indexCommandHistory: null | number = null;
-const logSystemVer: string = "1.11"; // current version of the log system
-const currentUpTime = Date.now();
+let commandHistory: string[] = []; // user command history history
+let indexCommandHistory: null | number = null; // the index of current selected
+const logSystemVer: string = "1.12"; // current version of the log system
+const currentUpTime = Date.now(); // uptime start date
 
 
-class logSystemError extends Error{};
+class logSystemError extends Error{}; // the easy error wrapper to log errors
 
-// settings
+// settings that are to provide to process stdin
 process.stdin.setRawMode(true);
 process.stdin.resume();
 process.stdin.setEncoding("utf-8")
 
 // check for the log directory
 if(!existsSync(join(cwd(), LOGDIRECTORY))){
+    // make it if it doesn't exist
     mkdirSync(join(cwd(), LOGDIRECTORY), {recursive: true});
 }
 
-const finalLatest: string = join(cwd(), LOGDIRECTORY, LATESTLOGNAME);
-const tempFinal: string = join(cwd(), LOGDIRECTORY, "temp");
+const finalLatest: string = join(cwd(), LOGDIRECTORY, LATESTLOGNAME); // the path to the previous log
+const tempFinal: string = join(cwd(), LOGDIRECTORY, "temp"); // the path to previous temp file log
 
+// check whether the previous log exist
 if(existsSync(finalLatest)){
+    // if the latest log does exist, then temp shall too!
     if(!existsSync(tempFinal)){
         throw new logSystemError("Error with moving the previous log!");
     }
 
-    const data = readFileSync(tempFinal).toString();
-    const piecesOfData: string[] = data.split("\n");
+    const data = readFileSync(tempFinal).toString(); // get the data of the previous log (temp data)
 
-    const date = new Date(Number(String(piecesOfData[0])));
+    const piecesOfData: string[] = data.split("\n"); // split it into lines
+
+    const date = new Date(Number(String(piecesOfData[0]))); // the first line is the date line
 
 	// calling the callback to do stuff with previous one
 	saveTheLatest(date, finalLatest);
@@ -851,16 +863,21 @@ function removeCommand(name: string){
 }
 
 /**
- * allows you to register a command
- * @param name the name of command
- * @param usage a string that describes the usage of the command
- * @param desc a string that describes the command (shortly)
- * @param longdesc a string that describes  the command
- * @param callback callback to use when that command is invoked
+ * allows you to register command
+ * @param name the command name
+ * @param data the command data
+ * @param edit whether it is in edit mode
+ * @returns 
  */
-function registerCommand(name: string, data: commandData) {
+function registerCommand(name: string, data: commandData, edit: boolean = false) {
     if(Object.hasOwn(commands, name)){
-        throw new logSystemError(`The command '${name}' does exist!`)
+        if(!edit){
+            throw new logSystemError(`The command '${name}' does exist!`);
+        }
+
+        if(!(commands[name].changeable)){
+            throw new logSystemError(`The command '${name}' is not changeable!`);
+        }
     }
 
     if(!data.isAlias && !data.callback){
@@ -896,6 +913,52 @@ function registerCommand(name: string, data: commandData) {
     // ];
 }
 
+const __registerCommand = registerCommand;
+
+/**
+ * legacy register command
+ * 
+ * DONT USE IN NEW PROJECTS
+ * 
+ * it doesnt allow you to edit command afterwards by default, due to compatibility reasons!
+ * 
+ * @param name the command name
+ * @param usage the command usage
+ * @param shortdesc short description
+ * @param longdesc long description
+ * @param callback callback
+ */
+function registerCommandLegacy(
+    name: string,
+    usage: string,
+    shortdesc: string,
+    longdesc: string,
+    callback: cmdcallback
+){
+    __registerCommand(name, {
+        usageinfo: usage,
+        desc: shortdesc,
+        longdesc: longdesc,
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: callback
+    });
+}
+
+/**
+ * forces registerCommand() to behave like registerCommandLegacy()
+ * 
+ * DONT USE IF YOU DONT HAVE TO!
+ * 
+ * ITS NOT TYPESCRIPT AND JAVASCRIPT SAFE
+ */
+function registerCommandLegacyForceUse(){
+    // @ts-ignore
+    registerCommand = registerCommandLegacy;
+}
+
+
 /**
  * interface to allow easily manipulation of the list of commands
  */
@@ -903,19 +966,25 @@ const commandInterface = {
     isCommandRegistered,
     commandList,
     removeCommand,
-    registerCommand
+    registerCommand,
+    registerCommandLegacy,
+    registerCommandLegacyForceUse
 };
 
 // that functions handles commands. It's for internal usage
 function handleEnter(text: string): boolean | void{
+    // print the info as log about that cmd
     log(LogType.INFO, `This command has been executed: '${text}'`, "console");
 
+    // handle command history
     if(commandHistory.length > 50) 
         commandHistory = commandHistory.slice(commandHistory.length - 50, commandHistory.length);
     commandHistory.push(text);
 
+    // get parts
     let parts = text.split(" ");
 
+    // try to execute it
     if(Object.hasOwn(commands, parts[0])){
         try {
             const cmdData = commands[parts[0]];
@@ -935,11 +1004,14 @@ function handleEnter(text: string): boolean | void{
 
 
             // return commands[parts[0]].callback(parts);
+        
+        // catch errors
         } catch (error) {
             log(LogType.ERROR, "The error has occured during the command execution:\n" + formatError(error), "console");
             return false;
         }
     }
+    // catch unkown command
     else{
         log(LogType.ERROR, "unknown command", "console");
         return true;  
@@ -1229,7 +1301,7 @@ const formatError = (error: any): string => {
  * @param message the message to print
  * @param who the executioner (for the logs). Defaults to "core"
  */
-function assertConsole(condition: boolean, message: string, who: string = "core"){
+function assertConsole(condition: boolean, message: string, who: string | logNode = "core"){
     if(!condition) log(LogType.ERROR, message, who)
 }
 
@@ -1260,7 +1332,7 @@ const counterTable: Record<string, number> = {
  * @param who the executioner (for the logs). Defaults to "core"
  * @returns the current name on the counter.
  */
-function counterCount(name: string, startFrom: number = 1, increaseBy: number = 1, who?: string): number{
+function counterCount(name: string, startFrom: number = 1, increaseBy: number = 1, who?: string | logNode): number{
     if(!Object.hasOwn(counterTable, name)){
         counterTable[name] = startFrom;
     }
@@ -1317,7 +1389,40 @@ function consoleWrite(textToWrite: string, WithColor: consoleColors | consoleCol
     if(viewTextBox){printViewTextbox()}
 }
 
-// TODO
+/**
+ * the function to combine colors
+ * 
+ * USE IT TO ENSURE THE COMPATIBILITY WITH THE NEXT VERSION
+ * 
+ * @param colors colors
+ * @returns the combined colors
+ */
+function combineColors(...colors: consoleColor[]): consoleColorsMulti{
+    let toReturn: consoleColorsMulti = "";
+
+    for(let color of colors){
+        toReturn += color;
+    }
+
+    return toReturn;
+}
+
+/**
+ * allows you to write multi colors to the console in the single command
+ * 
+ * the length of texts array and colors array have to be the exact match!
+ * 
+ * example:
+ * 
+ * consoleMultiWrite(["MEOW", " :3s"], [consoleColors.fgRed, consoleColors.fgBlue]);
+ * 
+ * you can also use multiple colors
+ * 
+ * 
+ * @param texts the array of texts
+ * @param colors the array of colors
+ * @param writeToFile whether to write it to file or only to console
+ */
 function consoleMultiWrite(texts: string[], colors: Array<consoleColors | consoleColorsMulti>, writeToFile: boolean = true){
     if(texts.length !== colors.length){
         throw new logSystemError("Text array length and colors array length dont match!");
@@ -1346,33 +1451,103 @@ function consoleMultiWrite(texts: string[], colors: Array<consoleColors | consol
     if(viewTextBox){printViewTextbox()}
 }
 
+/**
+ * the class that offers abstraction to consoleMultiWrite.
+ * 
+ * it works like an array
+ * 
+ * example:
+ * 
+ * 
+ * let g = new multiDisplayer();
+ * 
+ * g.push("\n");
+ * g.push("meoww!", consoleColors.fgRed);
+ * g.push(" :3", consoleColors.fgBlue);
+ * g.push("\n");
+ * g.useConsoleWrite()
+ * 
+ * would be equal to:
+ * consoleMultiWrite(["\n", "meoww!", " :3", "\n"], ["", consoleColors.fgRed, consoleColors.fgBlue, ""]);
+ */
 class multiDisplayer{
     private texts: string[] = [];
     private colors: Array<consoleColor | consoleColorsMulti> = [];
+
     constructor(){}
 
+    /**
+     * adds the new characters (and) colors to displayer
+     * 
+     * for adding at the beginning, check: unshift()
+     * 
+     * @param text the text to be added
+     * @param colors colors|color of that text
+     */
     push(text: string, colors?: consoleColor | consoleColorsMulti){
         this.texts.push(text);
-        
+
         if(colors)
             this.colors.push(colors);
         else
             this.colors.push("");
     }
 
+    /**
+     * adds the new characters (and) colors to displayer at the beginning
+     * 
+     * for adding at the last place, check: push()
+     * 
+     * @param text the text to be added
+     * @param colors colors|color of that text
+     */
+    unshift(text: string, colors?: consoleColor | consoleColorsMulti){
+        this.texts.unshift(text);
+
+        if(colors)
+            this.colors.unshift(colors);
+        else
+            this.colors.unshift("");
+    }
+
+    /**
+     * pops the last element and returns it
+     * @returns the popped element in format like: [string, consoleColor | consoleColorsMulti] or [undefined, undefined] if there wasnt any object
+     */
     pop(): [undefined | string, undefined | consoleColor | consoleColorsMulti]{
         return [this.texts.pop(), this.colors.pop()];
     }
 
-    useConsoleWrite(writeToFile: boolean = true, clearObj: boolean = true){
+    /**
+     * shifts the first element and returns it
+     * @returns the shifted element in format like: [string, consoleColor | consoleColorsMulti] or [undefined, undefined] if there wasnt any object
+     */
+    shift(): [undefined | string, undefined | consoleColor | consoleColorsMulti]{
+        return [this.texts.shift(), this.colors.shift()];
+    }
+
+    /**
+     * allows you to use finally consoleWrite. It's required because js has no constructors
+     * @param writeToFile parameter to be passed to consoleWrite. Leave it as undefined to leave it as default
+     * @param clearObj whether to clear the arrays on that objects. Defaults to true
+     */
+    useConsoleWrite(writeToFile: boolean | undefined = true, clearObj: boolean = true){
+        // default of writeToFile
+        if(writeToFile === undefined) writeToFile = true;
+
+        // use consoleMultiWrite
         consoleMultiWrite(this.texts, this.colors, writeToFile);
 
+        // clear objs
         if(clearObj){
             this.texts = [];
             this.colors = [];
         }
     }
 
+    /**
+     * clears the whole array
+     */
     clear(){
         this.texts = [];
         this.colors = [];
@@ -1416,7 +1591,6 @@ enum consoleColors{
 }
 
 let colorTable: Record<string, consoleColor> = {
-
 
     "info": consoleColors.FgWhite,
     "warning": consoleColors.FgYellow,
@@ -1717,5 +1891,7 @@ export {LogType, log, formatError,
     consoleColor,
     consoleMultiWrite,
     multiDisplayer,
-    getCurrentVersionOfLogSystem
+    getCurrentVersionOfLogSystem,
+    registerCommandLegacy,
+    registerCommandLegacyForceUse
 }
