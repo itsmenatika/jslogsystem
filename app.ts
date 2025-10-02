@@ -1,3 +1,9 @@
+/**
+
+MIN version wasn't orginally SHIPPED WITH 1.16!
+
+**/
+
 import { keepProcessAlive, newConsole } from "./logSystem";
 
 
