@@ -1,0 +1,177 @@
+# changelog
+
+## 1.X
+
+### 1.171
+
+**changes:**
+* keepProcessAlive() now accepts the time for the fake task. It defaults to 20ms
+
+### 1.17
+
+**changes:**
+
+* Changes in internal command handling
+* Results from eval are now inspected using node.js utils
+* new command: inspect (alias: insp) to manually trigger a JSON struct inspection
+* you can now get a template from a set bind using `bind bindexecutorname`
+* added commandInterface.exec("commandString") that allows to execute commands manually from the code
+
+**COMPATIBILITY:**
+
+*FULL COMPATIBILITY WITH PREVIOUS VERSION*
+
+### 1.16
+
+changes:
+
+* fixed a bug that allowed you to check the command history for undefined if there was no occurances of anything
+* aliases now can be properly displayed on help command
+* ech no longer points improperly to "clear"
+* there's now displayed a welcome message at the start
+* types are better verified during command registering (typescript wise)
+
+### 1.15
+
+release date: 12.09.2025
+
+The timers and groups UPDATE
+
+changes:
+
+* removed no longer used comments
+* added "autoadd to globalThis" configurations options that can be used instead of replaceConsole:
+  * useAddToGlobalAs
+  * addToGlobalAs
+* added time() (also as logTimeStart), timeEnd() (also as logTimeEnd), timeStamp() (also as logTimeStamp)
+* added group() (also as logGroup), groupEnd() (also as logGroupEnd()
+* added configuration options for groups:
+  * lastLogGroupText
+  * singleLogGroupText
+
+### 1.14
+
+The legacy and binding update.
+
+changes:
+
+* new commands:
+  * bind -> it allows you to bind command to execute command(-s). Alias is b
+  * write -> it's the copy of previous "echo". Alias is wtr
+* new functions:
+  * getLegacyInformation -> gets information about compability settings
+  * setLegacyInformation -> allows you to manually set compatibility settings
+  * validateLegacyProperty -> it's more internal, but it also exported to help moders. It validates whether setLegacy will produce error if given that value
+  * registerCommandShort -> allows you to register a command using commandCompound (shorthand for commandRegister)
+  * multiCommandRegister -> allows you to register a list of commands using an array of commandCompounds (shorthand for commandRegister)
+* command changes:
+  * hide -> it now has an argument "-h" that hides the message that is displayed
+  * echo -> it now supports \n
+* removed unncessary comments that wasted 2kbs of space
+* handling commands is now possible in silent mode (though it's mostly internal)
+
+bugfixes:
+* echo -> it now displays the correct description instead of the wrong one
+
+### 1.13
+
+* bugfix: you can now write "/" in console
+
+compatibility: full compatibility
+
+download: [TS](old/1.13/logSystem.ts) [JS](old/1.13/logSystem.js)
+
+### 1.12
+
+it's overall very small update
+
+changes:
+
+* more comments
+* added registerCommandLegacy() for legacy reasons and registerCommandLegacyForceUse() to force using it, even tho it technically shouldn't (THIS IS ONLY FOR LEGACY REASONS)
+  * NOTE: editing commands is disabled with commands legacy
+* added combineColors() to combine colors. It is to increase the compatibility in the future. We recommend using it
+* commands can finally be edited properly and attribute "changeable" is not ignored anymore
+* some small changes not worth mentioning
+
+compatibility: it actually increased
+
+download: [TS](old/1.12/logSystem.ts) [JS](old/1.12/logSystem.js)
+
+### 1.11
+
+just small changes :3
+
+changes:
+
+* command "info" now works (i forgot to add it to a new system)
+* info has been rebuilded and it now uses colors and says information about logical processors
+* added aliases for "info" -> sysinf, sysinfo, inf
+* added getCurrentVersionOfLogSystem()
+
+download: [TS](old/1.11/logSystem.ts) [JS](old/1.11/logSystem.js)
+
+### 1.1
+
+changes:
+
+* more colors
+* new register system (it now uses object, instead of a lot of arguments)
+* added new command parameters:
+  - changeable -> if the command can be later edited (all built-in commands has that set to false)
+  - hidden -> if the command should be shown on the command list
+  - isAlias -> if the command is alias (isAlias will make the command register ignore all parameters except for: changeable, hidden and aliasName)
+  - aliasName -> the orginal command name
+* built in commands are now also registered, not in switch
+* certain parts got rewritten completely
+* added commands:
+  - meow -> meows
+  - eval (alias: e) -> allows you to execute a javascript code in the global scope
+  - cmd (alias: sys) -> allows you to execute a systme code
+  - echo (alias: ech) -> allows you to print characters
+  - uptime (alias: up) -> allows you to see the current uptime
+  - version (alias: ver) -> shows the current version
+* added aliases (that were not specified before):
+  * crash -> exit
+  * cls -> clear (it worked before but it was hardcoded)
+  * ? -> help (it worked before but it was hardcoded)
+  * miau -> meow
+  * miau~ -> meow
+  * meow~ -> meow
+* help can now display information about a command using "help <command Name>". The long description is finally used here
+* added an new alias system
+* added automatic crash reports (unexpected error handling)
+* commands are now sandboxed
+* added consoleWriteMulti() that allows you to print more stuff with colors more easily.
+* added multiDisplayer class that allows you to use consoleWriteMulti like an array that allows you to easily write everything at once
+* added command history that saves up to 50 commands written. You can browse it using up and down keys
+* you can now move cursor left or right using arrows to write something in the middle of the current command
+* almost all of commands got rewritten to include colors
+* the bug with including colors in log files is now fixed
+* you can now combine colors in consoleWrite() (background + foreground)
+* added a lot of defaults to command register. So it's no longer required to specify all arguments to make it work properly
+* added colorTable that stores the style of "console". It's not designed to be customized though.
+* added useWith that is to "sandbox tasks" with easy logging
+* added log node system that allows you to easily show the log source via class inheritance (class is named logNode)
+* added actualCrash() that not only logs it but actually does it
+* added the configurable version info that can be set by the developer
+* added hide and show cursor functions
+* added replaceConsole() function that replace the vannilia console api with the new one that sides in the object newConsole
+* added keepProcessAlive() that creates a fake async task that forces the log system to be kept alive, even if the process does nothing (it's only for the testing purposes)
+
+compatibility:
+the whole thing is mostly compatible with the previous version. The only exception being registering the commands. You have to change it there!
+
+TODO:
+
+* optimizations
+* more code comments and code
+
+a lot of interesting improvements
+
+download: [TS](old/1.1/logSystem.ts) [JS](old/1.1/logSystem.js)
+
+### 1.0
+
+The first public release
+download: [TS](old/1.0/logSystem.ts) [JS](old/1.0/logSystem.js)
