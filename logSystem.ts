@@ -1,13 +1,12 @@
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
-// version: 1.1
+// version: 1.11
 
-import { BlobOptions } from "node:buffer";
 import { ChildProcess, exec, execSync, fork, spawn, spawnSync } from "node:child_process";
 import { appendFileSync, createReadStream, existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import os, { version } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { cwd } from "node:process";
 
 // CONFIG
@@ -61,7 +60,7 @@ enum LogType {
 
 let commandHistory: string[] = [];
 let indexCommandHistory: null | number = null;
-const logSystemVer: string = "1.1"; // current version of the log system
+const logSystemVer: string = "1.11"; // current version of the log system
 const currentUpTime = Date.now();
 
 
@@ -608,6 +607,92 @@ let commands: Record<string, commandData> = {
     "miau": {
         isAlias: true,
         aliasName: "meow",
+        hidden: true,
+        changeable: false
+    },
+    "info": {
+            //         consoleWrite(`------\nprocess info:\n\n`+
+    //             `\tarchitecture: ${os.arch}\n`+
+    //             `\thost name: ${os.hostname}\n`+
+    //             `\tplatform: ${os.platform}\n`+
+    //             `\tkernel version: ${os.version}\n`+
+    //             `\tprocess priority: ${os.getPriority()}\n`+
+    //             `\tmachine: ${os.machine}\n`+
+    //             `\tcwd: ${process.cwd()}\n`+
+    //             `\theap total: ${Math.round(mus.heapTotal/100000)/10}mb\n`+
+    //             `\theap used: ${Math.round(mus.heapUsed/100000)/10}mb\n`+
+    //             `\tcpu usage (1m, 5m, 15m): ${os.loadavg().map(num => `${num * 100}%`)}\n`);
+        usageinfo: "info",
+        desc: "prints information about the system",
+        longdesc: `it really just prints information about the system!`,
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: (args: string[]): boolean => {
+
+            const builder = new multiDisplayer();
+
+            builder.push("_______________", consoleColors.BgYellow + consoleColors.FgYellow);
+            builder.push("\n");
+
+
+            let mus = process.memoryUsage();
+            let pairs = [
+                ["architecture", os.arch],
+                ["host name", os.hostname],
+                ["platform", os.platform],
+                ["kernel version", os.version],
+                ["process priority", os.getPriority()],
+                ["machine", os.machine],
+                ["cwd", process.cwd()],
+                ["heap total",  Math.round(mus.heapTotal/100000)/10 + "mb"],
+                ["heap used",  Math.round(mus.heapUsed/100000)/10 + "mb"],
+                ["cpu usage (1m, 5m, 15m)", `${os.loadavg().map(num => `${num * 100}%`)}`]
+            ];
+
+            let cpus = os.cpus();
+
+            let i = 0;
+            for(let cpu of cpus){
+                pairs.push([
+                    `cpu ${i}`,
+                    `${cpu.model} (speed: ${cpu.speed})`
+                ]);
+                i++;
+            }
+
+            for(let pair of pairs){
+                builder.push("\t" + pair[0] + ": ", consoleColors.FgGray);
+                builder.push(pair[1] as string, consoleColors.BgRed);
+                builder.push("\n");
+            }
+
+
+            
+
+            builder.push("_______________", consoleColors.BgYellow + consoleColors.FgYellow);
+            builder.push("\n");
+
+            builder.useConsoleWrite();
+            return false;
+        }
+
+    },
+    "sysinfo": {
+        isAlias: true,
+        aliasName: "info",
+        hidden: true,
+        changeable: false
+    },
+    "sysinf": {
+        isAlias: true,
+        aliasName: "info",
+        hidden: true,
+        changeable: false
+    },
+    "inf": {
+        isAlias: true,
+        aliasName: "info",
         hidden: true,
         changeable: false
     },
@@ -1494,6 +1579,23 @@ function versionInfo(callback?: () => string): string {
     return getversionInfoData();
 }
 
+
+/**
+ * returns the current version of log system
+ * 
+ * example:
+ * 
+ * let w = getCurrentVersionOfLogSystem("string");
+ * 
+ * @param as string or number 
+ * @returns log system version in type depending of selected
+ */
+function getCurrentVersionOfLogSystem(as: "number" | "string" = "string"): string | number {
+    if(as === "string") return String(logSystemVer);
+    else if(as === "number") return Number(logSystemVer);
+    else return -1;
+}
+
 /**
  * Simple interface for the fast use of console utilities
  */
@@ -1532,7 +1634,7 @@ const newConsole = {
     versionInfo,
     showCursor,
     hideCursor,
-
+    getCurrentVersionOfLogSystem
 }   
 
 
@@ -1614,5 +1716,6 @@ export {LogType, log, formatError,
     consoleColorsMulti,
     consoleColor,
     consoleMultiWrite,
-    multiDisplayer
+    multiDisplayer,
+    getCurrentVersionOfLogSystem
 }

@@ -2,7 +2,10 @@
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
-// version: 1.1
+// version: 1.11
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.multiDisplayer = exports.logNode = exports.commands = exports.logSystemError = exports.blankCallback = exports.newConsole = exports.console = exports.consoleColors = exports.formatError = exports.LogType = void 0;
 exports.log = log;
@@ -27,8 +30,10 @@ exports.keepProcessAlive = keepProcessAlive;
 exports.showCursor = showCursor;
 exports.hideCursor = hideCursor;
 exports.consoleMultiWrite = consoleMultiWrite;
+exports.getCurrentVersionOfLogSystem = getCurrentVersionOfLogSystem;
 const node_child_process_1 = require("node:child_process");
 const node_fs_1 = require("node:fs");
+const node_os_1 = __importDefault(require("node:os"));
 const node_path_1 = require("node:path");
 const node_process_1 = require("node:process");
 // CONFIG
@@ -72,7 +77,7 @@ var LogType;
 })(LogType || (exports.LogType = LogType = {}));
 let commandHistory = [];
 let indexCommandHistory = null;
-const logSystemVer = "1.1"; // current version of the log system
+const logSystemVer = "1.11"; // current version of the log system
 const currentUpTime = Date.now();
 class logSystemError extends Error {
 }
@@ -545,6 +550,79 @@ let commands = {
     "miau": {
         isAlias: true,
         aliasName: "meow",
+        hidden: true,
+        changeable: false
+    },
+    "info": {
+        //         consoleWrite(`------\nprocess info:\n\n`+
+        //             `\tarchitecture: ${os.arch}\n`+
+        //             `\thost name: ${os.hostname}\n`+
+        //             `\tplatform: ${os.platform}\n`+
+        //             `\tkernel version: ${os.version}\n`+
+        //             `\tprocess priority: ${os.getPriority()}\n`+
+        //             `\tmachine: ${os.machine}\n`+
+        //             `\tcwd: ${process.cwd()}\n`+
+        //             `\theap total: ${Math.round(mus.heapTotal/100000)/10}mb\n`+
+        //             `\theap used: ${Math.round(mus.heapUsed/100000)/10}mb\n`+
+        //             `\tcpu usage (1m, 5m, 15m): ${os.loadavg().map(num => `${num * 100}%`)}\n`);
+        usageinfo: "info",
+        desc: "prints information about the system",
+        longdesc: `it really just prints information about the system!`,
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: (args) => {
+            const builder = new multiDisplayer();
+            builder.push("_______________", consoleColors.BgYellow + consoleColors.FgYellow);
+            builder.push("\n");
+            let mus = process.memoryUsage();
+            let pairs = [
+                ["architecture", node_os_1.default.arch],
+                ["host name", node_os_1.default.hostname],
+                ["platform", node_os_1.default.platform],
+                ["kernel version", node_os_1.default.version],
+                ["process priority", node_os_1.default.getPriority()],
+                ["machine", node_os_1.default.machine],
+                ["cwd", process.cwd()],
+                ["heap total", Math.round(mus.heapTotal / 100000) / 10 + "mb"],
+                ["heap used", Math.round(mus.heapUsed / 100000) / 10 + "mb"],
+                ["cpu usage (1m, 5m, 15m)", `${node_os_1.default.loadavg().map(num => `${num * 100}%`)}`]
+            ];
+            let cpus = node_os_1.default.cpus();
+            let i = 0;
+            for (let cpu of cpus) {
+                pairs.push([
+                    `cpu ${i}`,
+                    `${cpu.model} (speed: ${cpu.speed})`
+                ]);
+                i++;
+            }
+            for (let pair of pairs) {
+                builder.push("\t" + pair[0] + ": ", consoleColors.FgGray);
+                builder.push(pair[1], consoleColors.BgRed);
+                builder.push("\n");
+            }
+            builder.push("_______________", consoleColors.BgYellow + consoleColors.FgYellow);
+            builder.push("\n");
+            builder.useConsoleWrite();
+            return false;
+        }
+    },
+    "sysinfo": {
+        isAlias: true,
+        aliasName: "info",
+        hidden: true,
+        changeable: false
+    },
+    "sysinf": {
+        isAlias: true,
+        aliasName: "info",
+        hidden: true,
+        changeable: false
+    },
+    "inf": {
+        isAlias: true,
+        aliasName: "info",
         hidden: true,
         changeable: false
     },
@@ -1293,6 +1371,24 @@ function versionInfo(callback) {
     return getversionInfoData();
 }
 /**
+ * returns the current version of log system
+ *
+ * example:
+ *
+ * let w = getCurrentVersionOfLogSystem("string");
+ *
+ * @param as string or number
+ * @returns log system version in type depending of selected
+ */
+function getCurrentVersionOfLogSystem(as = "string") {
+    if (as === "string")
+        return String(logSystemVer);
+    else if (as === "number")
+        return Number(logSystemVer);
+    else
+        return -1;
+}
+/**
  * Simple interface for the fast use of console utilities
  */
 const newConsole = {
@@ -1330,6 +1426,7 @@ const newConsole = {
     versionInfo,
     showCursor,
     hideCursor,
+    getCurrentVersionOfLogSystem
 };
 exports.console = newConsole;
 exports.newConsole = newConsole;
