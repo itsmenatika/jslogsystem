@@ -1,7 +1,7 @@
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
-// version: 1.13
+// version: 1.15
 
 import { ChildProcess, exec, execSync, fork, spawn, spawnSync } from "node:child_process";
 import { appendFileSync, createReadStream, existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
@@ -37,6 +37,10 @@ const saveTheLatest = (date: Date, previousFilePath: string): void => {
 
 let viewTextBox: boolean = true; // if the textbox should be visible at the start
 let blockLogsVar: boolean = false; // if the logs should be displayed
+let singleLogGroupText: string = "┄┅"; // the indicator used to indicate a single log group
+let lastLogGroupText: string = "░"; // the string that gets added to the last group. It only gets added if there's at least log grpoup
+const useAddToGlobalAs: boolean = false; // whether to newConsole as a global automatically. It defaults to false
+const addToGlobalAs: string[] = ["newConsole"]; // addsnewConsole as listed keys to globalThis. Works only with useAddToGlobalAs enabled.
 
 // ___________________________________________
 //
@@ -63,14 +67,17 @@ enum LogType {
     INIT = 4,
     INT = 4,
     CRASH = 5,
-    COUNTER = 6
+    COUNTER = 6,
+    GROUP = 7
 }
 
 let commandHistory: string[] = []; // user command history history
 let indexCommandHistory: null | number = null; // the index of current selected
-const logSystemVer: string = "1.13"; // current version of the log system
+const logSystemVer: string = "1.15"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
-
+let currentGroupString: string = ""; // the current string for groups to make it run faster (you can name it cache, i guess?)
+let logGroups: string[] = []; // groups for console.group()
+const timers: Record<string, number> = {}; // the list of timers used with console.time()
 
 class logSystemError extends Error{}; // the easy error wrapper to log errors
 
@@ -103,12 +110,6 @@ if(existsSync(finalLatest)){
 
 	// calling the callback to do stuff with previous one
 	saveTheLatest(date, finalLatest);
-
-    // moving latest
-    // renameSync(
-    //    finalLatest, 
-    //    join(cwd(), LOGDIRECTORY, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()} ${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
-    //);
 
     // removing temp
     unlinkSync(tempFinal);
@@ -298,6 +299,16 @@ interface commandData{
     "callback"?: cmdcallback
 }
 
+interface bindDetail{
+    name: string,
+    commands: string[],
+    executor: string
+}
+
+
+type bindData = Record<string, bindDetail>;
+
+let bindInfo: bindData = {};
 // interface commandData extends commandDataSeter{
 //     "usageinfo": string
 //     "desc": string,
@@ -308,6 +319,10 @@ interface commandData{
 //     "aliasName"?: string,
 //     "callback": cmdcallback
 // }
+
+const numberLookUp = (char: string): boolean => {
+    return char == "1" || char == "2" || char == "3" || char == "4" || char == "5" || char == "6" || char == "7" || char == "8" || char == "9" || char == "0"
+}
 
 // the list of commands
 let commands: Record<string, commandData> = {
@@ -352,15 +367,38 @@ let commands: Record<string, commandData> = {
         hidden: true,
         changeable: false
     },
-    echo: {
-        usageinfo: "echo",
-        desc: "allows you to print on the screen",
-        longdesc: "It clears the whole screen using clearConsole()",
+    write: {
+        usageinfo: "write <data>",
+        desc: "allows you to print raw characters on the screen",
+        longdesc: "It prints the characters into the screen",
         hidden: false,
         changeable: false,
         isAlias: false,
         callback: (args: string[]): boolean => {
             let theString: string = args.slice(1).join(" ");
+
+            consoleWrite(theString + "\n", consoleColors.FgWhite);
+
+            return false;
+        }        
+    },
+    wrt: {
+        isAlias: true,
+        aliasName: "write",
+        hidden: true,
+        changeable: false
+    },
+    echo: {
+        usageinfo: "echo <data>",
+        desc: "allows you to print on the screen with special characters",
+        longdesc: "It prints the characters into the screen. It supports \\n\n\nThe alternative command is `write` that does not support special characters",
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: (args: string[]): boolean => {
+            let theString: string = args.slice(1).join(" ");
+
+            theString = theString.replaceAll("\\\\", "%SLASH%").replaceAll("\\n", "\n").replaceAll("%SLASH%", "\\");
 
             consoleWrite(theString + "\n", consoleColors.FgWhite);
 
@@ -376,12 +414,20 @@ let commands: Record<string, commandData> = {
     hide: {
         usageinfo: "hide",
         desc: "hides the textbox that allows you to write",
-        longdesc: "hides the textbox that is used to write. It will appear again when you start typing.",
+        longdesc: "It hides the textbox that shows what you are writting. It also displays the message about what has happened.\nThe message is as follows: \n\nThe textbox was hidden. Start writting to make it appear again!\n\nuse: `hide -h` to remove the message",
         hidden: false,
         changeable: false,
         isAlias: false,
         callback: (args: string[]): boolean => {
-            consoleWrite("The textbox was hidden. Start writting to make it appear again!\n");
+            let vis: boolean = true;
+
+            if(args.includes("-h")){
+                vis = false;
+            }
+
+            if(vis){
+                consoleWrite("The textbox was hidden. Start writting to make it appear again!\n");
+            }
             textboxVisibility(false);
             return false;
         }                
@@ -418,56 +464,6 @@ let commands: Record<string, commandData> = {
         hidden: true,
         changeable: false
     },    
-    //         let code = parts.slice(1).join(" ").trim();
-    //         let evalParent = new logNode("eval");
-    //         // @ts-ignore
-    //         newConsole.useWith("using eval", () => {
-    //             let g = globalEval(code);
-    //             log(LogType.INFO, `eval returned with: ${g}`, evalParent);
-    //         }, evalParent as any as string);
-    //         // }
-    //         break;
-    //     case "ver":
-    //     case "version": 
-    //         let prev = textboxVisibility();
-    //         textboxVisibility(false);
-    //         consoleWrite("logSystemVer: ");
-    //         consoleWrite(logSystemVer, consoleColors.BgCyan);
-    //         consoleWrite("\n");
-    //         consoleWrite(getversionInfoData(), consoleColors.BgGray);
-    //         consoleWrite("\n");
-    //         textboxVisibility(prev);
-    //         break;
-        
-
-    //     case "cmd":
-    //     case "c":
-    //         let codeC = parts.slice(1).join(" ").trim();
-    //         let evalParentC = new logNode("cmd");
-    //         // @ts-ignore
-    //         newConsole.useWith("using cmd", () => {
-    //             let g = execSync(codeC);
-    //             log(LogType.INFO, `cmd returned with: ${g}`, evalParentC);
-    //         }, evalParentC as any as string);
-    //         break;
-
-    //     case "reload":
-    //     case "r":
-    //         log(LogType.INFO, "restarting the process...");
-    //         processRestart();
-    //         break;
-
-
-    //     case "uptime":
-    //         let current = Date.now() - currentUpTime;
-    //         let mili = current % 1000;
-    //         let seconds = Math.floor((current / 1000) % 60);
-    //         let minutes = Math.floor((current / 1000 / 60) % 60);
-    //         let hours = Math.floor((current / 1000 / 60 / 60) % 24);
-    //         let days = Math.floor((current / 1000 / 60 / 60 / 24));
-
-    //         newConsole.log(`current uptime: ${days}d ${hours}h ${minutes}m ${seconds}s ${mili}m (exmili: ${current})`);
-    //         break;
     version: {
         usageinfo: "version",
         desc: "shows the version information",
@@ -580,6 +576,135 @@ let commands: Record<string, commandData> = {
         hidden: true,
         changeable: false
     },
+    "bind": {
+        usageinfo: `bind [\`<executor>\`:\`<commands...;>\`]`,
+        desc: "allows you to set binds or list them",
+        longdesc: `If it's used without parameters, then it will print the list of binds.\n\nUsing parameters will result in changing those binds\n\nTo add a new bind use: 'bind \`<executor>\`:\`<commands...;>\`'.\nThe example: 'bind \`meow\`:\`echo meow!\`'\n\nIt's also possible to set more than one command using ; as the seperator.\n\nTo remove bind use: 'bind \`<executor>\`:\`\``,
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: (args: string[]): boolean => {
+            if(args.length === 1){
+                let s = new multiDisplayer();
+
+                s.push("bind list", combineColors(consoleColors.BgMagenta, consoleColors.FgBlack));
+                s.push("\n");
+                for(const [name, commandD] of Object.entries(bindInfo)){
+                    s.push("* ", consoleColors.FgYellow);
+                    s.push(commandD.executor, consoleColors.FgRed);
+                    s.push(" -> ", consoleColors.FgGray);
+                    s.push(commandD.commands.toString() + "\n", consoleColors.FgBlue);
+                }
+
+                s.useConsoleWrite();
+
+                return false;
+            }
+
+            const data = args.slice(1).join(" ");
+
+            if(data[0] != "`"){
+                log(LogType.ERROR, "invalid syntax", "console.bind");
+                return false;
+            }
+
+            let it = 2;
+            while(true){
+                let char = data[it];
+                if(!char || char == "`") break;
+                it++;
+            }
+
+            let executor: string = data.slice(1, it);
+
+
+            if(executor.length === 0){
+                log(LogType.ERROR, "invalid syntax", "console.bind");
+                return false;
+            }
+
+            if(data[it] != "`"){
+                log(LogType.ERROR, "invalid syntax", "console.bind");
+                return false;
+            }
+
+            if(data[it+1] != ":"){
+                log(LogType.ERROR, "invalid syntax", "console.bind");
+                return false;
+            }     
+
+            if(data[it+2] != "`"){
+                log(LogType.ERROR, "invalid syntax", "console.bind");
+                return false;
+            }
+
+            let name = executor.split(" ")[0];
+
+            let it2 = it + 4;
+            while(true){
+                let char = data[it2];
+                if(!char || char == "`") break;
+                it2++;
+            }
+
+            if(it + 4 === it2){
+                delete bindInfo[name];
+                log(LogType.SUCCESS, "the bind was removed!", "console.bind");
+                return false;
+            }
+
+            let commandData: string = data.slice(it + 3, it2);
+
+
+            // let toRegex: string = "";
+
+            // let i = 0;
+            // while(i < commandData.length){
+            //     let x = commandData.indexOf("%", i);
+
+            //     let num: number | void = void 0;
+
+            //     let prev = x;
+            //     while(x < commandData.length){
+            //         if(!numberLookUp(commandData[x])) break;
+
+            //         x++;
+            //     }
+
+            //     let numStr = commandData.slice(prev);
+
+            //     toRegex += "(<"
+            // }
+
+            //  log(LogType.INFO, commandData.split(";").toString());
+
+            if(commandData.length === 0){
+                delete bindInfo[name];
+                log(LogType.SUCCESS, "the bind was removed!", "console.bind");
+                return false;
+            }
+
+            let commandListToExecute = commandData.split(";").map(
+                (val: string) => val.trim()
+            );
+
+            bindInfo[name] = {
+                name,
+                commands: commandListToExecute,
+                executor
+            } as bindDetail;
+
+            log(LogType.SUCCESS, "the bind was set!", "console.bind");
+            return false;
+        }
+
+    },
+    "b": {
+        isAlias: true,
+        aliasName: "bind",
+        hidden: true,
+        changeable: false
+    },   
     "meow": {
         usageinfo: "meow <?>",
         desc: "meows",
@@ -862,6 +987,44 @@ function removeCommand(name: string){
     delete commands[name];
 }
 
+interface commandCompound{
+    name: string,
+    data: commandData
+}
+
+/**
+ * register a command using an object
+ * 
+ * NOTE: IT DOESNT WORK IN LEGACY register MODE!
+ * 
+ * @param cmdCom command Compound
+ * @param edit whether it is in edit mode
+ */
+function registerCommandShort(cmdCom: commandCompound, edit: boolean = false){
+    if(legacyData.registerMode <= 1.13){
+        throw new logSystemError("Legacy: registerMode has to be at least 1.14");
+    }
+
+    registerCommand(cmdCom.name, cmdCom.data, edit);
+}
+
+/**
+ * allows you to quickly regiser commands
+ * @param data an array of commands compounds
+ * @param edit whether it is in edit mode
+ */
+function multiCommandRegister(data: Array<commandCompound>,
+    edit: boolean = false
+){
+    if(legacyData.registerMode <= 1.13){
+        throw new logSystemError("Legacy: registerMode has to be at least 1.14");
+    }
+
+    for(const oneD of data){
+        registerCommand(oneD.name, oneD.data, edit);
+    }
+}
+
 /**
  * allows you to register command
  * @param name the command name
@@ -915,6 +1078,79 @@ function registerCommand(name: string, data: commandData, edit: boolean = false)
 
 const __registerCommand = registerCommand;
 
+/** the legacy Data Type */
+interface legacyDataType{
+    initialized: boolean,
+    currentVersion: number,
+    registerMode: number
+}
+
+/** the legacy Data */
+const legacyData: legacyDataType = {
+    initialized: false,
+    currentVersion: getCurrentVersionOfLogSystem("number") as number,
+    registerMode: getCurrentVersionOfLogSystem("number") as number
+}
+
+/** allows you to get legacyInformation */
+function getLegacyInformation(): legacyDataType{
+    return {...legacyData};
+}
+
+/**
+ * check possibility of setting the value to that property
+ * 
+ * it refers to the legacy modes!
+ * 
+ * @param propertyName the name of property
+ * @param value the value that you is needed to be set
+ * @returns whether it's legal to do so
+ */
+function validateLegacyProperty(propertyName: string, value: any): boolean{
+    switch(propertyName){
+        case "intialized":
+            return false;
+        case "currentVersion":
+            return false;
+        case "registerMode":
+            return typeof value === "number"
+        default:
+            throw new Error("not existing property!");
+    }
+}
+
+/**
+ * allows you to set manually legacy information 
+ * 
+ * NOTE: some behaviour won't be changed
+ * it only changes the behaviour of commands! Not their parameters
+ * 
+ * If you want to get the previous command register api, use: 
+registerCommandLegacyForceUse() 
+ * 
+ * @param propertyName the name of property
+ * @param value the new value
+ * @param bypassSafety whether to bypass safety mechanism
+ */
+function setLegacyInformation(propertyName: string, value: any, bypassSafety: boolean = false){
+    if(legacyData.initialized && !bypassSafety){
+        throw new logSystemError("Legacy: you can't change legacy data after intialization!");
+    }
+
+    if(!Object.hasOwn(legacyData, propertyName)){
+        throw new logSystemError("Legacy: that property name does not exist!");
+    }
+
+    if(!validateLegacyProperty(propertyName, value)){
+        throw new logSystemError("Legacy: You can't set that value to that property!");
+    }
+
+    // @ts-ignore
+    legacyData[propertyName] = value;
+}
+
+// legacyData.usedOldRegisterSystem = true;
+
 /**
  * legacy register command
  * 
@@ -954,8 +1190,13 @@ function registerCommandLegacy(
  * ITS NOT TYPESCRIPT AND JAVASCRIPT SAFE
  */
 function registerCommandLegacyForceUse(){
+    if(legacyData.registerMode == 1.0){
+        throw new logSystemError("The system already use it");
+    }
+
     // @ts-ignore
     registerCommand = registerCommandLegacy;
+    legacyData.registerMode = 1.0
 }
 
 
@@ -968,14 +1209,13 @@ const commandInterface = {
     removeCommand,
     registerCommand,
     registerCommandLegacy,
-    registerCommandLegacyForceUse
+    registerCommandLegacyForceUse,
+    registerCommandShort,
+    multiCommandRegister
 };
 
 // that functions handles commands. It's for internal usage
-function handleEnter(text: string): boolean | void{
-    // print the info as log about that cmd
-    log(LogType.INFO, `This command has been executed: '${text}'`, "console");
-
+function handleEnter(text: string, silent: boolean = false): boolean | void{
     // handle command history
     if(commandHistory.length > 50) 
         commandHistory = commandHistory.slice(commandHistory.length - 50, commandHistory.length);
@@ -986,6 +1226,10 @@ function handleEnter(text: string): boolean | void{
 
     // try to execute it
     if(Object.hasOwn(commands, parts[0])){
+        // print the info as log about that cmd
+        if(!silent)
+        log(LogType.INFO, `This command has been executed: '${text}'`, "console");
+
         try {
             const cmdData = commands[parts[0]];
 
@@ -1011,8 +1255,24 @@ function handleEnter(text: string): boolean | void{
             return false;
         }
     }
+    else if(parts[0] in bindInfo){
+        // print the info as log about that bind
+        if(!silent)
+        log(LogType.INFO, `This bind has been executed: '${text}'`, "console");
+
+        let bindD = bindInfo[parts[0]];
+        try {
+            for(const command of bindD.commands){
+                handleEnter(command, true);
+            }
+        } catch (error) {
+            log(LogType.ERROR, "The error has occured during the bind execution:\n" + formatError(error), "console");
+            return false;
+        }
+    }
     // catch unkown command
     else{
+        if(!silent)
         log(LogType.ERROR, "unknown command", "console");
         return true;  
     }
@@ -1167,6 +1427,8 @@ function resolveLogType(type: LogType): string {
             return "INIT";
         case LogType.CRASH:
             return "CRASH";
+        case LogType.GROUP:
+            return "GROUP";
         default: return "UNKNOWN";
     }
 }
@@ -1192,6 +1454,8 @@ function resolveLogColor(type: LogType): consoleColor {
             return colorTable.init;
         case LogType.CRASH:
             return colorTable.crash;
+        case LogType.GROUP:
+            return colorTable.group;
         default: return consoleColors.Reset;
     }
 }
@@ -1216,8 +1480,8 @@ function log(type: LogType, message: string, who: string | logNode = "core") {
     const logTypeString: string = resolveLogType(type);
     const logColor: consoleColor = resolveLogColor(type);
     
-    const toWrite: string = `${formattedDate} ${logTypeString} ${who}: ${message}\n`;
-    const toDisplay: string = `${colorTable.date}${formattedDate}${consoleColors.Reset} ${logTypeString} ${colorTable.who}${who}${consoleColors.Reset}: ${logColor}${message}${consoleColors.Reset}\n`;
+    const toWrite: string = `${formattedDate} ${logTypeString} ${who}: ${currentGroupString}${message}\n`;
+    const toDisplay: string = `${colorTable.date}${formattedDate}${consoleColors.Reset} ${logTypeString} ${colorTable.who}${who}${consoleColors.Reset}: ${consoleColors.FgGray}${currentGroupString}${consoleColors.Reset}${logColor}${message}${consoleColors.Reset}\n`;
 
     if(viewTextBox){
         process.stdout.clearLine(0);
@@ -1230,57 +1494,6 @@ function log(type: LogType, message: string, who: string | logNode = "core") {
 
     if(viewTextBox)
         process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
-
-
-    // const printWho = `${consoleColors.FgMagenta}${who}`;
-    // switch(type){
-    //     case LogType.INFO: {
-    //         toWrite = `${formattedDate} INFO ${printWho}${consoleColors.Reset}: ${message}\n`;
-    //         break;
-    //     }
-    //     case LogType.ERROR: {
-    //         toWrite = `${formattedDate} ERROR ${printWho}${consoleColors.Reset}: ${consoleColors.FgRed}${message}\n`;
-    //         break;
-    //     }
-    //     case LogType.SUCCESS: {
-    //         toWrite = `${formattedDate} SUCCESS ${printWho}${consoleColors.Reset}: ${consoleColors.FgGreen}${message}\n`;
-    //         break;
-    //     }
-    //     case LogType.INIT: {
-    //         toWrite = `${formattedDate} INIT ${printWho}${consoleColors.Reset}: ${message}\n`;
-    //         break;
-    //     }
-    //     case LogType.WARNING: {
-    //         toWrite = `${formattedDate} WARNING ${printWho}${consoleColors.Reset}: ${consoleColors.FgYellow}${message}\n`;
-    //         break;
-    //     }
-    //     case LogType.CRASH: {
-    //         toWrite = `${formattedDate} CRASH ${printWho}${consoleColors.Reset}: ${consoleColors.FgRed}${message}\n`;
-    //         break;
-    //     }
-	// 	case LogType.COUNTER: {
-    //         toWrite = `${formattedDate} COUNTER ${printWho}${consoleColors.Reset}: ${message}\n`;
-    //         break;
-    //     }
-    //     default: {
-    //         throw new logSystemError("???");
-    //     }
-    // }
-
-    // appendFileSync(finalLatest, toWrite);
-
-
-    // if(blockLogsVar) return;
-
-
-
-    // process.stdout.clearLine(0);
-    // process.stdout.write("\r\x1b[0m");
-
-    // process.stdout.write(toWrite);
-
-    // if(viewTextBox)
-    // process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
 }
 
 
@@ -1599,6 +1812,7 @@ let colorTable: Record<string, consoleColor> = {
     "counter": consoleColors.FgCyan,
     "init": consoleColors.FgWhite,
     "crash": consoleColors.FgRed,
+    "group": consoleColors.FgGray,
 
     "date": consoleColors.FgGray,
     "who": consoleColors.FgMagenta
@@ -1770,6 +1984,136 @@ function getCurrentVersionOfLogSystem(as: "number" | "string" = "string"): strin
     else return -1;
 }
 
+interface groupSettings{
+    messageVisible?: boolean,
+    messageWho?: string | logNode,
+    error?: boolean
+}
+
+/**
+ * creates (joins) a new group for that log
+ * @param name the group name
+ * @returns the new current group string
+ */
+function logGroup(name: string, info: Omit<groupSettings, "error"> = {}): string{
+
+    if(!("messageVisible" in info) || info.messageVisible){
+        const whoS = info.messageWho ? info.messageWho : undefined;
+        log(LogType.GROUP, name, whoS);
+    }
+
+    logGroups.push(name);
+
+    // return currentGroupString = currentGroupString.slice(0, currentGroupString.indexOf(lastLogGroupText)) + singleLogGroupText + lastLogGroupText;
+
+    return reconstructLogGroup();
+}
+
+/**
+ * leaves the group created with logGroup / group
+ * @returns the new current group group string
+ */
+function logGroupEnd(info: Omit<groupSettings, "messageVisible" | "messageWho"> = {}): string {
+
+    
+    // currentGroupString = currentGroupString.slice(0, currentGroupString.lastIndexOf(singleLogGroupText)) + lastLogGroupText;
+
+    // // TODO: MAYBE IN THE FUTURE? better group ending
+
+    // return currentGroupString;
+
+
+    if(logGroups.length === 0){
+        if("error" in info && info.error){
+            throw new logSystemError("there's no group");
+        }
+
+        return currentGroupString;
+    }
+
+    logGroups.pop();
+
+    return reconstructLogGroup();
+}
+
+function reconstructLogGroup(): string{
+    currentGroupString = "";
+
+    for(let i = 0; i < logGroups.length; i++){
+        currentGroupString += singleLogGroupText;
+    }
+
+    if(logGroups.length !== 0)
+    currentGroupString += lastLogGroupText + " ";
+
+    return currentGroupString;
+}
+
+/**
+ * creates a new timer with specified name
+ * @param label the timer name
+ * @param info configuration information
+ * @returns the start time
+ */
+function logTimeStart(label: string, info: Omit<groupSettings, "error"> = {}): number{
+    const time = Date.now();
+
+    timers[label] = time;
+
+    if(!("messageVisible" in info) || info.messageVisible){
+        const whoS = info.messageWho ? info.messageWho : undefined;
+        log(LogType.GROUP, `timer '${label}' started`, whoS);
+    }
+
+    return time;
+}
+
+/**
+ * stops a timer with specified name
+ * 
+ * if info.error set to true, it causes an error if there's no timer with that name, otherwise it just ignores it
+ * 
+ * @param label the timer name
+ * @param info configuration information
+ * @returns elapsed time
+ */
+function logTimeEnd(label: string, info: groupSettings = {}): number{
+    if(!(label in timers) && "error" in info && info.error){
+        throw new logSystemError("there's no timer with that name");
+    }
+
+    const elapsed = Date.now() - timers[label];
+    delete timers[label];
+
+    if(!("messageVisible" in info) || info.messageVisible){
+        const whoS = info.messageWho ? info.messageWho : undefined;
+        log(LogType.GROUP, `timer '${label}' ended. ${elapsed}ms`, whoS);
+    }
+
+    return elapsed;
+}
+
+/**
+ * returns the current time of the timer
+ * @param label the timer name
+ * @param info configuration information
+ * @returns the current time
+ */
+function logTimeStamp(label: string, info: groupSettings = {}): number{
+    if(!(label in timers) && "error" in info && info.error){
+        throw new logSystemError("there's no timer with that name");
+    }
+
+    const elapsed = Date.now() - timers[label];
+
+    if(!("messageVisible" in info) || info.messageVisible){
+        const whoS = info.messageWho ? info.messageWho : undefined;
+        log(LogType.GROUP, `timer '${label}' stamp: ${elapsed}ms`, whoS);
+    }
+
+    return elapsed;
+}
+
 /**
  * Simple interface for the fast use of console utilities
  */
@@ -1809,8 +2153,27 @@ const newConsole = {
     showCursor,
     hideCursor,
     getCurrentVersionOfLogSystem,
-    combineColors
+    combineColors,
+    group: logGroup,
+    logGroup,
+    groupEnd: logGroupEnd,
+    logGroupEnd,
+    groupCollapsed: logGroup,
+    time: logTimeStart,
+    logTimeStart,
+    timeEnd: logTimeEnd,
+    logTimeEnd,
+    timeStamp: logTimeStamp,
+    logTimeStamp
 }   
+
+if(useAddToGlobalAs){
+    const obj: Record<string, typeof newConsole> = {};
+    for(const part of addToGlobalAs){
+        obj[part] = newConsole;
+    }
+    Object.assign(globalThis, obj);
+}
 
 
 process.addListener("exit", () => {
@@ -1836,7 +2199,7 @@ process.addListener("warning", (warn: unknown) => {
  * allows you to replace old console with fairly new
  */
 function replaceConsole(){
-    Object.assign(globalThis, {console: newConsole, orginalConsole: globalThis.console});
+    Object.assign(globalThis, {console: newConsole, orginalConsole: globalThis.console, newConsole});
 }
 
 
@@ -1895,5 +2258,23 @@ export {LogType, log, formatError,
     getCurrentVersionOfLogSystem,
     registerCommandLegacy,
     registerCommandLegacyForceUse,
-    combineColors
+    multiCommandRegister,
+    commandCompound,
+    registerCommandShort,
+    combineColors,
+    legacyDataType,
+    validateLegacyProperty,
+    setLegacyInformation,
+    getLegacyInformation,
+    logGroup as group,
+    logGroup,
+    logGroupEnd as groupEnd,
+    logGroupEnd,
+    logGroup as groupCollapsed,
+    logTimeStart as time,
+    logTimeStart,
+    logTimeEnd as timeEnd,
+    logTimeEnd,
+    logTimeStamp as timeStamp,
+    logTimeStamp
 }
