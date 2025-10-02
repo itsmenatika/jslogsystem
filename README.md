@@ -57,7 +57,7 @@ IT WILL BE POSSIBLE IN THE FUTURE
 ## CONFIG
 
 you can configure that thing in the top of file:
-![the image that shows config](https://github.com/itsmenatika/jslogsystem/blob/main/docs/config.png?raw=true)
+![the image that shows config](./docs/config.png?raw=true)
 
 I don't know what to say more
 
@@ -76,7 +76,7 @@ this will print hiii :3.
 
 the result should look like that:
 
-![example1](https://github.com/itsmenatika/jslogsystem/blob/main/docs/example1.png?raw=true)
+![example1](./docs/example1.png?raw=true)
 
 2.
 ```
