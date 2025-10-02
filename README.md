@@ -5,7 +5,7 @@
 The purpose of that thing is to allow easy logging from applications while still allowing the use of the console
 
 
-![the image that shows how does it look](https://github.com/itsmenatika/jslogsystem/blob/main/docs/run.png?raw=true)
+![the image that shows how does it look](./docs/run.png?raw=true)
 
 the logging system allows you to add your own commands via simple API
 
@@ -92,7 +92,7 @@ this example is in examples/example2.ts (it will not work out of the boxt)
 
 this will print more things
 
-![example2](https://github.com/itsmenatika/jslogsystem/blob/main/docs/example2.png?raw=true)
+![example2](./docs/example2.png?raw=true)
 
 3.
 ```
@@ -115,6 +115,6 @@ this example is in examples/example2.ts (it will not work out of the boxt)
 
 this will print more things and register one command and more
 
-![example3](https://github.com/itsmenatika/jslogsystem/blob/main/docs/example3.png?raw=true)
+![example3](./docs/example3.png?raw=true)
 
 
