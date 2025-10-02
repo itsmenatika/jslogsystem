@@ -1,15 +1,5 @@
-/**
-
-RELASE 1.0 IS NO LONGER SUPPORTED!
-
-USE AT YOUR OWN RISK
-
-app.ts was not orginally shipped with 1.0 version. It was created afterwards!
+import { keepProcessAlive, newConsole } from "./logSystem";
 
 
-
-**/
-
-import { newConsole } from "./logSystem";
-
-newConsole.log("hello!");
+// it will keep the process alive even though there's no error for it to be kept alive
+keepProcessAlive();
