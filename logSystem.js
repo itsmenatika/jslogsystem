@@ -2,7 +2,7 @@
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
-// version: 1.15
+// version: 1.14
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -33,23 +33,10 @@ exports.consoleMultiWrite = consoleMultiWrite;
 exports.getCurrentVersionOfLogSystem = getCurrentVersionOfLogSystem;
 exports.registerCommandLegacy = registerCommandLegacy;
 exports.registerCommandLegacyForceUse = registerCommandLegacyForceUse;
-exports.multiCommandRegister = multiCommandRegister;
-exports.registerCommandShort = registerCommandShort;
 exports.combineColors = combineColors;
 exports.validateLegacyProperty = validateLegacyProperty;
 exports.setLegacyInformation = setLegacyInformation;
 exports.getLegacyInformation = getLegacyInformation;
-exports.group = logGroup;
-exports.logGroup = logGroup;
-exports.groupCollapsed = logGroup;
-exports.groupEnd = logGroupEnd;
-exports.logGroupEnd = logGroupEnd;
-exports.time = logTimeStart;
-exports.logTimeStart = logTimeStart;
-exports.timeEnd = logTimeEnd;
-exports.logTimeEnd = logTimeEnd;
-exports.timeStamp = logTimeStamp;
-exports.logTimeStamp = logTimeStamp;
 const node_child_process_1 = require("node:child_process");
 const node_fs_1 = require("node:fs");
 const node_os_1 = __importDefault(require("node:os"));
@@ -75,10 +62,6 @@ const saveTheLatest = (date, previousFilePath) => {
 };
 let viewTextBox = true; // if the textbox should be visible at the start
 let blockLogsVar = false; // if the logs should be displayed
-let singleLogGroupText = "┄┅"; // the indicator used to indicate a single log group
-let lastLogGroupText = "░"; // the string that gets added to the last group. It only gets added if there's at least log grpoup
-const useAddToGlobalAs = false; // whether to newConsole as a global automatically. It defaults to false
-const addToGlobalAs = ["newConsole"]; // addsnewConsole as listed keys to globalThis. Works only with useAddToGlobalAs enabled.
 // ___________________________________________
 //
 // CODE
@@ -105,15 +88,11 @@ var LogType;
     LogType[LogType["INT"] = 4] = "INT";
     LogType[LogType["CRASH"] = 5] = "CRASH";
     LogType[LogType["COUNTER"] = 6] = "COUNTER";
-    LogType[LogType["GROUP"] = 7] = "GROUP";
 })(LogType || (exports.LogType = LogType = {}));
 let commandHistory = []; // user command history history
 let indexCommandHistory = null; // the index of current selected
-const logSystemVer = "1.15"; // current version of the log system
+const logSystemVer = "1.14"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
-let currentGroupString = ""; // the current string for groups to make it run faster (you can name it cache, i guess?)
-let logGroups = []; // groups for console.group()
-const timers = {}; // the list of timers used with console.time()
 class logSystemError extends Error {
 }
 exports.logSystemError = logSystemError;
@@ -1053,9 +1032,7 @@ const commandInterface = {
     removeCommand,
     registerCommand,
     registerCommandLegacy,
-    registerCommandLegacyForceUse,
-    registerCommandShort,
-    multiCommandRegister
+    registerCommandLegacyForceUse
 };
 // that functions handles commands. It's for internal usage
 function handleEnter(text, silent = false) {
@@ -1239,8 +1216,6 @@ function resolveLogType(type) {
             return "INIT";
         case LogType.CRASH:
             return "CRASH";
-        case LogType.GROUP:
-            return "GROUP";
         default: return "UNKNOWN";
     }
 }
@@ -1265,8 +1240,6 @@ function resolveLogColor(type) {
             return colorTable.init;
         case LogType.CRASH:
             return colorTable.crash;
-        case LogType.GROUP:
-            return colorTable.group;
         default: return consoleColors.Reset;
     }
 }
@@ -1286,8 +1259,8 @@ function log(type, message, who = "core") {
     const formattedDate = `${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}:${currentDate.getMilliseconds()}`;
     const logTypeString = resolveLogType(type);
     const logColor = resolveLogColor(type);
-    const toWrite = `${formattedDate} ${logTypeString} ${who}: ${currentGroupString}${message}\n`;
-    const toDisplay = `${colorTable.date}${formattedDate}${consoleColors.Reset} ${logTypeString} ${colorTable.who}${who}${consoleColors.Reset}: ${consoleColors.FgGray}${currentGroupString}${consoleColors.Reset}${logColor}${message}${consoleColors.Reset}\n`;
+    const toWrite = `${formattedDate} ${logTypeString} ${who}: ${message}\n`;
+    const toDisplay = `${colorTable.date}${formattedDate}${consoleColors.Reset} ${logTypeString} ${colorTable.who}${who}${consoleColors.Reset}: ${logColor}${message}${consoleColors.Reset}\n`;
     if (viewTextBox) {
         process.stdout.clearLine(0);
         process.stdout.write(consoleColors.Reset + "\r");
@@ -1296,6 +1269,47 @@ function log(type, message, who = "core") {
     (0, node_fs_1.appendFileSync)(finalLatest, toWrite);
     if (viewTextBox)
         process.stdout.write("\r\x1b[0m> \x1b[35m" + text);
+    // const printWho = `${consoleColors.FgMagenta}${who}`;
+    // switch(type){
+    //     case LogType.INFO: {
+    //         toWrite = `${formattedDate} INFO ${printWho}${consoleColors.Reset}: ${message}\n`;
+    //         break;
+    //     }
+    //     case LogType.ERROR: {
+    //         toWrite = `${formattedDate} ERROR ${printWho}${consoleColors.Reset}: ${consoleColors.FgRed}${message}\n`;
+    //         break;
+    //     }
+    //     case LogType.SUCCESS: {
+    //         toWrite = `${formattedDate} SUCCESS ${printWho}${consoleColors.Reset}: ${consoleColors.FgGreen}${message}\n`;
+    //         break;
+    //     }
+    //     case LogType.INIT: {
+    //         toWrite = `${formattedDate} INIT ${printWho}${consoleColors.Reset}: ${message}\n`;
+    //         break;
+    //     }
+    //     case LogType.WARNING: {
+    //         toWrite = `${formattedDate} WARNING ${printWho}${consoleColors.Reset}: ${consoleColors.FgYellow}${message}\n`;
+    //         break;
+    //     }
+    //     case LogType.CRASH: {
+    //         toWrite = `${formattedDate} CRASH ${printWho}${consoleColors.Reset}: ${consoleColors.FgRed}${message}\n`;
+    //         break;
+    //     }
+    // 	case LogType.COUNTER: {
+    //         toWrite = `${formattedDate} COUNTER ${printWho}${consoleColors.Reset}: ${message}\n`;
+    //         break;
+    //     }
+    //     default: {
+    //         throw new logSystemError("???");
+    //     }
+    // }
+    // appendFileSync(finalLatest, toWrite);
+    // if(blockLogsVar) return;
+    // process.stdout.clearLine(0);
+    // process.stdout.write("\r\x1b[0m");
+    // process.stdout.write(toWrite);
+    // if(viewTextBox)
+    // process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
 }
 /**
  * formats an error to allow the stack view
@@ -1572,7 +1586,6 @@ let colorTable = {
     "counter": consoleColors.FgCyan,
     "init": consoleColors.FgWhite,
     "crash": consoleColors.FgRed,
-    "group": consoleColors.FgGray,
     "date": consoleColors.FgGray,
     "who": consoleColors.FgMagenta
 };
@@ -1723,99 +1736,6 @@ function getCurrentVersionOfLogSystem(as = "string") {
         return -1;
 }
 /**
- * creates (joins) a new group for that log
- * @param name the group name
- * @returns the new current group string
- */
-function logGroup(name, info = {}) {
-    if (!("messageVisible" in info) || info.messageVisible) {
-        const whoS = info.messageWho ? info.messageWho : undefined;
-        log(LogType.GROUP, name, whoS);
-    }
-    logGroups.push(name);
-    // return currentGroupString = currentGroupString.slice(0, currentGroupString.indexOf(lastLogGroupText)) + singleLogGroupText + lastLogGroupText;
-    return reconstructLogGroup();
-}
-/**
- * leaves the group created with logGroup / group
- * @returns the new current group group string
- */
-function logGroupEnd(info = {}) {
-    // currentGroupString = currentGroupString.slice(0, currentGroupString.lastIndexOf(singleLogGroupText)) + lastLogGroupText;
-    // // TODO: MAYBE IN THE FUTURE? better group ending
-    // return currentGroupString;
-    if (logGroups.length === 0) {
-        if ("error" in info && info.error) {
-            throw new logSystemError("there's no group");
-        }
-        return currentGroupString;
-    }
-    logGroups.pop();
-    return reconstructLogGroup();
-}
-function reconstructLogGroup() {
-    currentGroupString = "";
-    for (let i = 0; i < logGroups.length; i++) {
-        currentGroupString += singleLogGroupText;
-    }
-    if (logGroups.length !== 0)
-        currentGroupString += lastLogGroupText + " ";
-    return currentGroupString;
-}
-/**
- * creates a new timer with specified name
- * @param label the timer name
- * @param info configuration information
- * @returns the start time
- */
-function logTimeStart(label, info = {}) {
-    const time = Date.now();
-    timers[label] = time;
-    if (!("messageVisible" in info) || info.messageVisible) {
-        const whoS = info.messageWho ? info.messageWho : undefined;
-        log(LogType.GROUP, `timer '${label}' started`, whoS);
-    }
-    return time;
-}
-/**
- * stops a timer with specified name
- *
- * if info.error set to true, it causes an error if there's no timer with that name, otherwise it just ignores it
- *
- * @param label the timer name
- * @param info configuration information
- * @returns elapsed time
- */
-function logTimeEnd(label, info = {}) {
-    if (!(label in timers) && "error" in info && info.error) {
-        throw new logSystemError("there's no timer with that name");
-    }
-    const elapsed = Date.now() - timers[label];
-    delete timers[label];
-    if (!("messageVisible" in info) || info.messageVisible) {
-        const whoS = info.messageWho ? info.messageWho : undefined;
-        log(LogType.GROUP, `timer '${label}' ended. ${elapsed}ms`, whoS);
-    }
-    return elapsed;
-}
-/**
- * returns the current time of the timer
- * @param label the timer name
- * @param info configuration information
- * @returns the current time
- */
-function logTimeStamp(label, info = {}) {
-    if (!(label in timers) && "error" in info && info.error) {
-        throw new logSystemError("there's no timer with that name");
-    }
-    const elapsed = Date.now() - timers[label];
-    if (!("messageVisible" in info) || info.messageVisible) {
-        const whoS = info.messageWho ? info.messageWho : undefined;
-        log(LogType.GROUP, `timer '${label}' stamp: ${elapsed}ms`, whoS);
-    }
-    return elapsed;
-}
-/**
  * Simple interface for the fast use of console utilities
  */
 const newConsole = {
@@ -1854,28 +1774,10 @@ const newConsole = {
     showCursor,
     hideCursor,
     getCurrentVersionOfLogSystem,
-    combineColors,
-    group: logGroup,
-    logGroup,
-    groupEnd: logGroupEnd,
-    logGroupEnd,
-    groupCollapsed: logGroup,
-    time: logTimeStart,
-    logTimeStart,
-    timeEnd: logTimeEnd,
-    logTimeEnd,
-    timeStamp: logTimeStamp,
-    logTimeStamp
+    combineColors
 };
 exports.console = newConsole;
 exports.newConsole = newConsole;
-if (useAddToGlobalAs) {
-    const obj = {};
-    for (const part of addToGlobalAs) {
-        obj[part] = newConsole;
-    }
-    Object.assign(globalThis, obj);
-}
 process.addListener("exit", () => {
     viewTextBox = false;
     consoleWrite("", consoleColors.Reset, false);
@@ -1895,7 +1797,7 @@ process.addListener("warning", (warn) => {
  * allows you to replace old console with fairly new
  */
 function replaceConsole() {
-    Object.assign(globalThis, { console: newConsole, orginalConsole: globalThis.console, newConsole });
+    Object.assign(globalThis, { console: newConsole, orginalConsole: globalThis.console });
 }
 /**
  * allows you to create a fake loop to keep the process alive. It was used mostly for testing
