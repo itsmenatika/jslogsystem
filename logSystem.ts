@@ -1,7 +1,7 @@
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
-// version: 1.17
+// version: 1.2
 
 import { ChildProcess, exec, execSync, fork, spawn, spawnSync } from "node:child_process";
 import { appendFileSync, createReadStream, existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
@@ -74,7 +74,7 @@ enum LogType {
 
 let commandHistory: string[] = []; // user command history history
 let indexCommandHistory: null | number = null; // the index of current selected
-const logSystemVer: string = "1.171"; // current version of the log system
+const logSystemVer: string = "1.2"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
 let currentGroupString: string = ""; // the current string for groups to make it run faster (you can name it cache, i guess?)
 let logGroups: string[] = []; // groups for console.group()
