@@ -31,5 +31,6 @@
   "license": "another",
   "dependencies": {
     "@types/node": "^22.18.0"
-  }
+  },
+  "type": "module"
 }
