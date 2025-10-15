@@ -12,7 +12,7 @@ import { inspect, InspectOptions, InspectOptionsStylized, stripVTControlCharacte
 
 // CONFIG
 // USE JOIN for paths
-const workingDirectory: string = join(__dirname, "dev");
+const workingDirectory: string = join(import.meta.dirname, "dev");
 const LOGDIRECTORY: string = join(workingDirectory, "logs");
 const LATESTLOGNAME: string = "latest.txt";
 
@@ -1111,7 +1111,7 @@ let commands: Record<string, unifiedCommandTypes> = {
     "reload": {
         usageinfo: "reload",
         desc: "restarts the process (It doesnt work properly)",
-        longdesc: `restarts the process (It doesnt work properly) using processRestart() (fork(join(__dirname, __filename), {stdio: "overlapped"});)`,
+        longdesc: `restarts the process (It doesnt work properly) using processRestart() (fork(join(import.meta.dirname, __filename), {stdio: "overlapped"});)`,
         hidden: false,
         changeable: false,
         isAlias: false,
@@ -3968,7 +3968,7 @@ function multiLineConstructor(...data: string[]): string{
  */
 function processRestart(){
     newConsole.warn("It may not work!");
-    fork(join(__dirname, __filename), {stdio: "overlapped"});
+    fork(join(import.meta.dirname, __filename), {stdio: "overlapped"});
     process.kill(0);
 //  const subprocess = spawn(process.argv[0], process.argv.slice(1), {detached: true, stdio: "inherit"});
 

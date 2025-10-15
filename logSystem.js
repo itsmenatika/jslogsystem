@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { inspect, stripVTControlCharacters } from "node:util";
 // CONFIG
 // USE JOIN for paths
-const workingDirectory = join(__dirname, "dev");
+const workingDirectory = join(import.meta.dirname, "dev");
 const LOGDIRECTORY = join(workingDirectory, "logs");
 const LATESTLOGNAME = "latest.txt";
 // TO EDIT COLORS SEARCH FOR consoleColorTable!
@@ -884,7 +884,7 @@ let commands = {
     "reload": {
         usageinfo: "reload",
         desc: "restarts the process (It doesnt work properly)",
-        longdesc: `restarts the process (It doesnt work properly) using processRestart() (fork(join(__dirname, __filename), {stdio: "overlapped"});)`,
+        longdesc: `restarts the process (It doesnt work properly) using processRestart() (fork(join(import.meta.dirname, __filename), {stdio: "overlapped"});)`,
         hidden: false,
         changeable: false,
         isAlias: false,
@@ -3160,7 +3160,7 @@ function multiLineConstructor(...data) {
  */
 function processRestart() {
     newConsole.warn("It may not work!");
-    fork(join(__dirname, __filename), { stdio: "overlapped" });
+    fork(join(import.meta.dirname, __filename), { stdio: "overlapped" });
     process.kill(0);
     //  const subprocess = spawn(process.argv[0], process.argv.slice(1), {detached: true, stdio: "inherit"});
     //     subprocess.unref();
