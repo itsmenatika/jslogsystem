@@ -4,22 +4,23 @@
 // version: 1.2
 
 import { ChildProcess, exec, execSync, fork, spawn, spawnSync } from "node:child_process";
-import { appendFileSync, createReadStream, existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, createReadStream, existsSync, mkdirSync, readdir, readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import os, { version } from "node:os";
 import { join } from "node:path";
 import { cwd } from "node:process";
-import { inspect } from "node:util";
+import { inspect, InspectOptions, InspectOptionsStylized, stripVTControlCharacters, toUSVString } from "node:util";
 
 // CONFIG
 // USE JOIN for paths
-const LOGDIRECTORY: string = join("dev", "logs");
+const workingDirectory: string = join(__dirname, "dev");
+const LOGDIRECTORY: string = join(workingDirectory, "logs");
 const LATESTLOGNAME: string = "latest.txt";
 
 // TO EDIT COLORS SEARCH FOR consoleColorTable!
 
 // callback to write information on the "ver" command
 let getversionInfoData = (): string => {
-    return "";
+    return "meow:3";
 }
 
 // callback to write information on the top
@@ -32,16 +33,20 @@ const getMoreStartInformation = (): string => {
 const saveTheLatest = (date: Date, previousFilePath: string): void => {
     renameSync(
         previousFilePath, 
-        join(cwd(), LOGDIRECTORY, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()} ${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
+        join(LOGDIRECTORY, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()}-${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
     );
 }
 
 let viewTextBox: boolean = true; // if the textbox should be visible at the start
 let blockLogsVar: boolean = false; // if the logs should be displayed
+
 let singleLogGroupText: string = "┄┅"; // the indicator used to indicate a single log group
 let lastLogGroupText: string = "░"; // the string that gets added to the last group. It only gets added if there's at least log grpoup
+
 const useAddToGlobalAs: boolean = false; // whether to newConsole as a global automatically. It defaults to false
 const addToGlobalAs: string[] = ["newConsole"]; // addsnewConsole as listed keys to globalThis. Works only with useAddToGlobalAs enabled.
+
+const quickHello: boolean = false; // quicker hello option
 
 // ___________________________________________
 //
@@ -50,6 +55,14 @@ const addToGlobalAs: string[] = ["newConsole"]; // addsnewConsole as listed keys
 // DONT TOUCH IT!
 //
 // ___________________________________________
+
+if(!existsSync(workingDirectory)){
+    mkdirSync(workingDirectory);
+}
+
+if(workingDirectory)
+process.chdir(workingDirectory);
+
 
 /**
  * the type of log
@@ -88,13 +101,13 @@ process.stdin.resume();
 process.stdin.setEncoding("utf-8")
 
 // check for the log directory
-if(!existsSync(join(cwd(), LOGDIRECTORY))){
+if(!existsSync(LOGDIRECTORY)){
     // make it if it doesn't exist
-    mkdirSync(join(cwd(), LOGDIRECTORY), {recursive: true});
+    mkdirSync(LOGDIRECTORY, {recursive: true});
 }
 
-const finalLatest: string = join(cwd(), LOGDIRECTORY, LATESTLOGNAME); // the path to the previous log
-const tempFinal: string = join(cwd(), LOGDIRECTORY, "temp"); // the path to previous temp file log
+const finalLatest: string = join(LOGDIRECTORY, LATESTLOGNAME); // the path to the previous log
+const tempFinal: string = join(LOGDIRECTORY, "temp"); // the path to previous temp file log
 
 // check whether the previous log exist
 if(existsSync(finalLatest)){
@@ -142,9 +155,7 @@ process.stdin.on('data', async (key: string) => {
     if(key){
         // escape ctrl + c key
         if(key === '\u0003'){
-            process.stdout.write("\x1b[0m");
-            textboxVisibility(false);
-            actualCrash("The execution was manually stopped by CTRL + C!", "core", -1);
+            interupHandler("CTRL + C");
             // process.exit();
         }
 
@@ -285,7 +296,7 @@ function showCursor(){
 }
 
 // type for typescript
-type cmdCallbackResponse = boolean;
+type cmdCallbackResponse = void | boolean | number | string | undefined | null | Object;
 
 type cmdcallback = ((args: string[]) => cmdCallbackResponse);
 type cmdCallbackAsync = ((args: string[]) => Promise<cmdCallbackResponse>);
@@ -342,7 +353,7 @@ function isCommandAlias(command: commandData): command is commandAlias{
 
 interface bindDetail{
     name: string,
-    commands: string[],
+    command: string,
     executor: string
 }
 
@@ -361,9 +372,10 @@ let bindInfo: bindData = {};
 //     "callback": cmdcallback
 // }
 
-const numberLookUp = (char: string): boolean => {
-    return char == "1" || char == "2" || char == "3" || char == "4" || char == "5" || char == "6" || char == "7" || char == "8" || char == "9" || char == "0"
-}
+// NOT USED ANYMORE
+// const numberLookUp = (char: string): boolean => {
+//     return char == "1" || char == "2" || char == "3" || char == "4" || char == "5" || char == "6" || char == "7" || char == "8" || char == "9" || char == "0"
+// }
 
 // the list of commands
 let commands: Record<string, unifiedCommandTypes> = {
@@ -375,7 +387,12 @@ let commands: Record<string, unifiedCommandTypes> = {
         changeable: false,
         isAlias: false,
         callback: (args: string[]): boolean => {
-            let exitCode = args.slice(1).join(" ").trim() !== "" ? args.slice(1).join(" ").trim() : 0;
+            let exitCode: any = args.slice(1).filter(s => {
+                return s != "-t";
+            })
+            .join(" ").trim();
+            
+            exitCode = exitCode ? exitCode : 0;
             // log(LogType.CRASH, "The execution was manually stopped by EXIT COMMAND with code: "+ exitCode);
             // process.stdout.write("\x1b[0m");
             // process.exit(exitCode);
@@ -390,6 +407,18 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: true,
         changeable: false
     },
+    stop: {
+        isAlias: true,
+        aliasName: "exit",
+        hidden: true,
+        changeable: false
+    },
+    halt: {
+        isAlias: true,
+        aliasName: "exit",
+        hidden: true,
+        changeable: false
+    },
     clear: {
         usageinfo: "clear",
         desc: "clears the whole screen",
@@ -397,9 +426,9 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: false,
         changeable: false,
         isAlias: false,
-        callback: (args: string[]): boolean => {
+        callback: (args: string[]): onlyIfRedirected => {
             clearConsole();
-            return true;
+            return onlyToRedirect(true);
         }
     },
     cls: {
@@ -415,12 +444,21 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: false,
         changeable: false,
         isAlias: false,
-        callback: (args: string[]): boolean => {
-            let theString: string = args.slice(1).join(" ");
+        callback: (args: string[]): string => {
+            let toPrint: string = "";
+            for(const cur of args.slice(1)){
+                if(cur === "-t") continue;
 
-            consoleWrite(theString + "\n", consoleColors.FgWhite);
+                toPrint += cur + " ";
+            }
 
-            return false;
+            let theString = toPrint.slice(0, -1);
+
+            // let theString: string = args.slice(1).join(" ");
+
+            // consoleWrite(theString + "\n", consoleColors.FgWhite);
+
+            return theString;
         }        
     },
     wrt: {
@@ -436,19 +474,74 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: false,
         changeable: false,
         isAlias: false,
-        callback: (args: string[]): boolean => {
-            let theString: string = args.slice(1).join(" ");
+        callback: (args: string[]): string => {
+            let toPrint: string = "";
+            for(const cur of args.slice(1)){
+                if(cur === "-t") continue;
+
+                toPrint += cur + " ";
+            }
+
+            let theString = toPrint.slice(0, -1);
 
             theString = theString.replaceAll("\\\\", "%SLASH%").replaceAll("\\n", "\n").replaceAll("%SLASH%", "\\");
 
-            consoleWrite(theString + "\n", consoleColors.FgWhite);
+            // consoleWrite(theString + "\n", consoleColors.FgWhite);
 
-            return false;
+            return theString;
         }        
     },
     ech: {
         isAlias: true,
         aliasName: "echo",
+        hidden: true,
+        changeable: false
+    },
+    directory: {
+        usageinfo: "directory <data>",
+        desc: "changes the working directory",
+        longdesc: "It prints the characters into the screen. It supports \\n\n\nThe alternative command is `write` that does not support special characters",
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: (args: string[]): string => {
+            let toPrint: string = "";
+            for(const cur of args.slice(1)){
+                if(cur === "-t") continue;
+
+                toPrint += cur + " ";
+            }
+
+            let theString = toPrint.slice(0, -1);
+
+            if(theString == ""){
+                return process.cwd();
+            }
+
+            const newDir = join(process.cwd(), theString);
+
+            process.chdir(newDir);
+            // consoleWrite(theString + "\n", consoleColors.FgWhite);
+
+            // return `new working directory: ${newDir}`;
+            return newDir;
+        }        
+    },
+    cd: {
+        isAlias: true,
+        aliasName: "directory",
+        hidden: true,
+        changeable: false
+    },
+    cwd: {
+        isAlias: true,
+        aliasName: "directory",
+        hidden: true,
+        changeable: false
+    },
+    pwd: {
+        isAlias: true,
+        aliasName: "directory",
         hidden: true,
         changeable: false
     },
@@ -459,7 +552,7 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: false,
         changeable: false,
         isAlias: false,
-        callback: (args: string[]): boolean => {
+        callback: (args: string[]): onlyIfRedirected => {
             let vis: boolean = true;
 
             if(args.includes("-h")){
@@ -467,10 +560,11 @@ let commands: Record<string, unifiedCommandTypes> = {
             }
 
             if(vis){
-                consoleWrite("The textbox was hidden. Start writting to make it appear again!\n");
+                consoleWrite("The textbox was hidden. Start writting to make it appear again!\n", undefined, undefined, "");
             }
             textboxVisibility(false);
-            return false;
+
+            return onlyToRedirect(true);
         }                
     },
     h: {
@@ -479,23 +573,208 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: true,
         changeable: false
     },
-    inspect: {
-        usageinfo: "inspect <structure>",
-        desc: "allows you to inspect a javascript structure",
-        longdesc: "it uses internal node.js inspect and JSON parser to allow you to inspect the structure",
+    // tojson: {
+    //    usageinfo: "inspect <structure>",
+    //     desc: "allows you to inspect a javascript structure (DEPRECATED)",
+    //     longdesc: "it uses internal node.js inspect and JSON parser to allow you to inspect the structure (all objects, are now inspected by default)",
+    //     hidden: false,
+    //     changeable: false,
+    //     isAlias: false,
+    //     callback: (preArgs: string[]): string => {
+    // },
+    // json: {
+    //     isAlias: true,
+    //     aliasName: "obj",
+    //     hidden: true,
+    //     changeable: false
+    // },
+    logs: {
+        usageinfo: "logs [<-d [...names]|-a>]",
+        desc: "allows you to manage logs",
+        longdesc: "It allows you to delete or view the list of logs.\n\nUse 'logs' to list all the logs.\nUse 'logs -d name...name...name' to delete certain logs.\nUse 'logs -d -a' to delete all logs.\nUse 'logs name' to view the content of that log.",
         hidden: false,
         changeable: false,
         isAlias: false,
-        callback: (args: string[]): boolean => {
-            let toFormat = args.slice(1).join(" ");
+        callback: (preArgs: string[]): any => {
+            const args = smartArgs(preArgs);
+            const g = new multiDisplayer();
 
-            let reCreateObject = JSON.parse(toFormat);
+            if(args.length === 0){
+                const f = readdirSync(LOGDIRECTORY);
+    
+                for(let file of f){
+                    if(file === "temp") continue;
+                    g.push("* ", consoleColors.FgYellow);
+    
+                    if(file.endsWith(".txt")) file = file.slice(0, -4);
+                    g.push(file, consoleColors.FgWhite);
+                    g.push("\n");
+                }
+            }
+            else if(args.length === 1){
+                const path = join(LOGDIRECTORY, args.args[0]);
 
-            let formatedAnswer = inspect(reCreateObject, true, null, true);
+                let res;
+                if(existsSync(path)){
+                    res = readFileSync(path);
+                    
+                    if(args.isEnding){
+                        g.push("CONTENT OF " + path, combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
+                        g.push("\n");
+                    }
+                    g.push(String(res));
+                    
+                    if(args.isEnding){
+                        g.push("CONTENT OF " + path, combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
+                        g.push("\n");
+                    }
+                }
+                else if(existsSync(path + ".txt")){
+                    res = readFileSync(path + ".txt");
+                    if(args.isEnding){
+                        g.push("CONTENT OF " + path + ".txt", combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
+                        g.push("\n");
+                    }
+                    g.push(String(res));
+                    
+                    if(args.isEnding){
+                        g.push("CONTENT OF " + path + ".txt", combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
+                        g.push("\n");
+                    }
+                }
+                else{
+                    g.push(path, consoleColors.FgWhite);
+                    g.push(" NOT FOUND", consoleColors.FgRed);
+                    if(args.isEnding)
+                    g.push("\n");
+                }
+            }
+            else if(args.args.includes("-d") && args.args.includes("-a")){
+                const f = readdirSync(LOGDIRECTORY).filter(
+                    (s) => s !== "latest.txt" && s !== "temp"
+                );
 
-            log(LogType.INFO, `${formatedAnswer}`, "console.inspect");
+                for(const file of f){
+                    g.push("* ", consoleColors.FgYellow);
+                    g.push(file, consoleColors.FgWhite);
+                    unlinkSync(join(LOGDIRECTORY, file));
+                    g.push(" DELETED \n");
+                }
 
-            return false;
+                g.push("\n");
+                g.push(`${f.length}/${f.length+1} DELETED`, consoleColors.BgMagenta);
+                g.push("\n");
+            }
+            else if(args.args.includes("-d")){
+                const whatToDelete = args.args.filter(
+                    (s) => s !== "-d"
+                );
+
+                let c = 0;
+                for(let del of whatToDelete){
+                    let where = join(LOGDIRECTORY, del);
+
+                    if(existsSync(where)){
+                        unlinkSync(where);
+                        g.push("* ", consoleColors.FgYellow);
+                        g.push(where, consoleColors.FgWhite);
+                        g.push(" DELETED \n");
+                        c++;
+                    }
+                    else if(existsSync(where+".txt")){
+                        unlinkSync(where+".txt");
+                        g.push("* ", consoleColors.FgYellow);
+                        g.push(where, consoleColors.FgWhite);
+                        g.push(" DELETED \n");
+                        c++;
+                    }
+                    else{
+                        g.push("* ", consoleColors.FgYellow);
+                        g.push(where, consoleColors.FgWhite);
+                        g.push(" NOT FOUND \n");
+                    }
+
+                    g.push("\n");
+                    g.push(`${c}/${whatToDelete.length} DELETED`, consoleColors.BgMagenta);
+                    g.push("\n");
+                }
+            }
+
+
+            if(args.isEnding)
+            g.useConsoleWrite();
+
+            return onlyToRedirect(g.toRawString());
+        },
+    },
+    inspect: {
+        usageinfo: "inspect <structure>",
+        desc: "allows you to inspect a javascript structure (DEPRECATED?)",
+        longdesc: "it uses internal node.js inspect and JSON parser to allow you to inspect the structure (all objects at the end of the command chain, are now inspected by default and that's why it's deprecated(?). COMMAND MAY BE REMOVED IN THE FUTURE AS IT NOW SERVES NO PURPOSE OTHER THAN FORCING THAT IN THE CHAIN WITH -t!). It can be used to convert JSON strings to objects (it's recommended to use toJSON though!).",
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: (preArgs: string[]): string => {
+
+            const args = smartArgs(preArgs);
+
+            // let toFormat = args.args.join(" ");
+
+
+
+            // let reCreateObject = JSON.parse(toFormat);
+
+            let obj = undefined;
+
+            const afterargs = args.args.map(
+                (arg) => {
+                    if(typeof arg === "string"){
+                        try {
+                            return JSON.parse(arg);
+                        } catch (error) {
+                            return arg;
+                        }
+                    }
+                    else return arg;
+                }
+            );
+
+            if(afterargs.length === 0){
+                obj = undefined;
+            }
+            else if(afterargs.length === 1){
+                obj = afterargs[0];
+            }
+            else{
+                obj = afterargs;
+            }
+
+            if(args.length === 1){
+                if(typeof args.args[0] === "string"){
+
+                    let jsConvert;
+                    try {
+                        jsConvert = JSON.parse(args.args[0]);
+                    } catch (error) {
+                        obj = args.args[0];
+                    }
+                } 
+                else{
+                    obj = args.args[0];
+                }
+            }
+            else{
+                obj = args.args;
+            }
+
+
+            let formatedAnswer = inspect(obj, true, null, args.isEnding);
+
+            // console.log(obj, formatedAnswer, args.isEnding);
+
+            // log(LogType.INFO, `${formatedAnswer}`, "console.inspect");
+
+            return formatedAnswer;
             // }
         }                
     },
@@ -504,27 +783,115 @@ let commands: Record<string, unifiedCommandTypes> = {
         aliasName: "inspect",
         hidden: true,
         changeable: false
-    },    
-    eval: {
-        usageinfo: "eval <code...>",
-        desc: "allows you to execute javascript",
-        longdesc: "it executes javascript using globalEval which means that the context is global",
+    }, 
+    arguments: {
+        usageinfo: "arguments",
+        desc: "allows you to see all arguments that got passed into that command",
+        longdesc: "allows you to see all arguments that got passed into that command",
         hidden: false,
         changeable: false,
         isAlias: false,
-        callback: (args: string[]): boolean => {
-            let code = args.slice(1).join(" ").trim();
+        callback: (args: string[]): string[] => {
+            return args;
+            // }
+        }                
+    }, 
+    args: {
+        isAlias: true,
+        aliasName: "arguments",
+        hidden: true,
+        changeable: false
+    },   
+    argumentslength: {
+        usageinfo: "arguments",
+        desc: "allows you to see the number of arguments that got passed into that command",
+        longdesc: "allows you to see the number of arguments that got passed into that command",
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: (args: string[]): number => {
+            return args.length;
+            // }
+        }                
+    }, 
+    argslen: {
+        isAlias: true,
+        aliasName: "argumentslength",
+        hidden: true,
+        changeable: false
+    }, 
+    arglen: {
+        isAlias: true,
+        aliasName: "argumentslength",
+        hidden: true,
+        changeable: false
+    }, 
+    string: {
+        usageinfo: "string <data>",
+        desc: "forces the input to become a string if possible",
+        longdesc: "uses javascript String() or toString() on provided things and returns it. It Ignores internal arguments like -t",
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: (PreArgs: string[]): any[] | undefined => {
+            const args = smartArgs(PreArgs);
+            const toReturn: any[] = [];
+
+
+            for(const obj of args){
+                toReturn.push(String(obj));
+            }
+
+            // console.log(args.args, args.length, toReturn, PreArgs);
+
+            if(toReturn.length === 0) return undefined;
+            return toReturn.length === 1 ? toReturn[0] : toReturn;
+
+
+            // }
+        }                
+    }, 
+    str: {
+        isAlias: true,
+        aliasName: "string",
+        hidden: true,
+        changeable: false
+    }, 
+    eval: {
+        usageinfo: "eval <code...>",
+        desc: "allows you to execute javascript",
+        longdesc: "it executes javascript using globalEval which means that the context is global. $newConsole exposes newConsole api regardles of the config!",
+        hidden: false,
+        changeable: false,
+        isAlias: false,
+        callback: (args: string[]): any => {
+            let toUse: string = "";
+            for(const cur of args.slice(1)){
+                if(cur === "-t") continue;
+
+                toUse += cur + " ";
+            }
+
+            let code = toUse.trim();
             let evalParent = new logNode("eval");
             // @ts-ignore
+            let answer;
             newConsole.useWith("using eval", () => {
-                let answer = globalEval(code);
+                // @ts-expect-error
+                let prev = globalThis.$newConsole;
+                // @ts-expect-error
+                globalThis.$newConsole = newConsole;
 
-                let formatedAnswer = inspect(answer, true, null, true);
+                answer = globalEval(code);
+                
+                // @ts-expect-error
+                globalThis.$newConsole = prev;
+                // let formatedAnswer = inspect(answer, true, null, true);
 
-                log(LogType.INFO, `eval returned with: ${formatedAnswer}`, evalParent);
+                // log(LogType.INFO, `eval returned with: ${formatedAnswer}`, evalParent);
             }, evalParent as any as string);
 
-            return false;
+            return answer;
             // }
         }                
     },
@@ -534,24 +901,70 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: true,
         changeable: false
     },    
+    js: {
+        isAlias: true,
+        aliasName: "eval",
+        hidden: true,
+        changeable: false
+    }, 
+    javascript: {
+        isAlias: true,
+        aliasName: "eval",
+        hidden: true,
+        changeable: false
+    },   
     version: {
-        usageinfo: "version",
+        usageinfo: "version [-i] [-s] [-u]",
         desc: "shows the version information",
-        longdesc: "it shows the current version information",
+        longdesc: multiLineConstructor("shows the version information",
+            "",
+            "use -i to get int version",
+            "use -s to get string version",
+            "use -u to get user set version data",
+            "",
+            "if piped it uses 'version -i' by default"
+            ),
         hidden: false,
         changeable: false,
         isAlias: false,
-        callback: (args: string[]): boolean => {
-            let prev = textboxVisibility();
-            textboxVisibility(false);
-            consoleWrite("logSystemVer: ");
-            consoleWrite(logSystemVer, consoleColors.BgCyan);
-            consoleWrite(" by naticzka", [consoleColors.FgMagenta, consoleColors.Blink]);
-            consoleWrite("\n");
-            consoleWrite(getversionInfoData(), consoleColors.BgGray);
-            consoleWrite("\n");
-            textboxVisibility(prev);
-            return false;
+        callback: (preArgs: any[]): any => {
+            const args = smartArgs(preArgs);
+
+            const toReturn: Record<string, number | string> = {};
+
+            if(args.dashCombined.includes("i")){
+                toReturn['int'] = getCurrentVersionOfLogSystem("number");
+            }
+    
+            if(args.dashCombined.includes("s")){
+                toReturn['str'] = getCurrentVersionOfLogSystem("string");
+            }
+
+            if(args.dashCombined.includes("u")){
+                toReturn['user'] = getversionInfoData();
+            }
+
+            let len = Object.keys(toReturn).length;
+
+            if(len === 1){
+                return toReturn[Object.keys(toReturn)[0]];
+            }
+            else if(len > 1){
+                return toReturn;
+            }
+
+            if(args.isEnding){
+                let prev = textboxVisibility();
+                textboxVisibility(false);
+                consoleWrite("logSystemVer: ", undefined, undefined, "");
+                consoleWrite(logSystemVer, consoleColors.BgCyan, undefined, "");
+                consoleWrite(" by naticzka", [consoleColors.FgMagenta, consoleColors.Blink]);
+                consoleWrite(getversionInfoData(), consoleColors.BgGray);
+                textboxVisibility(prev);
+                return undefined;
+            }
+
+            return onlyToRedirect(getCurrentVersionOfLogSystem("number"));
             // }
         }                
     },
@@ -561,6 +974,12 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: true,
         changeable: false
     },
+    "v": {
+        isAlias: true,
+        aliasName: "version",
+        hidden: true,
+        changeable: true
+    },
     "cmd": {
         usageinfo: "cmd <code...>",
         desc: "executes system commands",
@@ -568,15 +987,32 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: false,
         changeable: false,
         isAlias: false,
-        callback: (args: string[]): boolean => {
-            let codeC = args.slice(1).join(" ").trim();
+        callback: (args: string[]): any => {
+            let toUse: string = "";
+            for(const cur of args.slice(1)){
+                if(cur === "-t") continue;
+
+                toUse += cur + " ";
+            }
+
+            let codeC = toUse.trim();
+
             let evalParentC = new logNode("cmd");
             // @ts-ignore
+            let answer;
+
+            const isWindows = process.platform === "win32";
+
+            const toExecCmd = isWindows ?
+            "chcp 65001 > nul && " + codeC : codeC;
+
             newConsole.useWith("using cmd", () => {
-                let g = execSync(codeC);
-                log(LogType.INFO, `cmd returned with: ${g}`, evalParentC);
+                answer = execSync(toExecCmd, {shell: isWindows ? "cmd.exe" : "/bin/bash"});
+
+                // log(LogType.INFO, `cmd returned with: ${g}`, evalParentC);
             }, evalParentC as any as string);
-            return false;
+
+            return answer;
 
             // }
         }                
@@ -593,14 +1029,30 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: true,
         changeable: false
     },
+    "execute": {
+        isAlias: true,
+        aliasName: "cmd",
+        hidden: true,
+        changeable: false
+    },
     "uptime": {
         usageinfo: "uptime",
-        desc: "shows the time since the program start",
-        longdesc: "shows the time since the program start",
+        desc: "shows the time since the program start.",
+        longdesc: multiLineConstructor("shows the time since the program start.", 
+            "", "",
+            "use -e to get miliseconds since epoch",
+            "use -x to extract miliseconds (max 1000)",
+            "use -s to extract seconds (max 60)",
+            "use -m to extract minutes (max 60)",
+            "use -h to extract hours (max 24)",
+            "use -d to extract days",
+        ),
         hidden: false,
         changeable: false,
         isAlias: false,
-        callback: (args: string[]): boolean => {
+        callback: (preArgs: string[]): string | number | Record<string, number> => {
+            const args = smartArgs(preArgs);
+
             let current = Date.now() - currentUpTime;
             let mili = current % 1000;
             let seconds = Math.floor((current / 1000) % 60);
@@ -608,8 +1060,50 @@ let commands: Record<string, unifiedCommandTypes> = {
             let hours = Math.floor((current / 1000 / 60 / 60) % 24);
             let days = Math.floor((current / 1000 / 60 / 60 / 24));
 
-            newConsole.log(`current uptime: ${days}d ${hours}h ${minutes}m ${seconds}s ${mili}ms (exmili: ${current})`);
-            return false;
+            let toReturn: Record<string, any> = {};
+
+            if(args.dashCombined.includes("e")){
+                toReturn["sinceEpoch"] = current;
+            }
+
+            if(args.dashCombined.includes("x")){
+                toReturn["miliseconds"] = mili;
+            }
+
+            if(args.dashCombined.includes("m")){
+                toReturn["minutes"] = minutes;
+            }
+
+            if(args.dashCombined.includes("s")){
+                toReturn["seconds"] = seconds;
+            }
+
+            if(args.dashCombined.includes("h")){
+                toReturn["hours"] = hours;
+            }
+
+            if(args.dashCombined.includes("d")){
+                toReturn["days"] = days;
+            }
+
+            if(args.dashCombined.length != 0){
+                let len = Object.keys(toReturn).length;
+
+                if(len === 1){
+                    return toReturn[Object.keys(toReturn)[0]];
+                }
+                else if(len > 1){
+                    return toReturn;
+                }
+            }
+
+
+
+
+            let toShow: string = `current uptime: ${days}d ${hours}h ${minutes}m ${seconds}s ${mili}ms (since epoch: ${current})`;
+
+            // newConsole.log(`current uptime: ${days}d ${hours}h ${minutes}m ${seconds}s ${mili}ms (exmili: ${current})`);
+            return toShow;
 
             // }
         }                
@@ -642,7 +1136,7 @@ let commands: Record<string, unifiedCommandTypes> = {
     },
     "upt": {
         isAlias: true,
-        aliasName: "help",
+        aliasName: "uptime",
         hidden: true,
         changeable: false
     },
@@ -653,22 +1147,29 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: false,
         changeable: false,
         isAlias: false,
-        callback: (args: string[]): boolean => {
-            if(args.length === 1){
+        callback: (argsB: string[]): onlyIfRedirected => {
+            const args = removeInternalArguments(argsB);
+            const isT = argsB.includes("-t");
+
+            if(args.length === 1
+            ){
                 let s = new multiDisplayer();
 
-                s.push("bind list", combineColors(consoleColors.BgMagenta, consoleColors.FgBlack));
-                s.push("\n");
+                if(isT){
+                    s.push("bind list", combineColors(consoleColors.BgMagenta, consoleColors.FgBlack));
+                    s.push("\n");
+                }
                 for(const [name, commandD] of Object.entries(bindInfo)){
                     s.push("* ", consoleColors.FgYellow);
                     s.push(commandD.executor, consoleColors.FgRed);
                     s.push(" -> ", consoleColors.FgGray);
-                    s.push(commandD.commands.toString() + "\n", consoleColors.FgBlue);
+                    s.push(commandD.command.toString() + "\n", consoleColors.FgBlue);
                 }
 
+                if(isT)        
                 s.useConsoleWrite();
 
-                return false;
+                return onlyToRedirect(Object.entries(bindInfo));
             }
 
             const data = args.slice(1).join(" ");
@@ -679,20 +1180,25 @@ let commands: Record<string, unifiedCommandTypes> = {
                 if(bindName in bindInfo){
                     let s = new multiDisplayer();
 
-                    s.push(`bind '${bindName}'`, combineColors(consoleColors.BgMagenta, consoleColors.FgBlack));
+                    if(isT){
+                        s.push(`bind '${bindName}'`, combineColors(consoleColors.BgMagenta, consoleColors.FgBlack));
 
-                    s.push("\n");
+                        s.push("\n");
+                    }
 
-                    s.push(`\`${bindInfo[bindName].executor}\`:\`${bindInfo[bindName].commands.toString()}\``);
-                    s.push("\n");
+                    s.push(`\`${bindInfo[bindName].executor}\`:\`${bindInfo[bindName].command.toString()}\``);
+                    
+                    if(isT){
+                        s.push("\n");
+    
+                        s.useConsoleWrite();
+                    }
 
-                    s.useConsoleWrite();
-
-                    return false;
+                    return onlyToRedirect(s.toRawString());
                 }
 
                 log(LogType.ERROR, "invalid syntax", "console.bind");
-                return false;
+                return onlyToRedirect(false);
             }
 
             let it = 2;
@@ -707,22 +1213,22 @@ let commands: Record<string, unifiedCommandTypes> = {
 
             if(executor.length === 0){
                 log(LogType.ERROR, "invalid syntax", "console.bind");
-                return false;
+                return onlyToRedirect(false);
             }
 
             if(data[it] != "`"){
                 log(LogType.ERROR, "invalid syntax", "console.bind");
-                return false;
+                return onlyToRedirect(false);
             }
 
             if(data[it+1] != ":"){
                 log(LogType.ERROR, "invalid syntax", "console.bind");
-                return false;
+                return onlyToRedirect(false);
             }     
 
             if(data[it+2] != "`"){
                 log(LogType.ERROR, "invalid syntax", "console.bind");
-                return false;
+                return onlyToRedirect(false);
             }
 
             let name = executor.split(" ")[0];
@@ -737,7 +1243,7 @@ let commands: Record<string, unifiedCommandTypes> = {
             if(it + 4 === it2){
                 delete bindInfo[name];
                 log(LogType.SUCCESS, "the bind has been removed!", "console.bind");
-                return false;
+                return onlyToRedirect(false);
             }
 
             let commandData: string = data.slice(it + 3, it2);
@@ -768,21 +1274,21 @@ let commands: Record<string, unifiedCommandTypes> = {
             if(commandData.length === 0){
                 delete bindInfo[name];
                 log(LogType.SUCCESS, "the bind was removed!", "console.bind");
-                return false;
+                return onlyToRedirect(false);
             }
 
-            let commandListToExecute = commandData.split(";").map(
-                (val: string) => val.trim()
-            );
+            // let commandListToExecute = commandData.split(";").map(
+            //     (val: string) => val.trim()
+            // );
 
             bindInfo[name] = {
                 name,
-                commands: commandListToExecute,
+                command: commandData.trim(),
                 executor
             } as bindDetail;
 
-            log(LogType.SUCCESS, "the bind was set!", "console.bind");
-            return false;
+            log(LogType.SUCCESS, "the bind was set: " + `\`${bindInfo[name].executor}\`:\`${bindInfo[name].command.toString()}\``, "console.bind");
+            return onlyToRedirect(true);
         }
 
     },
@@ -799,7 +1305,7 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: false,
         changeable: false,
         isAlias: false,
-        callback: (args: string[]): boolean => {
+        callback: (args: string[]): onlyIfRedirected => {
             let g = new multiDisplayer();
 
             g.push("  /\\_/\\  (\n");
@@ -809,9 +1315,11 @@ let commands: Record<string, unifiedCommandTypes> = {
             g.push(" ( | | )\n");
             g.push("(__d b__)\n");
 
-            g.useConsoleWrite();
+            if(args.includes("-t") || !legacyData.pipes){
+                g.useConsoleWrite(undefined, false);
+            }
 
-            return false;
+            return onlyToRedirect(g.toRawString());
 
             // }
         }                
@@ -852,7 +1360,7 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: false,
         changeable: false,
         isAlias: false,
-        callback: (args: string[]): boolean => {
+        callback: (args: string[]): onlyIfRedirected => {
 
             const builder = new multiDisplayer();
 
@@ -898,7 +1406,8 @@ let commands: Record<string, unifiedCommandTypes> = {
             builder.push("\n");
 
             builder.useConsoleWrite();
-            return false;
+
+            return onlyToRedirect(builder.toRawString());
         }
 
     },
@@ -920,6 +1429,112 @@ let commands: Record<string, unifiedCommandTypes> = {
         hidden: true,
         changeable: false
     },
+    "nil": {
+        usageinfo: "nil",
+        desc: "it outputs literally nothing (eats the whole input and does nothing)",
+        longdesc: "it outputs literally nothing (eats the whole input and does nothing. It can be useful if you want to block the result from showing up on unsupported commands",
+        hidden: false,
+        changeable: false,
+        callback: (preArgs: string[]): any => {
+            return undefined;
+        }
+    },
+    "true": {
+        usageinfo: "true",
+        desc: "outputs true",
+        longdesc: "outputs true",
+        hidden: false,
+        changeable: false,
+        callback: (preArgs: string[]): any => {
+            return true;
+        }
+    },
+    "True": {
+        isAlias: true,
+        aliasName: "true",
+        hidden: true,
+        changeable: false
+    },
+    "false": {
+        usageinfo: "true",
+        desc: "outputs false",
+        longdesc: "outputs false",
+        hidden: false,
+        changeable: false,
+        callback: (preArgs: string[]): any => {
+            return false;
+        }
+    },
+    "False": {
+        isAlias: true,
+        aliasName: "false",
+        hidden: true,
+        changeable: false
+    },
+    "number": {
+        usageinfo: "num [...<number>]",
+        desc: "creates a number",
+        longdesc: "creates a number from provided numbers. If multiple ones are provided, all of them are summed. It supports negative numbers with ! or - as prefix. ",
+        hidden: false,
+        changeable: false,
+        callback: (preArgs: string[]): any => {
+            const s = smartArgs(preArgs);
+
+            let sum = 0;
+            for(const som of s.args){
+                if(som[0] === "!"){
+                    sum += -Number(som.slice(1))
+                }
+                else{
+
+                    sum += Number(som);
+                }
+            }
+
+            return sum;
+        }
+    },
+    "num": {
+        isAlias: true,
+        aliasName: "number",
+        hidden: true,
+        changeable: false
+    },
+    "sum": {
+        isAlias: true,
+        aliasName: "number",
+        hidden: true,
+        changeable: false
+    },
+    "exists": {
+        usageinfo: "exists [-b/-c] <command|bind>",
+        desc: "checks whether the bind or command exist",
+        longdesc: "checks whether a bind or a command exist\n\n* exists -c <command> - checks for a command\n* exists -b <bind> - checks for a bind\n* exists -b -c <command|bind> - checks for either bind or command.\n\nYou can combine arguments into a single -, writting '-bc'/'-cb' instead of '-b -c'",
+        hidden: false,
+        changeable: false,
+        callback: (preArgs: string[]): any => {
+            const args = smartArgs(preArgs);
+
+            if(args.argsWithoutDash.length != 1){
+                return explicitUndefined();
+            }
+
+            let toReturn = false;
+
+            // console.log(args.dashed);
+
+            if(args.dashCombined.includes("b")){
+                toReturn ||= Object.hasOwn(bindInfo, args.argsWithoutDash[0]);
+            }
+
+            if(args.dashCombined.includes("c")){
+                toReturn ||= Object.hasOwn(commands, args.argsWithoutDash[0]);
+            }
+
+            return toReturn;
+
+        }
+    },
     "?": {
         isAlias: true,
         aliasName: "help",
@@ -932,9 +1547,14 @@ let commands: Record<string, unifiedCommandTypes> = {
         longdesc: "Provides the long description and command usage of provided command and if not specified shows the list of commands.",
         hidden: false,
         changeable: false,
-        callback: (args: string[]): boolean => {
+        callback: (preArgs: string[]): any => {
+            const args = smartArgs(preArgs);
+            // return args;
+
             // if there was no arguments (the first is called command name)
-            if(args.length === 1){
+            if(
+                args.length === 0
+            ){
 
                 let toDisplay: string[] = [];
                 let colors: consoleColor[] = [];
@@ -960,28 +1580,35 @@ let commands: Record<string, unifiedCommandTypes> = {
                     }
                 }
 
-
+                if(args.isEnding)
                 consoleMultiWrite(toDisplay, colors);
+
+                return onlyToRedirect(toDisplay.join(""));
             }
 
-            else if(args.length == 2){
+            else if(args.length == 1){
                 let forMulti = new multiDisplayer();
 
+                let cmdToCheck: string = args.args[0];
 
-
-                if(!(args[1] in commands)){
+                if(!(cmdToCheck in commands)){
                     forMulti.push("There's no reference to ", consoleColors.FgRed);
-                    forMulti.push(args[1], consoleColors.FgYellow);
+                    forMulti.push(cmdToCheck, consoleColors.FgYellow);
                     forMulti.push(" in any list!\n", consoleColors.FgRed);
                 }
                 else{
-                    let cmd = commands[args[1]];
+                    let cmd = commands[cmdToCheck];
 
                     let cmdTouse;
+                    let cmdTouseName;
                     if(cmd.isAlias){
+                        cmdTouseName = cmd.aliasName;
                         cmdTouse = commands[cmd.aliasName as string];
                     }
-                    else cmdTouse = cmd;
+                    else{
+                        cmdTouse = cmd;
+                        cmdTouseName = cmdToCheck;
+                    } 
 
 
                     forMulti.push("_______________", consoleColors.BgYellow + consoleColors.FgYellow);
@@ -990,6 +1617,10 @@ let commands: Record<string, unifiedCommandTypes> = {
                     // const commandData = commands[args[1]];
 
                     forMulti.push(" " + cmdTouse.usageinfo + "\n\n", consoleColors.FgCyan);
+
+
+                    forMulti.push("aliases: ", consoleColors.FgGray);
+                    forMulti.push(getAliases(cmdTouseName).join(", ") + "\n", consoleColors.FgWhite);
 
                     forMulti.push("hidden: ", consoleColors.FgGray);
                     forMulti.push(String(cmdTouse.hidden) + "\n", consoleColors.FgWhite);
@@ -1010,13 +1641,16 @@ let commands: Record<string, unifiedCommandTypes> = {
                     forMulti.push("\n")
                 }
 
+                if(args.isEnding)
                 forMulti.useConsoleWrite();
+
+                return onlyToRedirect(forMulti.toRawString());
 
                 
             }
 
 
-            return false;
+            return onlyToRedirect(false);
 
         }
     }
@@ -1149,6 +1783,10 @@ function registerCommand(name: string, data: unifiedCommandTypes, edit: boolean 
         throw new logSystemError("The callback must be set for no alias.")
     }
 
+    // delete alias cache
+    delete aliasCache[name];
+    if(data.aliasName) delete aliasCache[data.aliasName];
+
     if(data.isAlias){
         commands[name] = {
             usageinfo: undefined,
@@ -1179,6 +1817,13 @@ function registerCommand(name: string, data: unifiedCommandTypes, edit: boolean 
         async: typeof data.async === "boolean" ? data.async : false
     };
 
+    // remove cache
+    // delete aliasCache[name];
+    // // @ts-ignore
+    // console.log(aliasCache[commands[name]]);
+    // if(commands[name].aliasName) delete aliasCache[commands[name].aliasName];
+    // // @ts-ignore
+    // console.log(aliasCache[commands[name]]);
     // commands[name] = [
     //     callback, usage, desc, longdesc
     // ];
@@ -1190,14 +1835,18 @@ const __registerCommand = registerCommand;
 interface legacyDataType{
     initialized: boolean,
     currentVersion: number,
-    registerMode: number
+    registerMode: number,
+    noSpecialArguments: boolean,
+    pipes: boolean
 }
 
 /** the legacy Data */
 const legacyData: legacyDataType = {
     initialized: false,
     currentVersion: getCurrentVersionOfLogSystem("number") as number,
-    registerMode: getCurrentVersionOfLogSystem("number") as number
+    registerMode: getCurrentVersionOfLogSystem("number") as number,
+    noSpecialArguments: false,
+    pipes: true
 }
 
 /** allows you to get legacyInformation */
@@ -1214,14 +1863,19 @@ function getLegacyInformation(): legacyDataType{
  * @param value the value that you is needed to be set
  * @returns whether it's legal to do so
  */
-function validateLegacyProperty(propertyName: string, value: any): boolean{
+function validateLegacyProperty(propertyName: keyof legacyDataType, value: any): boolean{
     switch(propertyName){
-        case "intialized":
+        case "initialized":
             return false;
         case "currentVersion":
             return false;
         case "registerMode":
-            return typeof value === "number"
+            return typeof value === "number";
+        case "noSpecialArguments":
+            return typeof value === "boolean";
+        case "pipes":
+            return typeof value === "boolean"
+
         default:
             throw new Error("not existing property!");
     }
@@ -1240,7 +1894,7 @@ registerCommandLegacyForceUse()
  * @param value the new value
  * @param bypassSafety whether to bypass safety mechanism
  */
-function setLegacyInformation(propertyName: string, value: any, bypassSafety: boolean = false){
+function setLegacyInformation<property extends keyof legacyDataType>(propertyName: property, value: legacyDataType[property], bypassSafety: boolean = false){
     if(legacyData.initialized && !bypassSafety){
         throw new logSystemError("Legacy: you can't change legacy data after intialization!");
     }
@@ -1253,8 +1907,19 @@ function setLegacyInformation(propertyName: string, value: any, bypassSafety: bo
         throw new logSystemError("Legacy: You can't set that value to that property!");
     }
 
+    log(LogType.INFO, `'${propertyName}' was changed to '${value}'!`, "legacy");
+    legacyCheckForWarningAndErrors(propertyName, value);
+
     // @ts-ignore
     legacyData[propertyName] = value;
+}
+
+function legacyCheckForWarningAndErrors<property extends keyof legacyDataType>(propertyName: property, value: legacyDataType[property]){
+    switch(propertyName){
+        case 'noSpecialArguments': {
+            log(LogType.WARNING, `NOTE: noSpecialArguments may cause other commands to not work correctly as they may depend on -t to render better view and not check for legacy settings! Some internal commands may also see errors. Pipping may be drastically affected. Disable that setting unless you necessarly need that. Consider disabling pipes by settings them to false instead of that option or with that option!`, "legacy")
+        }
+    }
 }
 
 // legacyData.usedOldRegisterSystem = true;
@@ -1313,7 +1978,8 @@ interface commandExecOptions{
 }
 
 async function commandExec(command: string, options: commandExecOptions = {}) {
-    handleCommandInternal(command, options.silent, options.logNode);
+    // handleCommandInternal(command.split(" "), options.silent, options.logNode);
+    commandInternalExec(command, options.silent, options.logNode);
 }
 
 /**
@@ -1333,24 +1999,737 @@ const commandInterface = {
 };
 
 function handleEnter(text: string, silent: boolean = false){
-    // handle command history
+    if(text.trim() == ""){
+        // textboxVisibility(false);
+        // textboxVisibility(true);
+        if(textboxVisibility()) printViewTextbox();
+        return;
+    }
+
     if(commandHistory.length > 50) 
         commandHistory = commandHistory.slice(commandHistory.length - 50, commandHistory.length);
     commandHistory.push(text);
 
-    handleCommandInternal(text, silent);
+    // handleCommandInternal(text, silent);
+    commandInternalExec(text);
 }
 
+// interface commandLauncherOptions{
+//     silent?: boolean,
+//     logNogde?: string | logNode
+// }
+
+enum specialTypes{
+    null,
+    redirection,
+    unkownCmd,
+    pipeExecutorHalt,
+    explicitUndefined
+}
+
+interface controlTypes{
+    __$special: specialTypes,
+    val?: any
+}
+
+interface onlyIfRedirected extends controlTypes{
+    __$special: specialTypes.redirection,
+    val: any
+}
+
+interface pipeExecutorHalt{
+    __$special: specialTypes.pipeExecutorHalt
+} 
+
+interface pipeExplicitUndefined{
+    __$special: specialTypes.explicitUndefined
+} 
+
+
+function onlyToRedirect(val: any): onlyIfRedirected{
+    return {__$special: specialTypes.redirection, val};
+}
+
+function isControlType(val: any): val is controlTypes{
+    return typeof val === "object" && "__$special" in val;
+}
+
+function isOnlyToRedirect(val: any): val is onlyIfRedirected{
+    return typeof val === "object" &&
+    "__$special" in val &&
+    val.__$special === specialTypes.redirection;
+}
+
+function isPipeHalt(val: any): val is pipeExecutorHalt{
+    return typeof val === "object" && "__$special" in val &&
+    val.__$special === specialTypes.pipeExecutorHalt;
+}
+
+function pipeHalt(): pipeExecutorHalt{
+    return {__$special: specialTypes.pipeExecutorHalt};
+}
+
+function explicitUndefined(): pipeExplicitUndefined{
+    return {__$special: specialTypes.explicitUndefined};
+}
+
+function isExplicitUndefined(val: any): val is pipeExplicitUndefined{
+    return typeof val === "object" && "__$special" in val &&
+    val.__$special === specialTypes.explicitUndefined;
+}
+
+function removeInternalArguments(ar: any[]): any[]{
+    return ar.filter(
+        (val) => !(typeof val === "string" &&
+            val in internalArgsList
+        )
+    );
+}
+
+interface smartArgumentList{
+    name: string,
+    commandName: string,
+    args: string[],
+    array: string[],
+    orginal: string[],
+    orginalLength: number,
+    internalArgs: string[],
+    internal: string[],
+    isEnding: boolean,
+    length: number,
+    dashed: string[],
+    argsWithDash: string[],
+    dashCombined: string,
+    argsWithoutDash: string[],
+    [Symbol.iterator](): any,
+    [Symbol.toStringTag](): string
+    [inspect.custom](depth: number, options: InspectOptions, inspect: (value: any, opts?: InspectOptionsStylized) => string): string
+}
+
+const internalArgsList = ["-t"];
+
+function smartArgs(preargs: any[]): smartArgumentList{
+    const commandName = preargs[0];
+    const argsWithoutOne = preargs.slice(1);
+    // console.log(argsWithoutOne, preargs);
+    
+    const argsFiltered: string[] = [];
+    const argsWithDash: string[] = [];
+    const argsWithoutDash: string[] = [];
+
+    const internalArgs = [];
+    let isEnding: boolean = !legacyData.pipes;
+
+    for(const arg of argsWithoutOne){
+        // console.log(typeof arg, arg, arg === "-t", arg == "-t", arg in internalar);
+        if(typeof arg === "string"){
+            if(internalArgsList.includes(arg)){
+                internalArgs.push(arg);
+    
+                // console.log(arg, arg === "-t")
+                if(arg === "-t") isEnding ||= true;
+            }
+            else{
+                argsFiltered.push(arg);
+            }
+            
+            if(arg.length > 0 && arg[0] === "-"){
+                argsWithDash.push(arg.slice(1));
+            }
+            else{
+                argsWithoutDash.push(arg);
+            }
+        }
+        else{
+            argsFiltered.push(arg);
+            argsWithDash.push(arg);
+        }
+
+
+
+        
+    }
+
+    const dashCombined = argsWithDash.join("");
+
+    return {
+        name: commandName,
+        commandName,
+        args: argsFiltered,
+        array: preargs,
+        orginal: preargs,
+        orginalLength: preargs.length,
+        internalArgs,
+        internal: internalArgs,
+        isEnding,
+        length: argsFiltered.length,
+        dashed: argsWithDash,
+        argsWithDash,
+        dashCombined,
+        argsWithoutDash,
+        [Symbol.iterator](){
+            let i = 0;
+            return {
+                next(){
+                    // console.log(i,  argsFiltered.length);
+                    if(i < argsFiltered.length){
+                        return {value: argsFiltered[i++], done: false}
+                    }
+                    else{
+                        return {done: true}
+                    }
+                }
+            }
+        },
+        [Symbol.toStringTag](){
+            return `smartArgs{${commandName}(\`${argsWithoutOne.join(" ")}\`)}`;
+        },
+        [inspect.custom](depth: number, options: InspectOptions, inspect: (value: any, opts?: InspectOptionsStylized) => string) {
+            return `smartArgs{${commandName}(\`${inspect(argsWithoutOne, options as InspectOptionsStylized)}\`)}`;
+        }
+    };
+
+}
+
+// function smartArgs(args: string[]): smartArgumentList{
+//     const commandName = args[0];
+
+//     const argsWithoutOne = args.slice(1);
+
+//     const internalArgs = argsWithoutOne.filter(
+//         (s) => s === "-t"
+//     );
+
+//     const isEnding = argsWithoutOne.includes("-t") || !legacyData.pipes;
+
+//     const argsFiltered = removeInternalArguments(argsWithoutOne);
+
+//     const argumentsWithDash = argsWithoutOne.filter(
+//         (s) => {
+//             // console.log(s, typeof s === "string", s.length > 1, s[0] == "-");
+//             return typeof s === "string" && s.length > 1 && s[0] == "-"
+//         }
+//     ).map((s) => s.slice(1));
+
+//     const dashCombined = argumentsWithDash.join("");
+
+//     const argsWithoutDashed = argsWithoutOne.filter(
+//         (s) => {
+//             return typeof s !== "string" || s[0] != "-"
+//         }
+//     );
+
+//     // console.log(argsWithoutDashed);
+
+//     return {
+//         name: commandName,
+//         commandName,
+//         args: argsFiltered,
+//         array: args,
+//         orginal: args,
+//         orginalLength: args.length,
+//         internalArgs,
+//         internal: internalArgs,
+//         isEnding,
+//         length: argsFiltered.length,
+//         dashed: argumentsWithDash,
+//         dashCombined,
+//         argsWithoutDashed,
+//         [Symbol.iterator](){
+//             let i = 0;
+//             return {
+//                 next(){
+//                     // console.log(i,  argsFiltered.length);
+//                     if(i < argsFiltered.length){
+//                         return {value: argsFiltered[i++], done: false}
+//                     }
+//                     else{
+//                         return {done: true}
+//                     }
+//                 }
+//             }
+//         }
+//     };
+// }
+
+
+function commandInternalExec(text: string, silent: boolean = false, logNode: string | logNode = "console", onlyReturn: boolean = false){
+    if(!silent)
+    log(LogType.INFO, `This command has been executed: '${text}'`, logNode);
+
+    let res;
+    if(legacyData.pipes){
+        const pipeTree = commandDividerInternal(text);
+        res = pipeExecutor(pipeTree, {silent, logNode});
+    }
+    else{
+        const parts = text.split(" ");
+
+        let partsToUse;
+        if(legacyData.noSpecialArguments){
+            partsToUse = parts;
+        }
+        else{
+            partsToUse = [parts[0], "-t" , ...parts.slice(1)];
+        }
+
+        res = handleCommandInternal(partsToUse, silent, logNode);
+    }
+    
+
+    if(onlyReturn){
+        return res;
+    }
+
+    if(isExplicitUndefined(res)){
+        consoleWrite("undefined", undefined, undefined);
+    }
+    else if(res != undefined){
+        if(isOnlyToRedirect(res)) return;
+
+        const toW = tryToGetAsStringToPrint(res, true);
+
+        consoleWrite(toW, undefined, undefined, "");
+
+        // consolePairWrite(
+        //     tryToGetAsStringToPrint(res, false),
+        //     tryToGetAsStringToPrint(res, true)
+        // );
+
+        // consoleWrite(tryToGetAsStringToPrint(res, true));
+        // s.useConsoleWrite();
+
+        // consoleWrite(
+        //     inspect(res, true, null, true) + "\n", 
+        //     consoleColors.FgWhite
+        // );
+    }
+}
+
+function tryToGetAsStringToPrint(val: any, canUseColors: boolean = false): string {
+    let toPrint: string;
+    // toPrint = inspect(val, true, null, canUseColors); 
+    switch(typeof val){
+        case "string": {
+            toPrint = val;
+            break;
+        }
+        case "object":
+        default:
+            if(isOnlyToRedirect(val)){
+                toPrint = val.val;
+                break;
+            }
+
+            toPrint = inspect(val, true, null, canUseColors); 
+    }
+
+    toPrint += "\n";
+
+    return toPrint;
+}
+
+enum pipeType{
+    unkown,
+    fileFrom,
+    command,
+    fileSet,
+    fileAppend,
+    and,
+    or,
+    pipe,
+    dataClear
+}
+
+interface commandPipe{
+    type: pipeType,
+    val: any
+}
+
+const specialChars = [">", "<"];
+const commandParsingStop = ["|", "&", ";"];
+
+function commandDividerInternal(text: string){
+    if(text.length == 0) return [];
+
+    let commandPipe: Array<commandPipe> = [];
+    let i: number = 0;
+    while(i < text.length){
+        // console.log(text[i], ' wda');
+        const [theNewI, commandData] = pipeDividerInternal(text, i);
+
+        commandPipe.push(...commandData);
+        i = theNewI;
+
+        while(text.length > i && text[i] == " ") i++;
+        if(!(i < text.length)) return commandPipe;
+
+
+        switch(text[i]){
+            case "|":
+                i++;
+
+                if(i < text.length && text[i] === "|"){
+                    commandPipe.push({
+                        type: pipeType.or,
+                        val: undefined
+                    });
+                    
+                    i++;
+                    break;
+                }
+
+                commandPipe.push({
+                    type: pipeType.pipe,
+                    val: undefined
+                });
+                break;
+            case ";": {
+                i++;
+                commandPipe.push({
+                    type: pipeType.dataClear,
+                    val: undefined
+                });
+                break;
+            }
+            case "&":
+                i++;
+
+                if(i < text.length && text[i] === "&"){
+                    commandPipe.push({
+                        type: pipeType.and,
+                        val: undefined
+                    });
+
+                    i++;
+                    break;
+                }
+            default:
+                throw new Error("unexpected token: " + text[i]);
+        }
+    }
+
+    return commandPipe;
+}
+
+function getFileDesc(i: number, text: string): [number, string]{
+    let cmdDesc: string = "";
+
+    while(i < text.length && text[i] != " " && 
+        !specialChars.includes(text[i])
+        &&
+        !commandParsingStop.includes(text[i])
+    ){
+        cmdDesc += text[i];
+        i++;
+    }
+    return [i, cmdDesc];
+}
+
+function pipeDividerInternal(text: string, startingPoint: number): [number, Array<commandPipe>]{
+    let toReturn: Array<commandPipe> = [];
+
+    let cmd: string = "";
+    let i: number = startingPoint;
+
+    for(; i < text.length; i++){
+        if(text[i] == "\\" && 
+            [...specialChars, ...commandParsingStop].includes(text[i + 1])
+        ){
+            i++;
+            if(!(i < text.length)) break;
+            cmd += text[i];
+            continue;
+        }
+        
+        if(specialChars.includes(text[i]) || commandParsingStop.includes(text[i])) break;
+        cmd += text[i];
+    }
+
+    cmd = cmd.trim();
+
+    toReturn.push({
+        type: pipeType.command,
+        val: cmd
+    });
+
+    if(!(i < text.length)) return [i, toReturn];
+
+    if(!specialChars.includes(text[i]) || commandParsingStop.includes(text[i])){
+        return [i, toReturn];
+    }
+
+    let loopAllowed = true;
+    while(i < text.length && loopAllowed){
+        // console.log(text[i]);
+        while(i < text.length && text[i] == " ") i++;
+
+        let cmdDesc = "";
+        i++;
+        switch(text[i-1]){
+            case "<":
+                // while(i < text.length && text[i] != " " && 
+                //     !specialChars.includes(text[i])){
+                //     cmdDesc += text[i];
+                //     i++;
+                // }
+
+                [i, cmdDesc] = getFileDesc(i, text);
+
+                toReturn.push({
+                    type: pipeType.fileFrom,
+                    val: cmdDesc
+                });
+                break;
+            case ">":
+                let isAppend = text[i] == ">";
+                if(isAppend) i++;
+
+                // while(i < text.length && text[i] != " " && 
+                //     !specialChars.includes(text[i])){
+                //     cmdDesc += text[i];
+                //     i++;
+                // }
+
+                [i, cmdDesc] = getFileDesc(i, text);
+
+                toReturn.push({
+                    type: isAppend ? pipeType.fileAppend : pipeType.fileSet,
+                    val: cmdDesc
+                });
+                break;
+            default:
+                i--;
+                loopAllowed = false;
+                break;
+            }
+    }
+   
+
+    toReturn = toReturn.sort(
+       (a: commandPipe, b: commandPipe): number => {
+            return a.type - b.type;
+       }
+    );
+
+    return [i, toReturn];
+}
+
+interface executorConfig{
+    silent?: boolean,
+    logNode?: string | logNode
+}
+
+interface executorConfigFin extends Required<executorConfig>{
+
+}
+
+/**
+ * tests the object to determine whether it should be treated as a positive result of a command
+ * it's required because javascript tends for example to treat empty strings as false
+ * 
+ * @param obj any object to test
+ * @returns the result (boolean)
+ */
+function internalIsTrue(obj: any): boolean{
+    switch(typeof obj){
+        case "boolean":
+            return obj;
+
+        case "bigint":
+            return true;
+        
+        case "function":
+            return true;
+
+        case "number":
+            return true;
+
+        case "object":
+            return true;
+        
+        case "string":
+            return true;
+        
+        case "symbol":
+            return true;
+
+        case "undefined":
+            return false;
+
+
+        default:
+            return false;
+    }
+}
+
+function pipeExecutor(pipeTree: commandPipe[], config: executorConfig = {}){
+    const conf: executorConfigFin = {
+        silent: false,
+        logNode: "console"
+    };
+
+    Object.assign(conf, config);
+
+    let pipeHaltCalled: boolean = false;
+    let result: any = void 0;
+
+
+    // console.log(pipeTree);
+    for(let i = 0; i < pipeTree.length; i++){
+        const pipe = pipeTree[i];
+
+        // console.log(pipe, result);
+
+        if(pipeHaltCalled){
+            while(i < pipeTree.length && pipeTree[i].type !== pipeType.dataClear) i++;
+
+            pipeHaltCalled = false;
+
+            if(!(i < pipeTree.length))
+                return undefined;
+        }
+
+        switch(pipe.type){
+            case pipeType.fileFrom: {
+
+
+                let f = readFileSync(join(process.cwd(), pipe.val as string));
+
+                result = f;
+                break;
+            }
+
+            case pipeType.fileAppend: {
+                let m = result;
+                if(Array.isArray(m) && m.length === 1){
+                    m = m[0];
+                }
+                
+                if(typeof m !== "string" && !(
+                    m instanceof Uint8Array
+                )){
+                    m = Buffer.of(m);
+                }
+
+                appendFileSync(join(process.cwd(), pipe.val as string), m);
+                break;
+            }
+
+            case pipeType.fileSet: {
+                let m = result;
+                if(Array.isArray(m) && m.length === 1){
+                    m = m[0];
+                }
+                
+                if(typeof m !== "string" && !(
+                    m instanceof Uint8Array
+                )){
+                    m = Buffer.of(m);
+                }
+
+                writeFileSync(join(process.cwd(), pipe.val as string), m);
+                break;
+            }
+            case pipeType.dataClear: {
+                result = undefined;
+                pipeHaltCalled = false;
+                break;
+            }
+
+            case pipeType.command: {
+                const commandExec = pipe.val as string;
+                const commandExecParts = commandExec.split(" ");
+
+                const commandPartsToUse = [commandExecParts[0]];
+
+                // console.log("meow ", i, pipeTree.length);
+                if(
+                    !legacyData.noSpecialArguments &&(
+                        i === pipeTree.length - 1
+                        ||
+                        (
+                            i + 1 < pipeTree.length &&
+                            pipeTree[i + 1].type === pipeType.dataClear
+                        )
+                    )
+                ){
+                    commandPartsToUse.push("-t");
+                }
+                // console.log(commandPartsToUse);
+
+                commandPartsToUse.push(...commandExecParts.slice(1));
+
+
+                if(Array.isArray(result)){
+                    commandPartsToUse.push(...result);
+                }
+                else if(result !== undefined){
+                    commandPartsToUse.push(result);
+                }
+
+                // console.log('dadad ', commandPartsToUse);
+                const cmdRes = handleCommandInternal(
+                    commandPartsToUse, conf.silent, conf.logNode
+                );
+
+                // console.log(cmdRes);s
+
+                if(isControlType(cmdRes)){
+                    if(isOnlyToRedirect(cmdRes) && i !== pipeTree.length - 1){
+                        result = cmdRes.val;
+                    }
+                    else if(isPipeHalt(cmdRes)){
+                        pipeHaltCalled = true;
+                    }
+                    else if(isExplicitUndefined(cmdRes)){
+                        result = cmdRes;
+                    }
+                    else return undefined;
+                }
+                else{
+                    result = cmdRes;
+                }
+
+                break;
+            }
+            case pipeType.pipe: {
+                // NO NEED TO IMPLEMENT CAUSE IT ACTUALLY ALREADY WORKING!
+                break;
+            }
+
+            case pipeType.and: {
+                if(!internalIsTrue(result)){
+                    return result;
+                }
+
+                break;
+            }
+
+            case pipeType.or: {
+                if(internalIsTrue(result)){
+                    return result;
+                }
+
+                break;
+            }
+        }
+    }
+
+    return result;
+}
+
+
+
 // that functions handles commands. It's for internal usage
-function handleCommandInternal(text: string, silent: boolean = false, logNode: string | logNode = "console"): boolean | void{
+function handleCommandInternal(parts: any[], silent: boolean = false, logNode: string | logNode = "console"): cmdCallbackResponse | void{
     // get parts
-    let parts = text.split(" ");
 
     // try to execute it
     if(Object.hasOwn(commands, parts[0])){
         // print the info as log about that cmd
-        if(!silent)
-        log(LogType.INFO, `This command has been executed: '${text}'`, logNode);
+        // if(!silent)
+        // log(LogType.INFO, `This command has been executed: '${text}'`, logNode);
 
         try {
             const cmdData = commands[parts[0]];
@@ -1389,29 +2768,33 @@ function handleCommandInternal(text: string, silent: boolean = false, logNode: s
         // catch errors
         } catch (error) {
             log(LogType.ERROR, "The error has occured during the command execution:\n" + formatError(error), logNode);
-            return false;
+            return {__$special: specialTypes.pipeExecutorHalt};
         }
     }
     else if(parts[0] in bindInfo){
         // print the info as log about that bind
-        if(!silent)
-        log(LogType.INFO, `This bind has been executed: '${text}'`, logNode);
+        // if(!silent)
+        // log(LogType.INFO, `This bind has been executed: '${text}'`, logNode);
 
         let bindD = bindInfo[parts[0]];
         try {
-            for(const command of bindD.commands){
-                handleEnter(command, true);
-            }
+            // for(const command of bindD.commands){
+            //     commandInternalExec(command, true);
+            // }
+            return commandInternalExec(bindD.command, true, logNode, true);
         } catch (error) {
             log(LogType.ERROR, "The error has occured during the bind execution:\n" + formatError(error), logNode);
-            return false;
+            return {__$special: specialTypes.pipeExecutorHalt};
         }
     }
     // catch unkown command
     else{
         if(!silent)
-        log(LogType.ERROR, "unknown command", logNode);
-        return true;  
+        log(LogType.ERROR, `unknown command '${parts[0]}'` , logNode);
+
+        if(!legacyData.pipes) return undefined;
+
+        return {__$special: specialTypes.pipeExecutorHalt}; 
     }
 
     // switch(parts[0]){
@@ -1716,15 +3099,63 @@ function getCounter(name: string): undefined | number{
 }
 
 
+/**
+ * prints the viewTextbox
+ */
 function printViewTextbox(){
     process.stdout.write("\x1b[0m> \x1b[35m"+text);
 }
 
+
 /**
- * writes a raw text to the console. Equivalent to process.stdout.write()
- * @param text the raw text
+ * IT'S A VERY LOW LEVEL. CONSIDER USING consoleWrite instead 
+ * (or consoleMultiWrite or multiDisplayer if you want to have more abstraction)
+ * 
+ * it just prints (or also writes to a file) as it says.
+ * it will not care about displayed anything. It won't check for anything.
+ * Use it on your own risk!
+ * 
+ * it requires by default disabling the textbox visibility and then turning it on!
+ * (something that consoleWrite does itself!)
+ * 
+ * it does not print a new line!
+ * 
+ * It can cause a lot of undesired and unexpected behaviour with the cause without the caution
+ *
+ * 
+ * @param textToWrite the raw text to print
+ * @param fileToWrite what to print to a file log. a string will be printed directly. The booleans will cause a special behaviour, where false means no writting to a file and true means copying the first argument
  */
-function consoleWrite(textToWrite: string, WithColor: consoleColors | consoleColors[] = consoleColors.Reset, writeToFile: boolean = true){
+function consoleUltraRawWrite(
+    textToWrite: string, 
+    fileToWrite: string | boolean = true
+){
+    process.stdout.write(textToWrite);
+
+    if(fileToWrite === true){
+        appendFileSync(finalLatest, textToWrite);
+    }
+    else if(fileToWrite !== false){
+        appendFileSync(finalLatest, fileToWrite);
+    }
+}
+
+/**
+ * writes a raw text to the console. Allows you to not use log format
+ * 
+ * if you want even more low level api use consoleUltraRawWrite()
+ * 
+ * @param textToWrite the text to write
+ * @param WithColor color (optional). Defaults to consoleColors.Reset
+ * @param writeToFile whether it should be written to the file. defaults to true
+ * @param end the end symbol. defaults to \n
+ */
+function consoleWrite(
+    textToWrite: string, 
+    WithColor: consoleColors | consoleColors[] | consoleColorRGB = consoleColors.Reset, 
+    writeToFile: boolean = true,
+    end: string = "\n"
+){
     if(Array.isArray(WithColor)) WithColor = WithColor.reduce((prev, next) => (prev+next) as consoleColors) as any as consoleColors;
 
     if(viewTextBox){
@@ -1732,9 +3163,9 @@ function consoleWrite(textToWrite: string, WithColor: consoleColors | consoleCol
         process.stdout.write("\r");
     }
 
-    process.stdout.write(WithColor+textToWrite+"\x1b[0m");
+    process.stdout.write(WithColor+textToWrite+"\x1b[0m"+end);
 
-    if(writeToFile) appendFileSync(finalLatest, textToWrite);
+    if(writeToFile) appendFileSync(finalLatest, stripVTControlCharacters(textToWrite)+end);
 
     if(viewTextBox){printViewTextbox()}
 }
@@ -1743,6 +3174,8 @@ function consoleWrite(textToWrite: string, WithColor: consoleColors | consoleCol
  * the function to combine colors
  * 
  * USE IT TO ENSURE THE COMPATIBILITY WITH THE NEXT VERSION
+ * 
+ * IT DOESNT WORK with colors created with libraries like chalk or with generateAnsiColor
  * 
  * @param colors colors
  * @returns the combined colors
@@ -1755,6 +3188,25 @@ function combineColors(...colors: consoleColor[]): consoleColorsMulti{
     }
 
     return toReturn;
+}
+
+/**
+ * allows you to write double input (with colors and without to not mess with logs files)
+ * @param withoutColors 
+ * @param withColors 
+ */
+function consolePairWrite(withoutColors: string, withColors: string){
+    if(viewTextBox){
+        process.stdout.clearLine(0);
+        process.stdout.write("\r");
+        process.stdout.write(consoleColors.Reset);
+    }
+
+    process.stdout.write(withColors);
+    
+    appendFileSync(finalLatest, withoutColors);
+
+    if(viewTextBox){printViewTextbox()}
 }
 
 /**
@@ -1772,10 +3224,13 @@ function combineColors(...colors: consoleColor[]): consoleColorsMulti{
  * @param texts the array of texts
  * @param colors the array of colors
  * @param writeToFile whether to write it to file or only to console
+ * @param end the end symbol. It defaults to \n
  */
-function consoleMultiWrite(texts: string[], colors: Array<consoleColors | consoleColorsMulti>, writeToFile: boolean = true){
+function consoleMultiWrite(texts: string[], colors: Array<consoleColors | consoleColorsMulti>, writeToFile: boolean = true, end: string = ""){
     if(texts.length !== colors.length){
-        throw new logSystemError("Text array length and colors array length dont match!");
+        throw new logSystemError("Text array length and colors array length dont match!"
+            + texts.toString() + " vs " + colors.toString()
+        );
     }
 
 
@@ -1794,9 +3249,9 @@ function consoleMultiWrite(texts: string[], colors: Array<consoleColors | consol
         process.stdout.write(consoleColors.Reset);
     }
 
-    process.stdout.write(toDisplay);
+    process.stdout.write(toDisplay+end);
     
-    if(writeToFile) appendFileSync(finalLatest, toWrite);
+    if(writeToFile) appendFileSync(finalLatest, toWrite+end);
 
     if(viewTextBox){printViewTextbox()}
 }
@@ -1820,11 +3275,32 @@ function consoleMultiWrite(texts: string[], colors: Array<consoleColors | consol
  * would be equal to:
  * consoleMultiWrite(["\n", "meoww!", " :3", "\n"], ["", consoleColors.fgRed, consoleColors.fgBlue, ""]);
  */
+
+type multiPairDisplayer = [string, string];
+
+function multiPairDisplayerCreate(withoutColors: string, withColors: string): multiPairDisplayer{
+    return [withoutColors, withColors];
+}
+
 class multiDisplayer{
     private texts: string[] = [];
     private colors: Array<consoleColor | consoleColorsMulti> = [];
 
     constructor(){}
+
+    // static fromReadyString(text: string){
+    //     const toReturn = new multiDisplayer();
+
+    //     const codes = [];
+
+    //     const ansiRegex = /\u001b\[[0-9;]*m/g;
+
+    //     toReturn.colors = text.match(ansiRegex) || [];
+
+    //     toReturn.texts = text.split(ansiRegex).filter(s => s);
+
+    //     return toReturn;
+    // }
 
     /**
      * adds the new characters (and) colors to displayer
@@ -1877,6 +3353,14 @@ class multiDisplayer{
     }
 
     /**
+     * returns the string without color table
+     * @returns the raw string
+     */
+    toRawString(): string {
+        return this.texts.join("");
+    }
+
+    /**
      * allows you to use finally consoleWrite. It's required because js has no constructors
      * @param writeToFile parameter to be passed to consoleWrite. Leave it as undefined to leave it as default
      * @param clearObj whether to clear the arrays on that objects. Defaults to true
@@ -1904,8 +3388,21 @@ class multiDisplayer{
     }
 }
 
+// types for internal typing
 type consoleColor = string;
 type consoleColorsMulti = string;
+type consoleColorRGB = string;
+
+/**
+ * generate a new ansi Color with rgb
+ * @param red 
+ * @param green 
+ * @param blue 
+ * @returns the ansi color
+ */
+function generateAnsiColor(red: number, green: number, blue: number): consoleColorRGB {
+  return `\u001b[38;2;${red};${green};${blue}m`;
+}
 
 /**
  * colors
@@ -1940,6 +3437,9 @@ enum consoleColors{
     BgGray = "\x1b[100m",
 }
 
+/**
+ * quick lookup table for color groups
+ */
 let colorTable: Record<string, consoleColor> = {
 
     "info": consoleColors.FgWhite,
@@ -1968,6 +3468,7 @@ function blockLogs(status?: boolean): boolean{
     return blockLogsVar;
 }
 
+
 /**
  * function to use to hide textbox to write texts
  * @param status allows to change the status
@@ -1980,7 +3481,7 @@ function textboxVisibility(status?: boolean): boolean{
 		process.stdout.clearLine(0);
         process.stdout.write("\r");
 	}
-	else{
+	else if(status === true){
 		process.stdout.write("\x1b[0m> \x1b[35m"+text);
 	}
 
@@ -2009,14 +3510,27 @@ function formatTaskError(taskName: string, error: any): string{
  * @param message the task description
  * @param func function that runs task (it will invoke it without any parameters)
  * @param who who is responsible
+ * @param silent Defaults to false. Allows you for the removal of logs
+ * @returns the func result or an error object
  */
-function useWith(message: string, func: CallableFunction, who: string | logNode = "core"){
+function useWith(
+    message: string, func: CallableFunction, 
+    who: string | logNode = "core", silent: boolean = false
+): any | Error{
     log(LogType.INFO, message, who);
     try {
-        func();
+        let funcRes = func();
+
+        if(!silent)
         log(LogType.SUCCESS, message, who);
+
+        return funcRes;
     } catch (error) {
+
+        if(!silent)
         log(LogType.ERROR, formatTaskError(message, error), who);
+
+        return error;
     }
 }
 
@@ -2121,6 +3635,7 @@ function getCurrentVersionOfLogSystem(as: "number" | "string" = "string"): strin
     else return -1;
 }
 
+// group settings
 interface groupSettings{
     messageVisible?: boolean,
     messageWho?: string | logNode,
@@ -2173,6 +3688,10 @@ function logGroupEnd(info: Omit<groupSettings, "messageVisible" | "messageWho"> 
     return reconstructLogGroup();
 }
 
+/**
+ * recreates a currentGroupString from other things
+ * @returns currentGroupString
+ */
 function reconstructLogGroup(): string{
     currentGroupString = "";
 
@@ -2251,12 +3770,80 @@ function logTimeStamp(label: string, info: groupSettings = {}): number{
     return elapsed;
 }
 
+
+// the default behaviour for inspect
+const inspectDefaultBehaviourForConsole: InspectOptions = {colors: true};
+
+/**
+ * formats (inspect) data and returns it
+ * 
+ * NOT USED. TODO
+ * 
+ * @param data 
+ * @returns formated data
+ */
+const formatMultiData = (...data: any[]) => {
+    return data.map(
+        (s: any) => {
+            inspect(s, inspectDefaultBehaviourForConsole)
+        }
+    ).join(" ");
+}
+
+/**
+ * api compatbile with orginal console.log() which accepts a lot more than one argument of any type
+ * NOT USED. TODO
+ * @param messages messages to display in log format
+ */
+const compatibleLog = (...messages: any[]) => {
+        log(LogType.INFO, formatMultiData(messages)
+    );
+};
+
+const aliasCache: Record<string, string[]> = {};
+
+
+/**
+ * creates a cache for an alias
+ * @param command 
+ */
+function createAliasCache(command: string){
+    if(!(command in commands)){
+        throw new Error("that command doesnt exist!");
+    }
+
+    const newData: string[] = [];
+
+    for(const [name, data] of Object.entries(commands)){
+        // console.log(command, data.aliasName, data.isAlias, data.isAlias, data.aliasName)
+
+        if(data.isAlias && data.aliasName === command){
+            newData.push(name);
+        }
+    }
+
+    aliasCache[command] = newData;
+}
+
+/**
+ * allows you to generate aliases to that command
+ * @param commandName the name of commands
+ * @returns every alias to that command
+ */
+function getAliases(commandName: string): string[]{
+    if(commandName in aliasCache) return aliasCache[commandName];
+
+    createAliasCache(commandName);
+
+    return aliasCache[commandName];
+}
+
 /**
  * Simple interface for the fast use of console utilities
  */
 const newConsole = {
-    log: (...messages: string[]) => log(LogType.INFO, messages.join(" ")),
-    debug: (...messages: string[]) => log(LogType.INFO, messages.join(" ")),
+    log: (message: string, who: string | logNode = "core") => log(LogType.INFO, message, who),
+    debug: (message: string, who: string | logNode = "core") => log(LogType.INFO, message, who),
     formatError,
     commandInterface,
     commands: commandInterface,
@@ -2304,6 +3891,7 @@ const newConsole = {
     logTimeStamp
 }   
 
+// adding the console to global
 if(useAddToGlobalAs){
     const obj: Record<string, typeof newConsole> = {};
     for(const part of addToGlobalAs){
@@ -2312,6 +3900,17 @@ if(useAddToGlobalAs){
     Object.assign(globalThis, obj);
 }
 
+/**
+ * internal interup handler
+ * @param reason the reason of the interup
+ */
+function interupHandler(reason: string = "INTERUP (i guess?)"){
+    // process.stdout.write("\x1b[0m");
+    textboxVisibility(false);
+    actualCrash(`The execution was manually stopped by ${reason}!`, "core", -1);
+}
+
+process.addListener("SIGINT", () => interupHandler("INTERUP (SIGINT)"));
 
 process.addListener("exit", () => {
     viewTextBox = false;
@@ -2351,6 +3950,14 @@ function keepProcessAlive(resolveTime: number = 20){
     })();
 }
 
+/**
+ * allows you to easily create multilined strings without bad readability in code
+ * @param data the data
+ * @returns joined data with \n
+ */
+function multiLineConstructor(...data: string[]): string{
+    return data.join("\n");
+}
 
 /**
  * in theory it should allow you to restart the current process
@@ -2373,20 +3980,25 @@ function processRestart(){
 // log(LogType.INIT, "new log session completely created!");
 
 // writting the welcome message
-{
-const s = new multiDisplayer();
-
-s.push("Log system has been properly loaded!\n", consoleColors.FgGreen);
-s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
-s.push("\n\n");
-s.push(`Welcome to the log system v${logSystemVer} `, consoleColors.FgCyan);
-s.push("by Naticzka\n", combineColors(consoleColors.FgMagenta, consoleColors.Blink));
-s.push("\n")
-s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
-s.push("\n");
-s.push("start using it by writting 'help' or '?'\n")
-s.useConsoleWrite(false);
+if(quickHello){
+    log(LogType.INIT, `log system v${logSystemVer} by Naticzka was properly loaded!`);
 }
+else
+{
+    const s = new multiDisplayer();
+
+    s.push("Log system has been properly loaded!\n", consoleColors.FgGreen);
+    s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
+    s.push("\n\n");
+    s.push(`Welcome to the log system v${logSystemVer} `, consoleColors.FgCyan);
+    s.push("by Naticzka\n", combineColors(consoleColors.FgMagenta, consoleColors.Blink));
+    s.push("\n")
+    s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
+    s.push("\n");
+    s.push("start using it by writting 'help' or '?'\n")
+    s.useConsoleWrite(false);
+}
+
 
 // exports
 export {LogType, log, formatError,
@@ -2431,5 +4043,17 @@ export {LogType, log, formatError,
     logTimeEnd as timeEnd,
     logTimeEnd,
     logTimeStamp as timeStamp,
-    logTimeStamp
+    logTimeStamp,
+    // internalPipeDivider
+    pipeDividerInternal,
+    commandDividerInternal,
+    pipeExecutor,
+    consoleUltraRawWrite,
+    multiLineConstructor,
+
+    smartArgs,
+    smartArgumentList,
+    generateAnsiColor,
+    consolePairWrite,
+    printViewTextbox
 }
