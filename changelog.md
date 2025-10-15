@@ -1,6 +1,81 @@
 # changelog
 
-## 1.X
+## 1.2X
+
+### 1.2
+
+**changes:**
+* the logsystem now uses ESM modules instead of commonJS node modules
+* it's now possible to change the starting working directory
+* it's now possible to replace long welcome screen with one quick log via changing quickHello to true
+* CTRL C and SIGNINT are now handled the same way. SIGINT was ignored before
+* commands can now return almost anything, not only boolean. The result is displayed. If returned result is undefined, it won't be.
+* added pipe system inspired by linux. It supports: "|", "||", "&&", "<", ">", ">>". It makes chaining commands possible.
+ * \ can be used to not use those characters as special characters. For example: "\|"
+ * the last command in the chain will receive "-t" argument showing that it's the last in the chain. It can be used to color the output.
+ * you can disable -t by legacy settings
+ * you can disable pipes by legacy settings (-t will still be sent)
+* new command aliases:
+ * exit -> stop, halt
+ * directory -> cd, pwd
+ * arguments -> args
+ * argumentslength -> argslen, arglen
+ * string -> str
+ * number -> num
+ * eval -> js, javascript
+ * version -> v (v can be changed into another command though!)
+ * cmd -> execute
+* those commands got rewritten:
+  * exit
+  * inspect
+  * eval
+  * version
+  * cmd
+  * uptime
+* added aliasCache
+* help now also shows aliases (even hidden ones) when asked about particular command
+* added onlyToRedirect(VAL) which will cause to not output anything if it's not the last in the chain (doesn't relay on -t argument)
+ * for example: clear() uses now it and will output true if used in chain and it's not the last one
+* added smartArgs() for easier argument detection
+* all commands are now handling -t properly
+* added new commands:
+ * directory -> changes directory if argument is provided and outputs the current directory
+ * logs -> a tool to manage logs (listing, deleting them or viewing them)
+ * arguments -> lists all provided arguments, including -t and the command name
+ * argumentslength -> outputs the number of arguments provided, including -t and the command name
+ * string -> forced the input to be changed into a string and outputs it
+ * number -> forces the input to be changed into a number and outputs it
+ * true -> outputs true, no matter what
+ * false -> outputs false, no matter what
+ * nil -> eats entire input, and outputs nothing
+* the usage of 'inspect' command now is less important and may be removed in the future (in the long future)
+* eval now exposes $newConsole variable that is a reference to newConsole interface
+* added multiline constructor that allows for easily creating multiline command descriptions
+* bind command seperation by ';' got removed. it is now handled completely by pipe system (the legacy system can't restore it!)
+* new legacy modes and better legacy typing
+* legacy modes can now show warnings
+* added pipeHalt() {STOP PIPE} explicitUndefined() {PRINT UNDEFINED} onlyToRedirect() {ONLY IF PIPED} to manage pipe system via command callback (returning them does the job.
+* added consoleUltraWrite api
+* added createAnsiColor which allows to create color by their RGB value
+* added end argument to consoleWrite
+* added silent mode to useWith
+* added toRawString() on multiDisplayer
+
+bugfixes:
+ * cmd now properly uses utf8 and works on linux
+ * 'upt' alias now properly points to 'uptime' command instead to 'clear' command
+ * random color characters in log files
+
+ known issues:
+  * stack overflow on binding bind to bind
+
+ compatibility:
+  * change module type to ESM from commonjs
+ 
+
+## 1.1X
+
+
 
 ### 1.171
 
@@ -171,7 +246,7 @@ a lot of interesting improvements
 
 download: [TS](old/1.1/logSystem.ts) [JS](old/1.1/logSystem.js)
 
-### 1.0
+## 1.0
 
 The first public release
 download: [TS](old/1.0/logSystem.ts) [JS](old/1.0/logSystem.js)
