@@ -1,5 +1,11 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const logSystem_1 = require("./logSystem");
+import { generateAnsiColor, keepProcessAlive, newConsole, registerCommand, replaceConsole } from "./logSystem";
+replaceConsole();
+// setLegacyInformation("pipes", false);
+registerCommand("test", { callback: (preargs) => {
+        // consoleWrite("meow!", generateAnsiColor(20, 20, 20))
+        newConsole.log(generateAnsiColor(100, 52, 100) + "meow!");
+        return;
+    } });
+// console.log(commandDividerInternal("aha<test.txt|meow>sraka.txt"));
 // it will keep the process alive even though there's no error for it to be kept alive
-(0, logSystem_1.keepProcessAlive)();
+keepProcessAlive();
