@@ -1,4 +1,4 @@
-import { generateAnsiColor, keepProcessAlive, newConsole, registerCommand, replaceConsole } from "./logSystem";
+import { generateAnsiColor, keepProcessAlive, newConsole, registerCommand, replaceConsole } from "./logSystem.js";
 replaceConsole();
 // setLegacyInformation("pipes", false);
 registerCommand("test", { callback: (preargs) => {

@@ -1,4 +1,4 @@
-import { commandDividerInternal, consoleUltraRawWrite, consoleWrite, generateAnsiColor, getLegacyInformation, keepProcessAlive, LogType, newConsole, pipeDividerInternal, registerCommand, replaceConsole, setLegacyInformation, smartArgs, useWith } from "./logSystem";
+import { commandDividerInternal, consoleUltraRawWrite, consoleWrite, generateAnsiColor, getLegacyInformation, keepProcessAlive, LogType, newConsole, pipeDividerInternal, registerCommand, replaceConsole, setLegacyInformation, smartArgs, useWith } from "./logSystem.js";
 
 
 replaceConsole();
