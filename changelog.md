@@ -10,7 +10,7 @@
 * it's now possible to replace long welcome screen with one quick log via changing quickHello to true
 * CTRL C and SIGNINT are now handled the same way. SIGINT was ignored before
 * commands can now return almost anything, not only boolean. The result is displayed. If returned result is undefined, it won't be.
-* added pipe system inspired by linux. It supports: "|", "||", "&&", "<", ">", ">>". It makes chaining commands possible.
+* added pipe system inspired by linux. It supports: "|", "||", "&&", "<", ">", ">>", ";". It makes chaining commands possible.
  * \ can be used to not use those characters as special characters. For example: "\|"
  * the last command in the chain will receive "-t" argument showing that it's the last in the chain. It can be used to color the output.
  * you can disable -t by legacy settings
