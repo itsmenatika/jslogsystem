@@ -6,6 +6,7 @@ current version being watched:
 
 | Version | Supported          | expiration date  |
 | ------- | ------------------ | ---------------- |
+| 1.2     | :white_check_mark: | NOT SPECIFIED    |  
 | 1.171   | :white_check_mark: | NOT SPECIFIED    |  
 | 1.17    | :white_check_mark: | LOST MEDIA       |  
 | 1.16    | :white_check_mark: | MAINTAINCE       |  
