@@ -13,11 +13,13 @@
     "type": "git",
     "url": "https://github.com/itsmenatika/jslogsystem.git"
   },
-  "version": "1.0.0",
-  "description": "Simple log system",
-  "main": "logSystem.js",
+  "version": "1.2.5",
+  "description": "interactive terminal and log system for node",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "run": "node app.js",
+    "clean": "tsc --clean"
   },
   "keywords": [
     "log",
@@ -25,12 +27,19 @@
     "javascript",
     "js",
     "typescript",
-    "ts"
+    "ts",
+    "terminal",
+    "node"
   ],
   "author": "naticzka",
-  "license": "another",
-  "dependencies": {
-    "@types/node": "^22.18.0"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "shx": "^0.4.0",
+    "typescript": "^5.9.3"
   },
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist"
+  ]
 }

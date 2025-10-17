@@ -1,0 +1,11 @@
+.gititnore
+app.js
+app.ts
+logSystemMIN.js
+SECURITY.md
+README.md
+tests/
+examples/
+dev/
+node_modules/
+*.log
