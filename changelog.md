@@ -2,6 +2,13 @@
 
 ## 1.2X
 
+### 1.2.7
+
+changes:
+* config has been moved to a new file
+* 'bind' finally works without any issues
+* removeInternalArgs has been fixed
+
 ### 1.2.6
 
 BUGFIX:
