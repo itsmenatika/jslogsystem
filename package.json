@@ -13,13 +13,14 @@
     "type": "git",
     "url": "https://github.com/itsmenatika/jslogsystem.git"
   },
-  "version": "1.2.5",
+  "version": "1.2.7",
   "description": "interactive terminal and log system for node",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "run": "node app.js",
-    "clean": "tsc --clean"
+    "clean": "tsc --clean",
+    "test": "node dist/app.js"
   },
   "keywords": [
     "log",

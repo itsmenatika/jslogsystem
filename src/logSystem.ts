@@ -10,43 +10,7 @@ import { join } from "node:path";
 import { cwd } from "node:process";
 import { inspect, InspectOptions, InspectOptionsStylized, stripVTControlCharacters, toUSVString } from "node:util";
 
-// CONFIG
-// USE JOIN for paths
-const workingDirectory: string = join(import.meta.dirname, "dev");
-const LOGDIRECTORY: string = join(workingDirectory, "logs");
-const LATESTLOGNAME: string = "latest.txt";
-
-// TO EDIT COLORS SEARCH FOR consoleColorTable!
-
-// callback to write information on the "ver" command
-let getversionInfoData = (): string => {
-    return "meow:3";
-}
-
-// callback to write information on the top
-const getMoreStartInformation = (): string => {
-	const dateObj = new Date();
-    return `----------------\nLOGS FROM ${dateObj.toISOString()} UTC TIME ${dateObj.getHours()}:${dateObj.getMinutes()}:${dateObj.getSeconds()}\n`;
-}
-
-// callback which is used to what to do with the previous log file
-const saveTheLatest = (date: Date, previousFilePath: string): void => {
-    renameSync(
-        previousFilePath, 
-        join(LOGDIRECTORY, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()}-${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
-    );
-}
-
-let viewTextBox: boolean = true; // if the textbox should be visible at the start
-let blockLogsVar: boolean = false; // if the logs should be displayed
-
-let singleLogGroupText: string = "┄┅"; // the indicator used to indicate a single log group
-let lastLogGroupText: string = "░"; // the string that gets added to the last group. It only gets added if there's at least log grpoup
-
-const useAddToGlobalAs: boolean = false; // whether to newConsole as a global automatically. It defaults to false
-const addToGlobalAs: string[] = ["newConsole"]; // addsnewConsole as listed keys to globalThis. Works only with useAddToGlobalAs enabled.
-
-const quickHello: boolean = false; // quicker hello option
+import * as config from "./config.js";
 
 // ___________________________________________
 //
@@ -56,12 +20,15 @@ const quickHello: boolean = false; // quicker hello option
 //
 // ___________________________________________
 
-if(!existsSync(workingDirectory)){
-    mkdirSync(workingDirectory);
+let viewTextBox: boolean = config.viewTextBox; // whether text box is visible
+let blockLogsVar: boolean = config.blockLogsVar;
+
+if(!existsSync(config.workingDirectory)){
+    mkdirSync(config.workingDirectory);
 }
 
-if(workingDirectory)
-process.chdir(workingDirectory);
+if(config.workingDirectory)
+process.chdir(config.workingDirectory);
 
 
 /**
@@ -101,13 +68,13 @@ process.stdin.resume();
 process.stdin.setEncoding("utf-8")
 
 // check for the log directory
-if(!existsSync(LOGDIRECTORY)){
+if(!existsSync(config.LOGDIRECTORY)){
     // make it if it doesn't exist
-    mkdirSync(LOGDIRECTORY, {recursive: true});
+    mkdirSync(config.LOGDIRECTORY, {recursive: true});
 }
 
-const finalLatest: string = join(LOGDIRECTORY, LATESTLOGNAME); // the path to the previous log
-const tempFinal: string = join(LOGDIRECTORY, "temp"); // the path to previous temp file log
+const finalLatest: string = join(config.LOGDIRECTORY, config.LATESTLOGNAME); // the path to the previous log
+const tempFinal: string = join(config.LOGDIRECTORY, "temp"); // the path to previous temp file log
 
 // check whether the previous log exist
 if(existsSync(finalLatest)){
@@ -123,7 +90,7 @@ if(existsSync(finalLatest)){
     const date = new Date(Number(String(piecesOfData[0]))); // the first line is the date line
 
 	// calling the callback to do stuff with previous one
-	saveTheLatest(date, finalLatest);
+	config.saveTheLatest(date, finalLatest);
 
     // removing temp
     unlinkSync(tempFinal);
@@ -133,7 +100,7 @@ if(existsSync(finalLatest)){
 writeFileSync(tempFinal, `${Date.now()}\n`);
 
 // create a new latest log file
-writeFileSync(finalLatest, getMoreStartInformation());
+writeFileSync(finalLatest, config.getMoreStartInformation());
 
 appendFileSync(finalLatest, "----------------\n");
 
@@ -600,7 +567,7 @@ let commands: Record<string, unifiedCommandTypes> = {
             const g = new multiDisplayer();
 
             if(args.length === 0){
-                const f = readdirSync(LOGDIRECTORY);
+                const f = readdirSync(config.LOGDIRECTORY);
     
                 for(let file of f){
                     if(file === "temp") continue;
@@ -612,7 +579,7 @@ let commands: Record<string, unifiedCommandTypes> = {
                 }
             }
             else if(args.length === 1){
-                const path = join(LOGDIRECTORY, args.args[0]);
+                const path = join(config.LOGDIRECTORY, args.args[0]);
 
                 let res;
                 if(existsSync(path)){
@@ -650,14 +617,14 @@ let commands: Record<string, unifiedCommandTypes> = {
                 }
             }
             else if(args.args.includes("-d") && args.args.includes("-a")){
-                const f = readdirSync(LOGDIRECTORY).filter(
+                const f = readdirSync(config.LOGDIRECTORY).filter(
                     (s) => s !== "latest.txt" && s !== "temp"
                 );
 
                 for(const file of f){
                     g.push("* ", consoleColors.FgYellow);
                     g.push(file, consoleColors.FgWhite);
-                    unlinkSync(join(LOGDIRECTORY, file));
+                    unlinkSync(join(config.LOGDIRECTORY, file));
                     g.push(" DELETED \n");
                 }
 
@@ -672,7 +639,7 @@ let commands: Record<string, unifiedCommandTypes> = {
 
                 let c = 0;
                 for(let del of whatToDelete){
-                    let where = join(LOGDIRECTORY, del);
+                    let where = join(config.LOGDIRECTORY, del);
 
                     if(existsSync(where)){
                         unlinkSync(where);
@@ -941,7 +908,7 @@ let commands: Record<string, unifiedCommandTypes> = {
             }
 
             if(args.dashCombined.includes("u")){
-                toReturn['user'] = getversionInfoData();
+                toReturn['user'] = config.getversionInfoData();
             }
 
             let len = Object.keys(toReturn).length;
@@ -959,7 +926,7 @@ let commands: Record<string, unifiedCommandTypes> = {
                 consoleWrite("logSystemVer: ", undefined, undefined, "");
                 consoleWrite(logSystemVer, consoleColors.BgCyan, undefined, "");
                 consoleWrite(" by naticzka", [consoleColors.FgMagenta, consoleColors.Blink]);
-                consoleWrite(getversionInfoData(), consoleColors.BgGray);
+                consoleWrite(config.getversionInfoData(), consoleColors.BgGray);
                 textboxVisibility(prev);
                 return undefined;
             }
@@ -1150,6 +1117,8 @@ let commands: Record<string, unifiedCommandTypes> = {
         callback: (argsB: string[]): onlyIfRedirected => {
             const args = removeInternalArguments(argsB);
             const isT = argsB.includes("-t");
+
+            console.log(args.length, args, isT);
 
             if(args.length === 1
             ){
@@ -2080,9 +2049,9 @@ function isExplicitUndefined(val: any): val is pipeExplicitUndefined{
 
 function removeInternalArguments(ar: any[]): any[]{
     return ar.filter(
-        (val) => !(typeof val === "string" &&
-            val in internalArgsList
-        )
+        (val) => {
+            return typeof val != "string" || !internalArgsList.includes(val);
+        }
     );
 }
 
@@ -3607,16 +3576,19 @@ function actualCrash(message: string, who?: string, exitCode?: any){
     process.exit(exitCode);
 }
 
-/**
- * set information displayed at versionInfo
- * @param callback versionInfoData
- * @returns versionInfoData
- */
-function versionInfo(callback?: () => string): string {
-    if(callback !== undefined) getversionInfoData = callback;
+// /**
+//  * set information displayed at versionInfo
+//  * 
+//  * INFORMATION: NOT RECOMMENDED CHANGING DURING RUNTIME
+//  * 
+//  * @param callback versionInfoData
+//  * @returns versionInfoData
+//  */
+// function versionInfo(callback?: () => string): string {
+//     if(callback !== undefined) config.getversionInfoData = callback;
 
-    return getversionInfoData();
-}
+//     return config.getversionInfoData();
+// }
 
 
 /**
@@ -3696,11 +3668,11 @@ function reconstructLogGroup(): string{
     currentGroupString = "";
 
     for(let i = 0; i < logGroups.length; i++){
-        currentGroupString += singleLogGroupText;
+        currentGroupString += config.singleLogGroupText;
     }
 
     if(logGroups.length !== 0)
-    currentGroupString += lastLogGroupText + " ";
+    currentGroupString += config.lastLogGroupText + " ";
 
     return currentGroupString;
 }
@@ -3796,7 +3768,7 @@ const formatMultiData = (...data: any[]) => {
  * @param messages messages to display in log format
  */
 const compatibleLog = (...messages: any[]) => {
-        log(LogType.INFO, formatMultiData(messages)
+        log(LogType.INFO, messages.join(" ")
     );
 };
 
@@ -3842,8 +3814,8 @@ function getAliases(commandName: string): string[]{
  * Simple interface for the fast use of console utilities
  */
 const newConsole = {
-    log: (message: string, who: string | logNode = "core") => log(LogType.INFO, message, who),
-    debug: (message: string, who: string | logNode = "core") => log(LogType.INFO, message, who),
+    log: compatibleLog,
+    debug: compatibleLog,
     formatError,
     commandInterface,
     commands: commandInterface,
@@ -3873,7 +3845,7 @@ const newConsole = {
     actualCrash,
     ace: actualCrash,
     acrash: actualCrash,
-    versionInfo,
+    // versionInfo,
     showCursor,
     hideCursor,
     getCurrentVersionOfLogSystem,
@@ -3892,9 +3864,9 @@ const newConsole = {
 }   
 
 // adding the console to global
-if(useAddToGlobalAs){
+if(config.useAddToGlobalAs){
     const obj: Record<string, typeof newConsole> = {};
-    for(const part of addToGlobalAs){
+    for(const part of config.addToGlobalAs){
         obj[part] = newConsole;
     }
     Object.assign(globalThis, obj);
@@ -3980,7 +3952,7 @@ function processRestart(){
 // log(LogType.INIT, "new log session completely created!");
 
 // writting the welcome message
-if(quickHello){
+if(config.quickHello){
     log(LogType.INIT, `log system v${logSystemVer} by Naticzka was properly loaded!`);
 }
 else

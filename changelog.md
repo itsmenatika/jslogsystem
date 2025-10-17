@@ -2,6 +2,17 @@
 
 ## 1.2X
 
+### 1.2.6
+
+BUGFIX:
+* 'bind' command now works correctly
+
+### 1.2.1 - 1.2.5
+
+versions 1.2.1 - 1.2.5 were used as testing ground for NPM Packages
+
+Also LICENSE was changed to modified MIT LICENSE
+
 ### 1.2
 
 **changes:**
