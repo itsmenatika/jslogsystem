@@ -1,29 +1,9 @@
-Copyright (C) 2025 Patryk Łata.
+Copyright (c) 2025 itsmenatika (also known as PATRYK ŁATA, NATALIA ŁATA, ITSMENATIKA)
 
-This repository and files are part of the rpkit project and were extracted only because of their usefulness.
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-That license only involves the log system file(-s) from my personal rpkit project that were added to that repository. 
-Everything else can be licensed under completely different license. 
-You don't get a license to other parts of the project.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-I'm allowed to change the license without a previous notice and to offer different companies or people different conditions of the license. 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-You can't change the license of that and/or remove any author notice.
-You have to explicitly say of using that log System. You cannot hide it from customers/users and others.
-You cannot remove any information that would say that it was my work.
-
-You cannot use it to train any AI, unless you use to log the results/progress and you're not feeding them this code.
-
-You're only allowed to use it if at least one of these conditions are met:
-	- You're doing it non-commercialy
-	- You get allowance from me (which i can revoke unless it said otherwise in an agreement)
-	- You're using it for educational purposes that are not done by company with more than 10 employes
-	- You're a teacher or a pupil of a public institution and you're not earning privately more than 10$ in project that uses that (that excludes your salary)
-	- I work for you
-
-The project can not be copied and/or distributed without the express
-permission of Patryk Łata.
-
-You can contact with me via email adress patryklata11@gmail.com or that github https://github.com/itsmenatika
-
-orginal github repository: https://github.com/itsmenatika/jslogsystem
+Except as contained in this notice, the name of itsmenatika (also known as PATRYK ŁATA, NATALIA ŁATA, ITSMENATIKA) shall not be used in advertising or otherwise to promote the sale, use or other dealings in this Software without prior written authorization from itsmenatika (also known as PATRYK ŁATA, NATALIA ŁATA, ITSMENATIKA).
