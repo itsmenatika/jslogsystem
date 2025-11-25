@@ -9,3 +9,4 @@ examples/
 dev/
 node_modules/
 *.log
+.vscode/
