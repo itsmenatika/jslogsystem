@@ -1,0 +1,577 @@
+import { inspect, stripVTControlCharacters } from "util";
+import { log, logNode, LogType } from "../../log.js";
+import { consoleUltraRawWrite, consoleWrite } from "../../out.js";
+import { getTerminalOPJ, getTerminalOPJTYPE, terminalSession } from "../../programdata";
+import { commandDividerInternal } from "./commandParser.js";
+import { isControlType, isExplicitUndefined, isOnlyToRedirect, isPipeHalt, pipeHalt, specialTypes } from "./commandSpecialTypes.js";
+import { commandExecParams, commandExecParamsProvide, commandPipe, getReadyParams, pipeType } from "./common.js";
+import { appendFileSync, readFileSync, writeFileSync } from "fs";
+import { join } from "path";
+import { logSystemError } from "../../ultrabasic.js";
+import { formatError } from "../../texttools.js";
+import { cmdcallback, cmdCallbackAsync, cmdCallbackResponse, commandContext, commandDataAsync, commandDataRegular } from "./types.js";
+import { textboxVisibility } from "../terminal/textbox.js";
+import { printTextBox } from "../../formatingSessionDependent.js";
+
+// function commandExec(text: string, ses: terminalSession, silent: boolean = false){
+//     if(!silent){
+//         log(LogType.INFO, `This command has been executed: '${text}'`);
+//     }
+// }
+
+function tryToGetAsStringToPrint(val: any, canUseColors: boolean = false): string {
+    let toPrint: string;
+    // toPrint = inspect(val, true, null, canUseColors); 
+    switch(typeof val){
+        case "string": {
+            toPrint = val;
+            break;
+        }
+        case "object":
+        default:
+            if(isOnlyToRedirect(val)){
+                toPrint = val.val;
+                break;
+            }
+            toPrint = inspect(val, true, null, canUseColors); 
+    }
+
+    // toPrint += "\n";
+
+    return toPrint;
+}
+
+
+function tryToPrintResult(
+    result: any,
+    op: commandExecParams,
+    session: terminalSession
+){
+    if(isExplicitUndefined(result)){
+        consoleUltraRawWrite(
+            "undefined",
+            "undefined",
+            session.out,
+            session.fileout
+        );
+        // consoleWrite("undefined", undefined, undefined, undefined, session);
+    }
+    else if(result !== undefined){
+        if(isOnlyToRedirect(result)) return;
+
+        const toW = tryToGetAsStringToPrint(result, true);
+        // consoleWrite(toW, undefined, undefined, "", session);
+
+        consoleUltraRawWrite(
+            toW,
+            stripVTControlCharacters(String(toW)),
+            session.out,
+            session.fileout
+        );
+
+        // consolePairWrite(
+        //     tryToGetAsStringToPrint(res, false),
+        //     tryToGetAsStringToPrint(res, true)
+        // );
+
+        // consoleWrite(tryToGetAsStringToPrint(res, true));
+        // s.useConsoleWrite();
+
+        // consoleWrite(
+        //     inspect(res, true, null, true) + "\n", 
+        //     consoleColors.FgWhite
+        // );
+    }
+}
+
+function divider(data: string): [string[], boolean]{
+    const toRet: string[] = [];
+
+    let i: number = 0;
+    let cur: string = "";
+    let closedQuotas: boolean = true;
+    while(i < data.length){
+        switch(data[i]){
+            case "\\": {
+                i++;
+                switch(data[i]){
+                    case "\\":
+                        cur += "\\";
+                        i--;
+                        break;
+                    case "\"":
+                        cur += "\""
+                        i++;
+                        break;
+                    default:
+                        cur += "\\";
+                        i--;
+                        break;
+                }
+                break;
+            }
+            case "\"": {
+                closedQuotas = false;
+                i++;
+                
+                while(
+                    i < data.length
+                ){
+                    if(
+                        data[i] == "\\"
+                        &&
+                        i + 1 < data.length
+                        &&
+                        data[i + 1] == "\""
+                    ){
+                        cur += "\"";
+                        i += 2;
+                    }
+                    else if(data[i] == "\""){
+                        closedQuotas = true;
+                        break;
+                    }
+                    else cur += data[i];
+                    i++;
+                }
+
+                break;
+            }
+            case " ": {
+                toRet.push(cur);
+                cur = "";
+                break;
+            }
+            default: {
+                cur += data[i];
+                break;
+            }
+        }
+        i++;
+    }
+
+    if(cur.length > 0) toRet.push(cur);
+
+    return [toRet, closedQuotas];
+}
+
+function commandInternalExec(
+    text: string, 
+    options: commandExecParamsProvide
+){
+    const [op, session] = getReadyParams(options);
+
+    // the information about the command execution
+    if(!op.silent)
+    log(LogType.INFO, `This command has been executed: '${text}'`, op.logNode, session);
+
+    const prev = textboxVisibility(undefined, session);
+
+    if(!op.onlyReturn)
+    textboxVisibility(false, session);
+
+    let res;
+    let prints = 0;
+    if(session.config.legacy.pipes){
+        const pipeTree = commandDividerInternal(text);
+        // console.log(pipeTree);
+        // return; 
+        [res, prints] = pipeExecutor(pipeTree, options);
+    }
+    else{
+        // const parts = text.split(" ");
+        const [parts, quotas] = divider(text);
+        if(!quotas){
+            if(op.silent !== true)
+            log(LogType.ERROR, "unclosed quotas", "console", session);
+            return undefined;
+        }
+
+        let partsToUse;
+        if(!session.config.legacy.specialArguments){
+            partsToUse = parts;
+        }
+        else{
+            partsToUse = [parts[0], "-t" , ...parts.slice(1)];
+        }
+
+        res = handleCommandInternal(partsToUse, options);
+    }
+
+    if(!op.onlyReturn)
+    tryToPrintResult(res, op, session);
+
+    if((res !== undefined || prints != 0) && !op.onlyReturn){
+        consoleUltraRawWrite(
+            "\n",
+            "\n",
+            session.out,
+            session.fileout
+        );   
+    }
+
+
+    if(!Object.hasOwn(session.flags, 'dontChangeTextboxVisiblity') && !op.onlyReturn){
+        // printTextBox(session);
+        textboxVisibility(prev, session);
+    }
+    else{
+        delete session.flags['dontChangeTextboxVisiblity'];
+    }
+
+    return res;
+}
+
+
+/**
+ * tests the object to determine whether it should be treated as a positive result of a command
+ * it's required because javascript tends for example to treat empty strings as false
+ * 
+ * @param obj any object to test
+ * @returns the result (boolean)
+ */
+function internalIsTrue(obj: any): boolean{
+    switch(typeof obj){
+        case "boolean":
+            return obj;
+
+        case "bigint":
+            return true;
+        
+        case "function":
+            return true;
+
+        case "number":
+            return true;
+
+        case "object":
+            return true;
+        
+        case "string":
+            return true;
+        
+        case "symbol":
+            return true;
+
+        case "undefined":
+            return false;
+
+
+        default:
+            return false;
+    }
+}
+
+function pipeExecutor(pipeTree: commandPipe[], options: commandExecParamsProvide = {}):
+[any, number]{
+    // console.log(pipeTree);
+    const [op, session] = getReadyParams(options);
+
+
+    let pipeHaltCalled: boolean = false;
+    let result: any = void 0;
+
+    let prints: number = 0;
+
+
+    // console.log(pipeTree);
+    for(let i = 0; i < pipeTree.length; i++){
+        const pipe = pipeTree[i];
+        // console.log(pipe, result, pipeHaltCalled, prints);
+
+        // console.log(pipe, result);
+
+        if(pipeHaltCalled){
+            while(i < pipeTree.length && pipeTree[i].type !== pipeType.dataClear) i++;
+
+            pipeHaltCalled = false;
+
+            if(!(i < pipeTree.length))
+                return [undefined, prints];
+        }
+
+        switch(pipe.type){
+            case pipeType.unkown: {
+                log(LogType.WARNING, "UNKOWN TYPE PIPE", "pipeExec", session);
+                break;
+            }
+            case pipeType.dataTryWrite: {
+                tryToPrintResult(result, op, session);
+                prints++;
+
+                break;
+            }
+
+            case pipeType.fileFrom: {
+
+
+                let f = readFileSync(join(process.cwd(), pipe.val as string));
+
+                result = f;
+                break;
+            }
+
+            case pipeType.fileAppend: {
+                let m = result;
+                if(Array.isArray(m) && m.length === 1){
+                    m = m[0];
+                }
+                
+                if(typeof m !== "string" && !(
+                    m instanceof Uint8Array
+                )){
+                    m = Buffer.of(m);
+                }
+
+                appendFileSync(join(process.cwd(), pipe.val as string), m);
+                break;
+            }
+
+            case pipeType.fileSet: {
+                let m = result;
+                if(Array.isArray(m) && m.length === 1){
+                    m = m[0];
+                }
+                
+                if(typeof m !== "string" && !(
+                    m instanceof Uint8Array
+                )){
+                    m = Buffer.of(m);
+                }
+
+                writeFileSync(join(process.cwd(), pipe.val as string), m);
+                break;
+            }
+            case pipeType.dataClear: {
+                result = undefined;
+                pipeHaltCalled = false;
+                break;
+            }
+
+            case pipeType.command: {
+                const commandExec = pipe.val as string;
+                const [commandExecParts, quotas] = divider(commandExec);
+
+                if(!quotas){
+                    pipeHaltCalled = true;
+                    if(op.silent !== true)
+                    log(LogType.ERROR, "unclosed quotas", "console", session);
+                    return result;
+                }
+
+                const commandPartsToUse = [commandExecParts[0]];
+
+                // console.log("meow ", i, pipeTree.length);
+                if(
+                    session.config.legacy.specialArguments &&(
+                        i === pipeTree.length - 1
+                        ||
+                        (
+                            i + 1 < pipeTree.length &&
+                            pipeTree[i + 1].type === pipeType.dataClear
+                        )
+                    )
+                ){
+                    commandPartsToUse.push("-t");
+                }
+                // console.log(commandPartsToUse);
+
+                commandPartsToUse.push(...commandExecParts.slice(1));
+
+
+                if(Array.isArray(result)){
+                    commandPartsToUse.push(...result);
+                }
+                else if(result !== undefined){
+                    commandPartsToUse.push(result);
+                }
+
+                // console.log('dadad ', commandPartsToUse);
+                const cmdRes = handleCommandInternal(
+                    commandPartsToUse, options
+                );
+
+                // console.log(cmdRes);s
+
+                if(isControlType(cmdRes)){
+                    if(isOnlyToRedirect(cmdRes) 
+                        && (
+                            i !== pipeTree.length - 1
+                            &&
+                            pipeTree[i + 1].type !== pipeType.dataTryWrite
+                        )
+                    ){
+                        result = cmdRes.val;
+                    }
+                    else if(isPipeHalt(cmdRes)){
+                        pipeHaltCalled = true;
+                    }
+                    else if(isExplicitUndefined(cmdRes)){
+                        result = cmdRes;
+                    }
+                    // else return [undefined, prints];
+                }
+                else{
+                    result = cmdRes;
+                }
+
+                break;
+            }
+            case pipeType.pipe: {
+                // NO NEED TO IMPLEMENT CAUSE IT ACTUALLY ALREADY WORKING!
+                break;
+            }
+
+            case pipeType.and: {
+                if(!internalIsTrue(result)){
+                    return [result, prints];
+                }
+
+                break;
+            }
+
+            case pipeType.or: {
+                if(internalIsTrue(result)){
+                    return [result, prints];
+                }
+
+                break;
+            }
+        }
+    }
+
+    return [result, prints];
+}
+
+
+
+// that functions handles commands. It's for internal usage
+function handleCommandInternal(
+    parts: any[], 
+    options: commandExecParamsProvide
+): cmdCallbackResponse | void{
+
+    const [op, session] = getReadyParams(options);
+    const conf = session.config;
+
+
+    const thisObj: commandContext = {
+        isCommandContext: true,
+        executedAs: "UNKOWN",
+        logNode: options.logNode,
+        sessionName: session.sessionName,
+        cwd: session.cwd,
+        _terminalSession: session,
+        runAt: Date.now()
+    };
+
+
+    // get parts
+
+    // try to execute it
+    if(Object.hasOwn(conf.commandTable, parts[0])){
+        // print the info as log about that cmd
+        // if(!silent)
+        // log(LogType.INFO, `This command has been executed: '${text}'`, logNode);
+
+        thisObj.executedAs = "ORGINAL";
+
+        try {
+            const cmdData = conf.commandTable[parts[0]];
+
+            if(
+                cmdData.minver !== undefined 
+                &&
+                Number(session.logSystemVer) < cmdData.minver
+            ){
+                log(LogType.ERROR, `'${parts[0]}' doesn't support versions below ${String(cmdData.minver)} and your version is ${String(session.logSystemVer)}`, op.logNode, session);
+
+                if(!conf.legacy.pipes) return undefined;
+
+                return {__$special: specialTypes.pipeExecutorHalt};                 
+            }
+
+
+            if(
+                cmdData.maxver !== undefined 
+                &&
+                Number(session.logSystemVer) > cmdData.maxver
+            ){
+                log(LogType.ERROR, `'${parts[0]}' doesn't support versions above ${String(cmdData.maxver)} and your version is ${String(session.logSystemVer)}`, op.logNode, session);
+
+                if(!conf.legacy.pipes) return undefined;
+
+                return {__$special: specialTypes.pipeExecutorHalt};                 
+            }
+
+            // get the orginal command if that is an alias
+            let orginalCmd;
+            if(cmdData.isAlias){
+                thisObj.executedAs = "ALIAS";
+                orginalCmd = conf.commandTable[cmdData.aliasName as string] as commandDataAsync | commandDataRegular;
+
+                if(!orginalCmd){
+                    throw new logSystemError("invalid alias");
+                }
+
+                if(orginalCmd.async){
+
+                }
+                else
+                return (orginalCmd.callback as cmdcallback).apply(thisObj, [parts]);
+            }
+            else orginalCmd = cmdData;
+
+            const cmdToUse = orginalCmd as commandDataRegular | commandDataAsync;
+
+            // execute it
+            if(orginalCmd.async){
+                (cmdToUse.callback as cmdCallbackAsync).apply(thisObj, [parts]);
+                return true;
+            }
+            else{
+                return (cmdToUse.callback as cmdcallback).apply(thisObj, [parts]);
+            }
+
+
+            // return commands[parts[0]].callback(parts);
+        
+        // catch errors
+        } catch (error) {
+            log(LogType.ERROR, "The error has occured during the command execution:\n" + formatError(error), op.logNode, session);
+            return {__$special: specialTypes.pipeExecutorHalt};
+        }
+    }
+    else if(parts[0] in session.bindTable){
+        thisObj.executedAs = "BIND";
+
+        // print the info as log about that bind
+        // if(!silent)
+        // log(LogType.INFO, `This bind has been executed: '${text}'`, logNode);
+
+        let bindD = session.bindTable[parts[0]];
+        try {
+            // for(const command of bindD.commands){
+            //     commandInternalExec(command, true);
+            // }
+            return commandInternalExec(bindD.executor, {...options, silent: true, onlyReturn: true});
+        } catch (error) {
+            log(LogType.ERROR, "The error has occured during the bind execution:\n" + formatError(error), op.logNode, session);
+            return {__$special: specialTypes.pipeExecutorHalt};
+        }
+    }
+    // catch unkown command
+    else{
+        // if(!op.silent)
+        log(LogType.ERROR, `unknown command '${parts[0]}'`, op.logNode, session);
+
+        if(!conf.legacy.pipes) return undefined;
+
+        return {__$special: specialTypes.pipeExecutorHalt}; 
+    }
+
+}
+
+// // }
+
+export {commandInternalExec}

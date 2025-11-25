@@ -1,5 +1,63 @@
 # changelog
 
+## 1.3X
+
+### 1.3
+
+The whole system was rebuilt from the ground up
+
+changes:
+* commands were added:
+  * parameter -> to isolate parameters
+  * terminal -> for managing terminals
+* commands were reintroduced:
+  * info -> it has been mistakely removed from the preview versions
+* commands were rewritten:
+  * bind -> it is not is solely based on the new pipe system
+  * echo -> it supports a lot of new parameters and the whole color system
+  * uptime -> it was just mostly rewritten, no that much of changes
+  * inspect -> it was completely rewritten and it is not not deprecated, because of this
+* commands changes:
+  * hide -> it now supports a custom hide message
+  * eval -> it now uses silent tasks without logging
+  * cmd -> it now uses silent tasks without logging
+* '--' argument can now be used for indicating that the next stuff are not dashed parameters
+* quotas can now be used to pass arguments with space as one
+* terminal sessions were added
+* added terminalApi
+* added bindApi
+* added legacyApi
+* added terminalMiddleApi
+* added quickSetup
+* added more options to config (it was practically rewritten)
+* showCursor, hideCursor and printViewTextbox and replaceConsole have been deprecated
+* It's now impossible to force the old style of registering commands
+* command collections were added
+* command groups were introduced:
+  * all
+  * othershells
+  * pipeGroup
+  * processCommands
+  * streams
+  * thatShell
+* command creator tools were added: quickCmdWithAliases cmdTableToCommandCompounts, commandCompoundsToCmdTable
+* useWith has now options
+* nodeJsConsole was added (it uses orginal node.js front-end of console and sends output to the jslogsystem)
+* newConsole structure was changed into consoleShortHand which has 100% compatibility with node.js console (instead of maybe 85%?)
+* some changes in the position of arguments (I don't rembember which ones exactly)
+* consoleUltraRawWrite was added
+* legacy system was rewritten
+* it is now possible to run jslogsystem standalone without importing it
+
+
+compatibility:
+* some commands may suffer from change in the position of arguments, but it's very rare and for rarely used parameters
+* showCursor, hideCursor and printViewTextbox has been deprecated
+* consoleShortHand is 100% compatible with node.js console
+* nodeJsConsole is a easy tool to replace node.js console using the orginal node.js console class
+* timers now use "DEFAULT" if label is not specified
+
+
 ## 1.2X
 
 ### 1.2.7

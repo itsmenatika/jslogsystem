@@ -20,7 +20,7 @@
     "build": "tsc",
     "run": "node app.js",
     "clean": "tsc --clean",
-    "test": "node dist/app.js"
+    "test": "node dist/index.js"
   },
   "keywords": [
     "log",

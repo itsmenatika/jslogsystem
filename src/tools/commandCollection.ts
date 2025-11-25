@@ -1,0 +1,278 @@
+import { InspectOptions, InspectOptionsStylized, inspect } from "util";
+import { cmdcallback, cmdTable, unifiedCommandTypes } from "../apis/commands/types.js";
+import { ansiEscape, consoleColors } from "../texttools.js";
+import { logSystemError } from "../ultrabasic.js";
+
+interface commandCompound{
+    name: string,
+    data: unifiedCommandTypes
+}
+
+class commandCollection{
+    #cmdTable: cmdTable = {}
+
+    constructor(from: cmdTable = {}){
+        Object.assign(
+            this.#cmdTable,
+            {
+                ...from
+            }
+        );
+    }
+
+    clear(): commandCollection{
+        this.#cmdTable = {};
+        return this;
+    }
+
+    names(...names: string[]): commandCollection{
+        const toCr: cmdTable = {};
+
+        for(const name of Object.keys(this.#cmdTable)){
+            if(names.includes(name)) toCr[name] = this.#cmdTable[name];
+        }
+
+        return new commandCollection(toCr);
+    }
+
+    get aliases(): commandCollection{
+        const toRet: cmdTable = {};
+
+        for(const [name, data] of Object.entries(this.#cmdTable)){
+            if(data.isAlias){
+                toRet[name] = data;
+            }
+        }
+
+        return new commandCollection(toRet);
+    }
+
+
+    get orginals(): commandCollection{
+        const toRet: cmdTable = {};
+
+        for(const [name, data] of Object.entries(this.#cmdTable)){
+            if(!data.isAlias){
+                toRet[name] = data;
+            }
+        }
+
+        return new commandCollection(toRet);
+    }
+
+    get length(){
+        return Object.keys(this.#cmdTable).length;
+    }
+
+    get(asCopy: boolean = true){
+        if(asCopy)
+        return {...this.#cmdTable};
+
+        return this.#cmdTable;
+    }
+
+    extend(by: cmdTable | commandCollection, edit: boolean = false): commandCollection{
+        if(by instanceof commandCollection){
+            by = by.get();
+        }
+
+        const cp: cmdTable = {};
+
+        for(const name of Object.keys(by)){
+            if(
+                !Object.hasOwn(this.#cmdTable, name) || (
+                    edit &&
+                    this.#cmdTable[name].changeable
+                )
+
+            ){
+                cp[name] = by[name];
+            }   
+        }
+        
+
+        Object.assign(this.#cmdTable, cp);
+
+        return this;
+    }
+
+
+    removeCommand(name: string, ignoreError: boolean = false): commandCollection{
+        if(!Object.hasOwn(this.#cmdTable, name)){
+            if(!ignoreError){
+                throw new logSystemError(`command named '${name}' doesn't exist`);
+            }
+
+            return this;
+        }
+
+        if(!this.#cmdTable[name].changeable){
+            if(!ignoreError){
+                throw new logSystemError(`command named '${name}' is not changeable!`);
+            }
+
+            return this;
+        }
+
+        delete this.#cmdTable[name];
+        return this;
+    }
+
+    removeCommands(...names: string[]): commandCollection{
+        for(const name of names){
+            this.removeCommand(name);
+        }
+
+        return this;
+    }
+
+    registerCommand(name: string, data: unifiedCommandTypes, edit: boolean = false, ignoreError: boolean = false): commandCollection{
+        if(Object.hasOwn(this.#cmdTable, name)){
+            if(!edit){
+                throw new logSystemError(`command named '${name}' does exist`);
+            }
+
+            if(!this.#cmdTable[name].changeable){
+                if(!ignoreError){
+                    throw new logSystemError(`command named '${name}' is not changeable!`);
+                }
+
+               return this;
+            }
+        }
+
+
+        if(!data.isAlias && !data.callback){
+            if(!ignoreError)
+            throw new logSystemError("The callback must be set for no alias.");
+
+            return this;
+        }
+
+        if(data.isAlias){
+            this.#cmdTable[name] = {
+                usageinfo: undefined,
+                desc: undefined,
+                longdesc: undefined,
+                hidden: typeof data.hidden === "boolean" ? data.hidden : true,
+                changeable: typeof data.changeable === "boolean" ? data.changeable : true,
+                isAlias: true,
+                aliasName: data.aliasName as string,
+                callback: undefined,
+                async: undefined,
+                minver: data.minver,
+                maxver: data.maxver
+            }
+
+            return this;
+        }
+
+        // it will WORK, i wont waste 5 hours to try convince typescript
+        // @ts-ignore
+        this.#cmdTable[name] = {
+            usageinfo: data.usageinfo ? data.usageinfo : `${name} [<arguments...>] ~(usage not specified)`,
+            desc: data.desc ? data.desc : "no description",
+            longdesc: data.longdesc ? data.longdesc : "no long description",
+            hidden: typeof data.hidden === "boolean" ? data.hidden : false,
+            changeable: typeof data.changeable === "boolean" ? data.changeable : true,
+            isAlias: false,
+            aliasName: undefined,
+            callback: data.callback,
+            async: typeof data.async === "boolean" ? data.async : false,
+            minver: data.minver,
+            maxver: data.maxver
+        };
+
+        return this;
+    }
+
+
+    registerCommandShort(
+        cmdCom: commandCompound, 
+        edit: boolean = false,
+        ignoreError: boolean = false
+    ): commandCollection{
+        this.registerCommand(cmdCom.name, cmdCom.data, edit, ignoreError);
+
+        return this;
+    }
+
+    multiCommandRegister(
+        data: Array<commandCompound>,
+        edit: boolean = false,
+        ignoreError: boolean = false
+    ): commandCollection{
+
+        for(const one of data){
+            this.registerCommandShort(one, edit, ignoreError);
+        }
+
+        return this;
+    }
+
+    /**
+     * @deprecated
+     * 
+     * legacy register command
+     * 
+     * DONT USE IN NEW PROJECTS
+     * 
+     * it doesnt allow you to edit command afterwards by default, due to compatibility reasons!
+     * 
+     * @param name the command name
+     * @param usage the command usage
+     * @param shortdesc short description
+     * @param longdesc long description
+     * @param callback callback
+     */
+    registerCommandLegacy(
+        name: string,
+        usage: string,
+        shortdesc: string,
+        longdesc: string,
+        callback: cmdcallback
+    ): commandCollection{
+        this.registerCommand(name, {
+            usageinfo: usage,
+            desc: shortdesc,
+            longdesc: longdesc,
+            hidden: false,
+            changeable: false,
+            isAlias: false,
+            callback: callback
+        });
+
+        return this;
+    }
+
+    [Symbol.toStringTag](){
+        return "[" + Object.keys(this.#cmdTable).join(", ") + "]";
+    }
+
+    [inspect.custom](depth: number, options: InspectOptions, inspect: (value: any, opts?: InspectOptionsStylized) => string): string{
+        let al = Object.keys(this.#cmdTable);
+
+        al = al.filter(
+            (s) => {
+                const cmdData = this.#cmdTable[s];
+                if(!cmdData) return false;
+
+                if(cmdData.hidden && !options.showHidden) return false;
+            }
+        )
+
+        al = al.slice(0, (options.maxArrayLength || 0) + 1);
+
+        if(options.colors){
+            al = al.map((s) => `${consoleColors.FgMagenta}${s}${consoleColors.Reset}`);
+        
+             return `${consoleColors.FgRed}CommandCollection${consoleColors.Reset}(${al.join(", ")})`;
+        }
+
+        return `CommandCollection(${al.join(", ")})`;
+    }
+
+}
+
+
+export {commandCollection}

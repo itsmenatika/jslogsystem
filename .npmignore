@@ -10,3 +10,5 @@ dev/
 node_modules/
 *.log
 .vscode/
+dev/
+_logSystemOLD.ts

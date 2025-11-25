@@ -1,3 +1,6 @@
+// OLD VERSION REFERENCE FOR ADDING COMPATIBILITY. IT SHOULD NOT BE USED!
+
+
 // LOG SYSTEM
 // created by naticzka ;3
 // github: https://github.com/itsmenatika/jslogsystem
@@ -11,7 +14,7 @@ import { cwd } from "node:process";
 import { inspect, InspectOptions, InspectOptionsStylized, stripVTControlCharacters, toUSVString } from "node:util";
 
 import * as config from "./config.js";
-
+import { logSystemError } from "./ultrabasic.js";
 // ___________________________________________
 //
 // CODE
@@ -23,86 +26,81 @@ import * as config from "./config.js";
 let viewTextBox: boolean = config.viewTextBox; // whether text box is visible
 let blockLogsVar: boolean = config.blockLogsVar;
 
-if(!existsSync(config.workingDirectory)){
-    mkdirSync(config.workingDirectory);
-}
 
-if(config.workingDirectory)
-process.chdir(config.workingDirectory);
+// /**
+//  * the type of log
+//  */
+// enum LogType {
+//     INFO = 0,
+//     INFORMATION = 0,
+//     ERROR = 1,
+//     ERR = 1,
+//     WARNING = 2,
+//     WAR = 2,
+//     SUCCESS = 3,
+//     SUCC = 3,
+//     SUC = 3,
+//     INITIALIZATION = 4,
+//     INIT = 4,
+//     INT = 4,
+//     CRASH = 5,
+//     COUNTER = 6,
+//     GROUP = 7
+// }
+
+// let commandHistory: string[] = []; // user command history history
+// let indexCommandHistory: null | number = null; // the index of current selected
+// const logSystemVer: string = "1.2"; // current version of the log system
+// const currentUpTime = Date.now(); // uptime start date
+// let currentGroupString: string = ""; // the current string for groups to make it run faster (you can name it cache, i guess?)
+// let logGroups: string[] = []; // groups for console.group()
+// const timers: Record<string, number> = {}; // the list of timers used with console.time()
 
 
-/**
- * the type of log
- */
-enum LogType {
-    INFO = 0,
-    INFORMATION = 0,
-    ERROR = 1,
-    ERR = 1,
-    WARNING = 2,
-    WAR = 2,
-    SUCCESS = 3,
-    SUCC = 3,
-    SUC = 3,
-    INITIALIZATION = 4,
-    INIT = 4,
-    INT = 4,
-    CRASH = 5,
-    COUNTER = 6,
-    GROUP = 7
-}
-
-let commandHistory: string[] = []; // user command history history
-let indexCommandHistory: null | number = null; // the index of current selected
-const logSystemVer: string = "1.2"; // current version of the log system
-const currentUpTime = Date.now(); // uptime start date
-let currentGroupString: string = ""; // the current string for groups to make it run faster (you can name it cache, i guess?)
-let logGroups: string[] = []; // groups for console.group()
-const timers: Record<string, number> = {}; // the list of timers used with console.time()
-
-class logSystemError extends Error{}; // the easy error wrapper to log errors
 
 // settings that are to provide to process stdin
-process.stdin.setRawMode(true);
-process.stdin.resume();
-process.stdin.setEncoding("utf-8")
+// process.stdin.setRawMode(true);
+// process.stdin.resume();
+// process.stdin.setEncoding("utf-8")
 
 // check for the log directory
-if(!existsSync(config.LOGDIRECTORY)){
-    // make it if it doesn't exist
-    mkdirSync(config.LOGDIRECTORY, {recursive: true});
-}
+// if(!existsSync(config.LOGDIRECTORY)){
+//     // make it if it doesn't exist
+//     mkdirSync(config.LOGDIRECTORY, {recursive: true});
+// }
 
-const finalLatest: string = join(config.LOGDIRECTORY, config.LATESTLOGNAME); // the path to the previous log
-const tempFinal: string = join(config.LOGDIRECTORY, "temp"); // the path to previous temp file log
+    const finalLatest = config.finalLatest;
+    const tempFinal = config.tempFinal;
+// const finalLatest: string = join(config.LOGDIRECTORY, config.LATESTLOGNAME); // the path to the previous log
+// // const tempFinal: string = join(config.LOGDIRECTORY, "temp"); // the path to previous temp file log
 
-// check whether the previous log exist
-if(existsSync(finalLatest)){
-    // if the latest log does exist, then temp shall too!
-    if(!existsSync(tempFinal)){
-        throw new logSystemError("Error with moving the previous log!");
-    }
+// // check whether the previous log exist
+// if(existsSync(finalLatest)){
+//     // if the latest log does exist, then temp shall too!
+//     if(!existsSync(tempFinal)){
+//         throw new logSystemError("Error with moving the previous log!");
+//     }
 
-    const data = readFileSync(tempFinal).toString(); // get the data of the previous log (temp data)
+//     const data = readFileSync(tempFinal).toString(); // get the data of the previous log (temp data)
 
-    const piecesOfData: string[] = data.split("\n"); // split it into lines
+//     const piecesOfData: string[] = data.split("\n"); // split it into lines
 
-    const date = new Date(Number(String(piecesOfData[0]))); // the first line is the date line
+//     const date = new Date(Number(String(piecesOfData[0]))); // the first line is the date line
 
-	// calling the callback to do stuff with previous one
-	config.saveTheLatest(date, finalLatest);
+// 	// calling the callback to do stuff with previous one
+// 	config.saveTheLatest(date, finalLatest);
 
-    // removing temp
-    unlinkSync(tempFinal);
-}
+//     // removing temp
+//     unlinkSync(tempFinal);
+// }
 
-// create new temp file
-writeFileSync(tempFinal, `${Date.now()}\n`);
+// // create new temp file
+// writeFileSync(tempFinal, `${Date.now()}\n`);
 
-// create a new latest log file
-writeFileSync(finalLatest, config.getMoreStartInformation());
+// // create a new latest log file
+// writeFileSync(finalLatest, config.getMoreStartInformation());
 
-appendFileSync(finalLatest, "----------------\n");
+// appendFileSync(finalLatest, "----------------\n");
 
 // vars to store info
 let text: string = "";
@@ -117,150 +115,150 @@ if(viewTextBox){
    process.stdout.write("> \x1b[35m"+text);	
 }
 
-// watching user typing
-process.stdin.on('data', async (key: string) => {
-    if(key){
-        // escape ctrl + c key
-        if(key === '\u0003'){
-            interupHandler("CTRL + C");
-            // process.exit();
-        }
+// // watching user typing
+// process.stdin.on('data', async (key: string) => {
+//     if(key){
+//         // escape ctrl + c key
+//         if(key === '\u0003'){
+//             interupHandler("CTRL + C");
+//             // process.exit();
+//         }
 
-        // reappearing of the textbox
-        if(!viewTextBox){
-            viewTextBox = true;
-            process.stdout.write("\x1b[0m> \x1b[35m");
-        }
+//         // reappearing of the textbox
+//         if(!viewTextBox){
+//             viewTextBox = true;
+//             process.stdout.write("\x1b[0m> \x1b[35m");
+//         }
 
  
-        // backspace
-        if(key.includes("\b")){
-            if(relativePos !== 0){
-                if(relativePos * -1 >= text.length) return;
-                text = text.slice(0, text.length + relativePos - 1) + text.slice(text.length + relativePos , text.length);
+//         // backspace
+//         if(key.includes("\b")){
+//             if(relativePos !== 0){
+//                 if(relativePos * -1 >= text.length) return;
+//                 text = text.slice(0, text.length + relativePos - 1) + text.slice(text.length + relativePos , text.length);
 
 
-                hideCursor();
-                process.stdout.clearLine(0);
-                process.stdout.write("\r");
-                printViewTextbox();
-                process.stdout.moveCursor(relativePos, 0);
-                showCursor();
+//                 hideCursor();
+//                 process.stdout.clearLine(0);
+//                 process.stdout.write("\r");
+//                 printViewTextbox();
+//                 process.stdout.moveCursor(relativePos, 0);
+//                 showCursor();
 
 
-                return;
-            }
+//                 return;
+//             }
 
-            if(text.length > 0){
-                process.stdout.write("\b \b"); 
-            }
-            text = text.slice(0, -1);
-        }
-        // enter
-        else if(key.includes("\r")){
-            relativePos = 0;
+//             if(text.length > 0){
+//                 process.stdout.write("\b \b"); 
+//             }
+//             text = text.slice(0, -1);
+//         }
+//         // enter
+//         else if(key.includes("\r")){
+//             relativePos = 0;
 
-            indexCommandHistory = null;
-            process.stdout.write("\n");
-            appendFileSync(finalLatest, "> "+text+"\n");
-            let tempText: string = text;
-            text = "";
-            process.stdout.write("\x1b[0m");
-			handleEnter(tempText)
-            // if(!handleEnter(tempText) && viewTextBox){
-                // process.stdout.write("> \x1b[35m");
-            // }
-        }
+//             indexCommandHistory = null;
+//             process.stdout.write("\n");
+//             appendFileSync(finalLatest, "> "+text+"\n");
+//             let tempText: string = text;
+//             text = "";
+//             process.stdout.write("\x1b[0m");
+// 			handleEnter(tempText)
+//             // if(!handleEnter(tempText) && viewTextBox){
+//                 // process.stdout.write("> \x1b[35m");
+//             // }
+//         }
 
-        // up key
-        else if (key == '\u001B\u005B\u0041') {
-            relativePos = 0;
+//         // up key
+//         else if (key == '\u001B\u005B\u0041') {
+//             relativePos = 0;
 
-            if(indexCommandHistory === null){
-                indexCommandHistory = commandHistory.length - 1;
-            }
-            else{
-                indexCommandHistory--;
-                if(indexCommandHistory < 0) indexCommandHistory = 0;
-            }
+//             if(indexCommandHistory === null){
+//                 indexCommandHistory = commandHistory.length - 1;
+//             }
+//             else{
+//                 indexCommandHistory--;
+//                 if(indexCommandHistory < 0) indexCommandHistory = 0;
+//             }
 
-            if(commandHistory.length > 0){
-                text = commandHistory[indexCommandHistory];
-                hideCursor();
-                process.stdout.clearLine(0);
-                process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
-                showCursor();
-            }
-        }
+//             if(commandHistory.length > 0){
+//                 text = commandHistory[indexCommandHistory];
+//                 hideCursor();
+//                 process.stdout.clearLine(0);
+//                 process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
+//                 showCursor();
+//             }
+//         }
 
-        // down
-        else if (key == '\u001B\u005B\u0042') {
-            relativePos = 0;
+//         // down
+//         else if (key == '\u001B\u005B\u0042') {
+//             relativePos = 0;
 
-            if(indexCommandHistory !== null){
-                indexCommandHistory++;
-                if(indexCommandHistory >= commandHistory.length) 
-                    indexCommandHistory = null;
+//             if(indexCommandHistory !== null){
+//                 indexCommandHistory++;
+//                 if(indexCommandHistory >= commandHistory.length) 
+//                     indexCommandHistory = null;
 
 
-                if(indexCommandHistory !== null)
-                    text = commandHistory[indexCommandHistory];
-                else
-                    text = ""
+//                 if(indexCommandHistory !== null)
+//                     text = commandHistory[indexCommandHistory];
+//                 else
+//                     text = ""
                 
-                hideCursor();
-                process.stdout.clearLine(0);
-                process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
-                showCursor();
+//                 hideCursor();
+//                 process.stdout.clearLine(0);
+//                 process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
+//                 showCursor();
 
-            }
-        }
-        // left
-        else if(key === '\u001B\u005B\u0044'){
-            if(relativePos * -1 >= text.length) return;
+//             }
+//         }
+//         // left
+//         else if(key === '\u001B\u005B\u0044'){
+//             if(relativePos * -1 >= text.length) return;
 
-            process.stdout.moveCursor(-1, 0);
-            relativePos--;
-        }
+//             process.stdout.moveCursor(-1, 0);
+//             relativePos--;
+//         }
 
-        // right
-        else if(key === '\u001B\u005B\u0043'){
-            if(relativePos >= 0) return;
+//         // right
+//         else if(key === '\u001B\u005B\u0043'){
+//             if(relativePos >= 0) return;
 
-            process.stdout.moveCursor(1, 0);
-            relativePos++;
-        }
+//             process.stdout.moveCursor(1, 0);
+//             relativePos++;
+//         }
         
-        // adding keys
-        else if(allowedKeysToWrite.includes(key)){
-            if(relativePos !== 0){
-                text = text.slice(0, relativePos) + key + text.slice(relativePos);
-                hideCursor();
-                process.stdout.write("\r");
-                printViewTextbox();
-                process.stdout.moveCursor(relativePos, 0);
-                showCursor();
+//         // adding keys
+//         else if(allowedKeysToWrite.includes(key)){
+//             if(relativePos !== 0){
+//                 text = text.slice(0, relativePos) + key + text.slice(relativePos);
+//                 hideCursor();
+//                 process.stdout.write("\r");
+//                 printViewTextbox();
+//                 process.stdout.moveCursor(relativePos, 0);
+//                 showCursor();
 
-                return;
-            }
+//                 return;
+//             }
 
-            text += key;
-            process.stdout.write(key); 
-        }
+//             text += key;
+//             process.stdout.write(key); 
+//         }
 
 
 
-    }
-}
-);
+//     }
+// }
+// );
 
-function hideCursor(){
-    process.stdout.write("\x1b[?25l");
-}
+// function hideCursor(){
+//     process.stdout.write("\x1b[?25l");
+// }
 
-function showCursor(){
-    process.stdout.write("\x1b[?25h");
-}
+// function showCursor(){
+//     process.stdout.write("\x1b[?25h");
+// }
 
 // type for typescript
 type cmdCallbackResponse = void | boolean | number | string | undefined | null | Object;
@@ -1117,8 +1115,6 @@ let commands: Record<string, unifiedCommandTypes> = {
         callback: (argsB: string[]): onlyIfRedirected => {
             const args = removeInternalArguments(argsB);
             const isT = argsB.includes("-t");
-
-            console.log(args.length, args, isT);
 
             if(args.length === 1
             ){
@@ -2895,335 +2891,335 @@ function globalEval(code: string){
 }
 
 
-/**
- * converts a provided logType to the belonging logType string
- * @param type logType
- * @returns string of that logtype
- */
-function resolveLogType(type: LogType): string {
-    switch(type){
-        case LogType.SUCCESS:
-            return "SUCCESS";
-        case LogType.ERROR:
-            return "ERROR";
-        case LogType.INFO:
-            return "INFO";
-        case LogType.WARNING:
-            return "WARNING";
-        case LogType.COUNTER: 
-            return "COUNTER";
-        case LogType.INIT:
-            return "INIT";
-        case LogType.CRASH:
-            return "CRASH";
-        case LogType.GROUP:
-            return "GROUP";
-        default: return "UNKNOWN";
-    }
-}
+// /**
+//  * converts a provided logType to the belonging logType string
+//  * @param type logType
+//  * @returns string of that logtype
+//  */
+// function resolveLogType(type: LogType): string {
+//     switch(type){
+//         case LogType.SUCCESS:
+//             return "SUCCESS";
+//         case LogType.ERROR:
+//             return "ERROR";
+//         case LogType.INFO:
+//             return "INFO";
+//         case LogType.WARNING:
+//             return "WARNING";
+//         case LogType.COUNTER: 
+//             return "COUNTER";
+//         case LogType.INIT:
+//             return "INIT";
+//         case LogType.CRASH:
+//             return "CRASH";
+//         case LogType.GROUP:
+//             return "GROUP";
+//         default: return "UNKNOWN";
+//     }
+// }
 
-/**
- * converts a provided logType to the belonging logType color
- * @param type logType
- * @returns color
- */
-function resolveLogColor(type: LogType): consoleColor {
-    switch(type){
-        case LogType.SUCCESS:
-            return colorTable.success;
-        case LogType.ERROR:
-            return colorTable.error;
-        case LogType.INFO:
-            return colorTable.info;
-        case LogType.WARNING:
-            return colorTable.warning;
-        case LogType.COUNTER: 
-            return colorTable.counter;
-        case LogType.INIT:
-            return colorTable.init;
-        case LogType.CRASH:
-            return colorTable.crash;
-        case LogType.GROUP:
-            return colorTable.group;
-        default: return consoleColors.Reset;
-    }
-}
+// /**
+//  * converts a provided logType to the belonging logType color
+//  * @param type logType
+//  * @returns color
+//  */
+// function resolveLogColor(type: LogType): consoleColor {
+//     switch(type){
+//         case LogType.SUCCESS:
+//             return colorTable.success;
+//         case LogType.ERROR:
+//             return colorTable.error;
+//         case LogType.INFO:
+//             return colorTable.info;
+//         case LogType.WARNING:
+//             return colorTable.warning;
+//         case LogType.COUNTER: 
+//             return colorTable.counter;
+//         case LogType.INIT:
+//             return colorTable.init;
+//         case LogType.CRASH:
+//             return colorTable.crash;
+//         case LogType.GROUP:
+//             return colorTable.group;
+//         default: return consoleColors.Reset;
+//     }
+// }
 
-/**
- * allows you to write raw logs
- * @param type the type of the log
- * @param message the message
- * @param who the executioner (for the logs). Defaults to "core"
- */
-function log(type: LogType, message: string, who: string | logNode = "core") {
-    if(blockLogsVar) return;
+// /**
+//  * allows you to write raw logs
+//  * @param type the type of the log
+//  * @param message the message
+//  * @param who the executioner (for the logs). Defaults to "core"
+//  */
+// function log(type: LogType, message: string, who: string | logNode = "core") {
+//     if(blockLogsVar) return;
 
-    // if that's the parentNode, then get its string
-    if(typeof who === "object") who = who.toString();
+//     // if that's the parentNode, then get its string
+//     if(typeof who === "object") who = who.toString();
     
     
 
-    const currentDate: Date = new Date();
-    const formattedDate = `${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}:${currentDate.getMilliseconds()}`;
+//     const currentDate: Date = new Date();
+//     const formattedDate = `${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}:${currentDate.getMilliseconds()}`;
 
-    const logTypeString: string = resolveLogType(type);
-    const logColor: consoleColor = resolveLogColor(type);
+//     const logTypeString: string = resolveLogType(type);
+//     const logColor: consoleColor = resolveLogColor(type);
     
-    const toWrite: string = `${formattedDate} ${logTypeString} ${who}: ${currentGroupString}${message}\n`;
-    const toDisplay: string = `${colorTable.date}${formattedDate}${consoleColors.Reset} ${logTypeString} ${colorTable.who}${who}${consoleColors.Reset}: ${consoleColors.FgGray}${currentGroupString}${consoleColors.Reset}${logColor}${message}${consoleColors.Reset}\n`;
+//     const toWrite: string = `${formattedDate} ${logTypeString} ${who}: ${currentGroupString}${message}\n`;
+//     const toDisplay: string = `${colorTable.date}${formattedDate}${consoleColors.Reset} ${logTypeString} ${colorTable.who}${who}${consoleColors.Reset}: ${consoleColors.FgGray}${currentGroupString}${consoleColors.Reset}${logColor}${message}${consoleColors.Reset}\n`;
 
-    if(viewTextBox){
-        process.stdout.clearLine(0);
-        process.stdout.write(consoleColors.Reset + "\r");
-    }
+//     if(viewTextBox){
+//         process.stdout.clearLine(0);
+//         process.stdout.write(consoleColors.Reset + "\r");
+//     }
 
-    process.stdout.write(toDisplay);
+//     process.stdout.write(toDisplay);
 
-    appendFileSync(finalLatest, toWrite);
+//     appendFileSync(finalLatest, toWrite);
 
-    if(viewTextBox)
-        process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
-}
-
-
-/**
- * formats an error to allow the stack view
- * @param error some kind of error
- * @returns the formated string
- */
-const formatError = (error: any): string => {
-    return typeof error === "object" && Object.hasOwn(error, "stack") ? error.stack : error;
-}
+//     if(viewTextBox)
+//         process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
+// }
 
 
-/**
- * logs an error if the provided condition was not met. Nothing happens if it wasn't
- * It uses logType.ERROR
- * @param condition the condition
- * @param message the message to print
- * @param who the executioner (for the logs). Defaults to "core"
- */
-function assertConsole(condition: boolean, message: string, who: string | logNode = "core"){
-    if(!condition) log(LogType.ERROR, message, who)
-}
-
-/**
- * clears the console. Equivalent to vannilia JS console.clear()
- */
-function clearConsole(){
-    process.stdout.cursorTo(0,0);
-    process.stdout.clearScreenDown();
-
-    if(viewTextBox){
-        process.stdout.write("\x1b[0m> \x1b[35m"+text);
-    }
-}
-
-/**
- * stores the counters
- */
-const counterTable: Record<string, number> = {
-
-};
-
-/**
- * counts the counter
- * @param name the name of the counter
- * @param startFrom the starting value of the counter if it doesn't exist. Defaults to 1
- * @param increaseBy the increment value. Defaults to 1
- * @param who the executioner (for the logs). Defaults to "core"
- * @returns the current name on the counter.
- */
-function counterCount(name: string, startFrom: number = 1, increaseBy: number = 1, who?: string | logNode): number{
-    if(!Object.hasOwn(counterTable, name)){
-        counterTable[name] = startFrom;
-    }
-    else{
-        counterTable[name] += increaseBy;
-    }
-
-    log(LogType.COUNTER, `${name} -> ${ counterTable[name]}`, who);
-
-    return counterTable[name];
-}
+// /**
+//  * formats an error to allow the stack view
+//  * @param error some kind of error
+//  * @returns the formated string
+//  */
+// const formatError = (error: any): string => {
+//     return typeof error === "object" && Object.hasOwn(error, "stack") ? error.stack : error;
+// }
 
 
-/**
- * removes (resets) the couter
- * @param name the counter name
- */
-function counterCountReset(name: string){
-    if(Object.hasOwn(counterTable, name)){
-        delete counterTable[name];
-    }
-}
+// /**
+//  * logs an error if the provided condition was not met. Nothing happens if it wasn't
+//  * It uses logType.ERROR
+//  * @param condition the condition
+//  * @param message the message to print
+//  * @param who the executioner (for the logs). Defaults to "core"
+//  */
+// function assertConsole(condition: boolean, message: string, who: string | logNode = "core"){
+//     if(!condition) log(LogType.ERROR, message, who)
+// }
 
-/**
- * returns the number register on the counter
- * @param name the name of the counter
- * @returns undefined if doesnt exist or the number if exist
- */
-function getCounter(name: string): undefined | number{
-    return counterTable[name] ? counterTable[name] : undefined;
-}
+// /**
+//  * clears the console. Equivalent to vannilia JS console.clear()
+//  */
+// function clearConsole(){
+//     process.stdout.cursorTo(0,0);
+//     process.stdout.clearScreenDown();
+
+//     if(viewTextBox){
+//         process.stdout.write("\x1b[0m> \x1b[35m"+text);
+//     }
+// }
+
+// /**
+//  * stores the counters
+//  */
+// const counterTable: Record<string, number> = {
+
+// };
+
+// /**
+//  * counts the counter
+//  * @param name the name of the counter
+//  * @param startFrom the starting value of the counter if it doesn't exist. Defaults to 1
+//  * @param increaseBy the increment value. Defaults to 1
+//  * @param who the executioner (for the logs). Defaults to "core"
+//  * @returns the current name on the counter.
+//  */
+// function counterCount(name: string, startFrom: number = 1, increaseBy: number = 1, who?: string | logNode): number{
+//     if(!Object.hasOwn(counterTable, name)){
+//         counterTable[name] = startFrom;
+//     }
+//     else{
+//         counterTable[name] += increaseBy;
+//     }
+
+//     log(LogType.COUNTER, `${name} -> ${ counterTable[name]}`, who);
+
+//     return counterTable[name];
+// }
 
 
-/**
- * prints the viewTextbox
- */
-function printViewTextbox(){
-    process.stdout.write("\x1b[0m> \x1b[35m"+text);
-}
+// /**
+//  * removes (resets) the couter
+//  * @param name the counter name
+//  */
+// function counterCountReset(name: string){
+//     if(Object.hasOwn(counterTable, name)){
+//         delete counterTable[name];
+//     }
+// }
+
+// /**
+//  * returns the number register on the counter
+//  * @param name the name of the counter
+//  * @returns undefined if doesnt exist or the number if exist
+//  */
+// function getCounter(name: string): undefined | number{
+//     return counterTable[name] ? counterTable[name] : undefined;
+// }
 
 
-/**
- * IT'S A VERY LOW LEVEL. CONSIDER USING consoleWrite instead 
- * (or consoleMultiWrite or multiDisplayer if you want to have more abstraction)
- * 
- * it just prints (or also writes to a file) as it says.
- * it will not care about displayed anything. It won't check for anything.
- * Use it on your own risk!
- * 
- * it requires by default disabling the textbox visibility and then turning it on!
- * (something that consoleWrite does itself!)
- * 
- * it does not print a new line!
- * 
- * It can cause a lot of undesired and unexpected behaviour with the cause without the caution
- *
- * 
- * @param textToWrite the raw text to print
- * @param fileToWrite what to print to a file log. a string will be printed directly. The booleans will cause a special behaviour, where false means no writting to a file and true means copying the first argument
- */
-function consoleUltraRawWrite(
-    textToWrite: string, 
-    fileToWrite: string | boolean = true
-){
-    process.stdout.write(textToWrite);
+// /**
+//  * prints the viewTextbox
+//  */
+// function printViewTextbox(){
+//     process.stdout.write("\x1b[0m> \x1b[35m"+text);
+// }
 
-    if(fileToWrite === true){
-        appendFileSync(finalLatest, textToWrite);
-    }
-    else if(fileToWrite !== false){
-        appendFileSync(finalLatest, fileToWrite);
-    }
-}
 
-/**
- * writes a raw text to the console. Allows you to not use log format
- * 
- * if you want even more low level api use consoleUltraRawWrite()
- * 
- * @param textToWrite the text to write
- * @param WithColor color (optional). Defaults to consoleColors.Reset
- * @param writeToFile whether it should be written to the file. defaults to true
- * @param end the end symbol. defaults to \n
- */
-function consoleWrite(
-    textToWrite: string, 
-    WithColor: consoleColors | consoleColors[] | consoleColorRGB = consoleColors.Reset, 
-    writeToFile: boolean = true,
-    end: string = "\n"
-){
-    if(Array.isArray(WithColor)) WithColor = WithColor.reduce((prev, next) => (prev+next) as consoleColors) as any as consoleColors;
+// /**
+//  * IT'S A VERY LOW LEVEL. CONSIDER USING consoleWrite instead 
+//  * (or consoleMultiWrite or multiDisplayer if you want to have more abstraction)
+//  * 
+//  * it just prints (or also writes to a file) as it says.
+//  * it will not care about displayed anything. It won't check for anything.
+//  * Use it on your own risk!
+//  * 
+//  * it requires by default disabling the textbox visibility and then turning it on!
+//  * (something that consoleWrite does itself!)
+//  * 
+//  * it does not print a new line!
+//  * 
+//  * It can cause a lot of undesired and unexpected behaviour with the cause without the caution
+//  *
+//  * 
+//  * @param textToWrite the raw text to print
+//  * @param fileToWrite what to print to a file log. a string will be printed directly. The booleans will cause a special behaviour, where false means no writting to a file and true means copying the first argument
+//  */
+// function consoleUltraRawWrite(
+//     textToWrite: string, 
+//     fileToWrite: string | boolean = true
+// ){
+//     process.stdout.write(textToWrite);
 
-    if(viewTextBox){
-        process.stdout.clearLine(0);
-        process.stdout.write("\r");
-    }
+//     if(fileToWrite === true){
+//         appendFileSync(finalLatest, textToWrite);
+//     }
+//     else if(fileToWrite !== false){
+//         appendFileSync(finalLatest, fileToWrite);
+//     }
+// }
 
-    process.stdout.write(WithColor+textToWrite+"\x1b[0m"+end);
+// /**
+//  * writes a raw text to the console. Allows you to not use log format
+//  * 
+//  * if you want even more low level api use consoleUltraRawWrite()
+//  * 
+//  * @param textToWrite the text to write
+//  * @param WithColor color (optional). Defaults to consoleColors.Reset
+//  * @param writeToFile whether it should be written to the file. defaults to true
+//  * @param end the end symbol. defaults to \n
+//  */
+// function consoleWrite(
+//     textToWrite: string, 
+//     WithColor: consoleColors | consoleColors[] | consoleColorRGB = consoleColors.Reset, 
+//     writeToFile: boolean = true,
+//     end: string = "\n"
+// ){
+//     if(Array.isArray(WithColor)) WithColor = WithColor.reduce((prev, next) => (prev+next) as consoleColors) as any as consoleColors;
 
-    if(writeToFile) appendFileSync(finalLatest, stripVTControlCharacters(textToWrite)+end);
+//     if(viewTextBox){
+//         process.stdout.clearLine(0);
+//         process.stdout.write("\r");
+//     }
 
-    if(viewTextBox){printViewTextbox()}
-}
+//     process.stdout.write(WithColor+textToWrite+"\x1b[0m"+end);
 
-/**
- * the function to combine colors
- * 
- * USE IT TO ENSURE THE COMPATIBILITY WITH THE NEXT VERSION
- * 
- * IT DOESNT WORK with colors created with libraries like chalk or with generateAnsiColor
- * 
- * @param colors colors
- * @returns the combined colors
- */
-function combineColors(...colors: consoleColor[]): consoleColorsMulti{
-    let toReturn: consoleColorsMulti = "";
+//     if(writeToFile) appendFileSync(finalLatest, stripVTControlCharacters(textToWrite)+end);
 
-    for(let color of colors){
-        toReturn += color;
-    }
+//     if(viewTextBox){printViewTextbox()}
+// }
 
-    return toReturn;
-}
+// /**
+//  * the function to combine colors
+//  * 
+//  * USE IT TO ENSURE THE COMPATIBILITY WITH THE NEXT VERSION
+//  * 
+//  * IT DOESNT WORK with colors created with libraries like chalk or with generateAnsiColor
+//  * 
+//  * @param colors colors
+//  * @returns the combined colors
+//  */
+// function combineColors(...colors: consoleColor[]): consoleColorsMulti{
+//     let toReturn: consoleColorsMulti = "";
 
-/**
- * allows you to write double input (with colors and without to not mess with logs files)
- * @param withoutColors 
- * @param withColors 
- */
-function consolePairWrite(withoutColors: string, withColors: string){
-    if(viewTextBox){
-        process.stdout.clearLine(0);
-        process.stdout.write("\r");
-        process.stdout.write(consoleColors.Reset);
-    }
+//     for(let color of colors){
+//         toReturn += color;
+//     }
 
-    process.stdout.write(withColors);
+//     return toReturn;
+// }
+
+// /**
+//  * allows you to write double input (with colors and without to not mess with logs files)
+//  * @param withoutColors 
+//  * @param withColors 
+//  */
+// function consolePairWrite(withoutColors: string, withColors: string){
+//     if(viewTextBox){
+//         process.stdout.clearLine(0);
+//         process.stdout.write("\r");
+//         process.stdout.write(consoleColors.Reset);
+//     }
+
+//     process.stdout.write(withColors);
     
-    appendFileSync(finalLatest, withoutColors);
+//     appendFileSync(finalLatest, withoutColors);
 
-    if(viewTextBox){printViewTextbox()}
-}
+//     if(viewTextBox){printViewTextbox()}
+// }
 
-/**
- * allows you to write multi colors to the console in the single command
- * 
- * the length of texts array and colors array have to be the exact match!
- * 
- * example:
- * 
- * consoleMultiWrite(["MEOW", " :3s"], [consoleColors.fgRed, consoleColors.fgBlue]);
- * 
- * you can also use multiple colors
- * 
- * 
- * @param texts the array of texts
- * @param colors the array of colors
- * @param writeToFile whether to write it to file or only to console
- * @param end the end symbol. It defaults to \n
- */
-function consoleMultiWrite(texts: string[], colors: Array<consoleColors | consoleColorsMulti>, writeToFile: boolean = true, end: string = ""){
-    if(texts.length !== colors.length){
-        throw new logSystemError("Text array length and colors array length dont match!"
-            + texts.toString() + " vs " + colors.toString()
-        );
-    }
-
-
-    let toWrite: string = "";
-    let toDisplay: string = "";
-
-    for(let index in texts){
-        toWrite += texts[index];
-        toDisplay += colors[index] + texts[index] + consoleColors.Reset;
-    }
+// /**
+//  * allows you to write multi colors to the console in the single command
+//  * 
+//  * the length of texts array and colors array have to be the exact match!
+//  * 
+//  * example:
+//  * 
+//  * consoleMultiWrite(["MEOW", " :3s"], [consoleColors.fgRed, consoleColors.fgBlue]);
+//  * 
+//  * you can also use multiple colors
+//  * 
+//  * 
+//  * @param texts the array of texts
+//  * @param colors the array of colors
+//  * @param writeToFile whether to write it to file or only to console
+//  * @param end the end symbol. It defaults to \n
+//  */
+// function consoleMultiWrite(texts: string[], colors: Array<consoleColors | consoleColorsMulti>, writeToFile: boolean = true, end: string = ""){
+//     if(texts.length !== colors.length){
+//         throw new logSystemError("Text array length and colors array length dont match!"
+//             + texts.toString() + " vs " + colors.toString()
+//         );
+//     }
 
 
-    if(viewTextBox){
-        process.stdout.clearLine(0);
-        process.stdout.write("\r");
-        process.stdout.write(consoleColors.Reset);
-    }
+//     let toWrite: string = "";
+//     let toDisplay: string = "";
 
-    process.stdout.write(toDisplay+end);
+//     for(let index in texts){
+//         toWrite += texts[index];
+//         toDisplay += colors[index] + texts[index] + consoleColors.Reset;
+//     }
+
+
+//     if(viewTextBox){
+//         process.stdout.clearLine(0);
+//         process.stdout.write("\r");
+//         process.stdout.write(consoleColors.Reset);
+//     }
+
+//     process.stdout.write(toDisplay+end);
     
-    if(writeToFile) appendFileSync(finalLatest, toWrite+end);
+//     if(writeToFile) appendFileSync(finalLatest, toWrite+end);
 
-    if(viewTextBox){printViewTextbox()}
-}
+//     if(viewTextBox){printViewTextbox()}
+// }
 
 /**
  * the class that offers abstraction to consoleMultiWrite.
@@ -3251,318 +3247,318 @@ function multiPairDisplayerCreate(withoutColors: string, withColors: string): mu
     return [withoutColors, withColors];
 }
 
-class multiDisplayer{
-    private texts: string[] = [];
-    private colors: Array<consoleColor | consoleColorsMulti> = [];
+// class multiDisplayer{
+//     private texts: string[] = [];
+//     private colors: Array<consoleColor | consoleColorsMulti> = [];
 
-    constructor(){}
+//     constructor(){}
 
-    // static fromReadyString(text: string){
-    //     const toReturn = new multiDisplayer();
+//     // static fromReadyString(text: string){
+//     //     const toReturn = new multiDisplayer();
 
-    //     const codes = [];
+//     //     const codes = [];
 
-    //     const ansiRegex = /\u001b\[[0-9;]*m/g;
+//     //     const ansiRegex = /\u001b\[[0-9;]*m/g;
 
-    //     toReturn.colors = text.match(ansiRegex) || [];
+//     //     toReturn.colors = text.match(ansiRegex) || [];
 
-    //     toReturn.texts = text.split(ansiRegex).filter(s => s);
+//     //     toReturn.texts = text.split(ansiRegex).filter(s => s);
 
-    //     return toReturn;
-    // }
+//     //     return toReturn;
+//     // }
 
-    /**
-     * adds the new characters (and) colors to displayer
-     * 
-     * for adding at the beginning, check: unshift()
-     * 
-     * @param text the text to be added
-     * @param colors colors|color of that text
-     */
-    push(text: string, colors?: consoleColor | consoleColorsMulti){
-        this.texts.push(text);
+//     /**
+//      * adds the new characters (and) colors to displayer
+//      * 
+//      * for adding at the beginning, check: unshift()
+//      * 
+//      * @param text the text to be added
+//      * @param colors colors|color of that text
+//      */
+//     push(text: string, colors?: consoleColor | consoleColorsMulti){
+//         this.texts.push(text);
 
-        if(colors)
-            this.colors.push(colors);
-        else
-            this.colors.push("");
-    }
+//         if(colors)
+//             this.colors.push(colors);
+//         else
+//             this.colors.push("");
+//     }
 
-    /**
-     * adds the new characters (and) colors to displayer at the beginning
-     * 
-     * for adding at the last place, check: push()
-     * 
-     * @param text the text to be added
-     * @param colors colors|color of that text
-     */
-    unshift(text: string, colors?: consoleColor | consoleColorsMulti){
-        this.texts.unshift(text);
+//     /**
+//      * adds the new characters (and) colors to displayer at the beginning
+//      * 
+//      * for adding at the last place, check: push()
+//      * 
+//      * @param text the text to be added
+//      * @param colors colors|color of that text
+//      */
+//     unshift(text: string, colors?: consoleColor | consoleColorsMulti){
+//         this.texts.unshift(text);
 
-        if(colors)
-            this.colors.unshift(colors);
-        else
-            this.colors.unshift("");
-    }
+//         if(colors)
+//             this.colors.unshift(colors);
+//         else
+//             this.colors.unshift("");
+//     }
 
-    /**
-     * pops the last element and returns it
-     * @returns the popped element in format like: [string, consoleColor | consoleColorsMulti] or [undefined, undefined] if there wasnt any object
-     */
-    pop(): [undefined | string, undefined | consoleColor | consoleColorsMulti]{
-        return [this.texts.pop(), this.colors.pop()];
-    }
+//     /**
+//      * pops the last element and returns it
+//      * @returns the popped element in format like: [string, consoleColor | consoleColorsMulti] or [undefined, undefined] if there wasnt any object
+//      */
+//     pop(): [undefined | string, undefined | consoleColor | consoleColorsMulti]{
+//         return [this.texts.pop(), this.colors.pop()];
+//     }
 
-    /**
-     * shifts the first element and returns it
-     * @returns the shifted element in format like: [string, consoleColor | consoleColorsMulti] or [undefined, undefined] if there wasnt any object
-     */
-    shift(): [undefined | string, undefined | consoleColor | consoleColorsMulti]{
-        return [this.texts.shift(), this.colors.shift()];
-    }
+//     /**
+//      * shifts the first element and returns it
+//      * @returns the shifted element in format like: [string, consoleColor | consoleColorsMulti] or [undefined, undefined] if there wasnt any object
+//      */
+//     shift(): [undefined | string, undefined | consoleColor | consoleColorsMulti]{
+//         return [this.texts.shift(), this.colors.shift()];
+//     }
 
-    /**
-     * returns the string without color table
-     * @returns the raw string
-     */
-    toRawString(): string {
-        return this.texts.join("");
-    }
+//     /**
+//      * returns the string without color table
+//      * @returns the raw string
+//      */
+//     toRawString(): string {
+//         return this.texts.join("");
+//     }
 
-    /**
-     * allows you to use finally consoleWrite. It's required because js has no constructors
-     * @param writeToFile parameter to be passed to consoleWrite. Leave it as undefined to leave it as default
-     * @param clearObj whether to clear the arrays on that objects. Defaults to true
-     */
-    useConsoleWrite(writeToFile: boolean | undefined = true, clearObj: boolean = true){
-        // default of writeToFile
-        if(writeToFile === undefined) writeToFile = true;
+//     /**
+//      * allows you to use finally consoleWrite. It's required because js has no constructors
+//      * @param writeToFile parameter to be passed to consoleWrite. Leave it as undefined to leave it as default
+//      * @param clearObj whether to clear the arrays on that objects. Defaults to true
+//      */
+//     useConsoleWrite(writeToFile: boolean | undefined = true, clearObj: boolean = true){
+//         // default of writeToFile
+//         if(writeToFile === undefined) writeToFile = true;
 
-        // use consoleMultiWrite
-        consoleMultiWrite(this.texts, this.colors, writeToFile);
+//         // use consoleMultiWrite
+//         consoleMultiWrite(this.texts, this.colors, writeToFile);
 
-        // clear objs
-        if(clearObj){
-            this.texts = [];
-            this.colors = [];
-        }
-    }
+//         // clear objs
+//         if(clearObj){
+//             this.texts = [];
+//             this.colors = [];
+//         }
+//     }
 
-    /**
-     * clears the whole array
-     */
-    clear(){
-        this.texts = [];
-        this.colors = [];
-    }
-}
+//     /**
+//      * clears the whole array
+//      */
+//     clear(){
+//         this.texts = [];
+//         this.colors = [];
+//     }
+// }
 
 // types for internal typing
-type consoleColor = string;
-type consoleColorsMulti = string;
-type consoleColorRGB = string;
+// type consoleColor = string;
+// type consoleColorsMulti = string;
+// type consoleColorRGB = string;
 
-/**
- * generate a new ansi Color with rgb
- * @param red 
- * @param green 
- * @param blue 
- * @returns the ansi color
- */
-function generateAnsiColor(red: number, green: number, blue: number): consoleColorRGB {
-  return `\u001b[38;2;${red};${green};${blue}m`;
-}
+// /**
+//  * generate a new ansi Color with rgb
+//  * @param red 
+//  * @param green 
+//  * @param blue 
+//  * @returns the ansi color
+//  */
+// function generateAnsiColor(red: number, green: number, blue: number): consoleColorRGB {
+//   return `\u001b[38;2;${red};${green};${blue}m`;
+// }
 
-/**
- * colors
- */
-enum consoleColors{
-    Reset = "\x1b[0m",
-    Bright = "\x1b[1m",
-    Dim = "\x1b[2m",
-    Underscore = "\x1b[4m",
-    Blink = "\x1b[5m",
-    Reverse = "\x1b[7m",
-    Hidden = "\x1b[8m",
+// /**
+//  * colors
+//  */
+// enum consoleColors{
+//     Reset = "\x1b[0m",
+//     Bright = "\x1b[1m",
+//     Dim = "\x1b[2m",
+//     Underscore = "\x1b[4m",
+//     Blink = "\x1b[5m",
+//     Reverse = "\x1b[7m",
+//     Hidden = "\x1b[8m",
     
-    FgBlack = "\x1b[30m",
-    FgRed = "\x1b[31m",
-    FgGreen = "\x1b[32m",
-    FgYellow = "\x1b[33m",
-    FgBlue = "\x1b[34m",
-    FgMagenta = "\x1b[35m",
-    FgCyan = "\x1b[36m",
-    FgWhite = "\x1b[37m",
-    FgGray = "\x1b[90m",
+//     FgBlack = "\x1b[30m",
+//     FgRed = "\x1b[31m",
+//     FgGreen = "\x1b[32m",
+//     FgYellow = "\x1b[33m",
+//     FgBlue = "\x1b[34m",
+//     FgMagenta = "\x1b[35m",
+//     FgCyan = "\x1b[36m",
+//     FgWhite = "\x1b[37m",
+//     FgGray = "\x1b[90m",
     
-    BgBlack = "\x1b[40m",
-    BgRed = "\x1b[41m",
-    BgGreen = "\x1b[42m",
-    BgYellow = "\x1b[43m",
-    BgBlue = "\x1b[44m",
-    BgMagenta = "\x1b[45m",
-    BgCyan = "\x1b[46m",
-    BgWhite = "\x1b[47m",
-    BgGray = "\x1b[100m",
-}
+//     BgBlack = "\x1b[40m",
+//     BgRed = "\x1b[41m",
+//     BgGreen = "\x1b[42m",
+//     BgYellow = "\x1b[43m",
+//     BgBlue = "\x1b[44m",
+//     BgMagenta = "\x1b[45m",
+//     BgCyan = "\x1b[46m",
+//     BgWhite = "\x1b[47m",
+//     BgGray = "\x1b[100m",
+// }
 
-/**
- * quick lookup table for color groups
- */
-let colorTable: Record<string, consoleColor> = {
+// /**
+//  * quick lookup table for color groups
+//  */
+// let colorTable: Record<string, consoleColor> = {
 
-    "info": consoleColors.FgWhite,
-    "warning": consoleColors.FgYellow,
-    "error": consoleColors.FgRed,
-    "success": consoleColors.FgGreen,
-    "counter": consoleColors.FgCyan,
-    "init": consoleColors.FgWhite,
-    "crash": consoleColors.FgRed,
-    "group": consoleColors.FgGray,
+//     "info": consoleColors.FgWhite,
+//     "warning": consoleColors.FgYellow,
+//     "error": consoleColors.FgRed,
+//     "success": consoleColors.FgGreen,
+//     "counter": consoleColors.FgCyan,
+//     "init": consoleColors.FgWhite,
+//     "crash": consoleColors.FgRed,
+//     "group": consoleColors.FgGray,
 
-    "date": consoleColors.FgGray,
-    "who": consoleColors.FgMagenta
+//     "date": consoleColors.FgGray,
+//     "who": consoleColors.FgMagenta
 
-}
-
-
-/**
- * function to use to block incoming logs
- * @param status allows you to block incoming logs. Defaults to undefined, which does nothing
- * @returns current status
- */
-function blockLogs(status?: boolean): boolean{
-    if(typeof status === "boolean") blockLogsVar = status;
-
-    return blockLogsVar;
-}
+// }
 
 
-/**
- * function to use to hide textbox to write texts
- * @param status allows to change the status
- * @returns current status
- */
-function textboxVisibility(status?: boolean): boolean{
-    if(typeof status === "boolean") viewTextBox = status;
+// /**
+//  * function to use to block incoming logs
+//  * @param status allows you to block incoming logs. Defaults to undefined, which does nothing
+//  * @returns current status
+//  */
+// function blockLogs(status?: boolean): boolean{
+//     if(typeof status === "boolean") blockLogsVar = status;
+
+//     return blockLogsVar;
+// }
+
+
+// /**
+//  * function to use to hide textbox to write texts
+//  * @param status allows to change the status
+//  * @returns current status
+//  */
+// function textboxVisibility(status?: boolean): boolean{
+//     if(typeof status === "boolean") viewTextBox = status;
 	
-	if(status === false){
-		process.stdout.clearLine(0);
-        process.stdout.write("\r");
-	}
-	else if(status === true){
-		process.stdout.write("\x1b[0m> \x1b[35m"+text);
-	}
+// 	if(status === false){
+// 		process.stdout.clearLine(0);
+//         process.stdout.write("\r");
+// 	}
+// 	else if(status === true){
+// 		process.stdout.write("\x1b[0m> \x1b[35m"+text);
+// 	}
 
-    return viewTextBox;
-}
+//     return viewTextBox;
+// }
 
-/**
- * returns unified formated error
- * @param taskName the name of the task
- * @param error the error
- * @returns `The error with the task: '${taskName}'. The error message:\n${formatError(error)}\n`
- */
-function formatTaskError(taskName: string, error: any): string{
-    return `The error with the task: '${taskName}'. The error message:\n${formatError(error)}\n`;
-}
+// /**
+//  * returns unified formated error
+//  * @param taskName the name of the task
+//  * @param error the error
+//  * @returns `The error with the task: '${taskName}'. The error message:\n${formatError(error)}\n`
+//  */
+// function formatTaskError(taskName: string, error: any): string{
+//     return `The error with the task: '${taskName}'. The error message:\n${formatError(error)}\n`;
+// }
 
-/**
- * allows you to easily use log without retypping task info
- * 
- * example:
- * useWith("bulding core data...", () => {
- *     let s = connectToApi();
- *     s.build();
- * }, "userAccounter")
- * 
- * @param message the task description
- * @param func function that runs task (it will invoke it without any parameters)
- * @param who who is responsible
- * @param silent Defaults to false. Allows you for the removal of logs
- * @returns the func result or an error object
- */
-function useWith(
-    message: string, func: CallableFunction, 
-    who: string | logNode = "core", silent: boolean = false
-): any | Error{
-    log(LogType.INFO, message, who);
-    try {
-        let funcRes = func();
+// /**
+//  * allows you to easily use log without retypping task info
+//  * 
+//  * example:
+//  * useWith("bulding core data...", () => {
+//  *     let s = connectToApi();
+//  *     s.build();
+//  * }, "userAccounter")
+//  * 
+//  * @param message the task description
+//  * @param func function that runs task (it will invoke it without any parameters)
+//  * @param who who is responsible
+//  * @param silent Defaults to false. Allows you for the removal of logs
+//  * @returns the func result or an error object
+//  */
+// function useWith(
+//     message: string, func: CallableFunction, 
+//     who: string | logNode = "core", silent: boolean = false
+// ): any | Error{
+//     log(LogType.INFO, message, who);
+//     try {
+//         let funcRes = func();
 
-        if(!silent)
-        log(LogType.SUCCESS, message, who);
+//         if(!silent)
+//         log(LogType.SUCCESS, message, who);
 
-        return funcRes;
-    } catch (error) {
+//         return funcRes;
+//     } catch (error) {
 
-        if(!silent)
-        log(LogType.ERROR, formatTaskError(message, error), who);
+//         if(!silent)
+//         log(LogType.ERROR, formatTaskError(message, error), who);
 
-        return error;
-    }
-}
+//         return error;
+//     }
+// }
 
 
 /**
  * class used to tell the localisation of logs. That is an optional class
  * You can still pass strings instead of that!
  */
-class logNode{
-    // the name of that log
-    name: string;
+// class logNode{
+//     // the name of that log
+//     name: string;
 
-    // the parent of that parent
-    private parent?: logNode;
+//     // the parent of that parent
+//     private parent?: logNode;
 
-    /**
-     * 
-     * @param name the name of the nod
-     * @param parent the parent (optional)
-     */
-    constructor(name: string, parent?: logNode){
-        this.name = name;
-        this.parent;
-    }
+//     /**
+//      * 
+//      * @param name the name of the nod
+//      * @param parent the parent (optional)
+//      */
+//     constructor(name: string, parent?: logNode){
+//         this.name = name;
+//         this.parent;
+//     }
 
-    /**
-     * gets the node parent
-     * @returns parent or undefined if no parent is present
-     */
-    getParent(): undefined | logNode{
-        return this.parent;
-    }
+//     /**
+//      * gets the node parent
+//      * @returns parent or undefined if no parent is present
+//      */
+//     getParent(): undefined | logNode{
+//         return this.parent;
+//     }
 
-    /**
-     * returns the formatted string using fast algorithm
-     * @returns formatted string
-     */
-    toString(): string {
-        let toReturn = ""; // create a string
+//     /**
+//      * returns the formatted string using fast algorithm
+//      * @returns formatted string
+//      */
+//     toString(): string {
+//         let toReturn = ""; // create a string
 
-        let parent: logNode | undefined = this as logNode; // get parent
+//         let parent: logNode | undefined = this as logNode; // get parent
 
-        // loop till there's no more
-        while(true){
+//         // loop till there's no more
+//         while(true){
 
-            // if no parent, then return
-            if(!parent){
-                // toReturn = "core" + "." + toReturn;
-                break;
-            }
+//             // if no parent, then return
+//             if(!parent){
+//                 // toReturn = "core" + "." + toReturn;
+//                 break;
+//             }
 
-            // add parent name
-            toReturn = parent.name + "." + toReturn;
+//             // add parent name
+//             toReturn = parent.name + "." + toReturn;
 
-            // get the next parent
-            parent = parent.getParent();
-        }
+//             // get the next parent
+//             parent = parent.getParent();
+//         }
 
 
-        // return without the last dot
-        return toReturn.slice(0, toReturn.length - 1);
-    }
-}
+//         // return without the last dot
+//         return toReturn.slice(0, toReturn.length - 1);
+//     }
+// }
 
 
 /**
@@ -3591,156 +3587,156 @@ function actualCrash(message: string, who?: string, exitCode?: any){
 // }
 
 
-/**
- * returns the current version of log system
- * 
- * example:
- * 
- * let w = getCurrentVersionOfLogSystem("string");
- * 
- * @param as string or number 
- * @returns log system version in type depending of selected
- */
-function getCurrentVersionOfLogSystem(as: "number" | "string" = "string"): string | number {
-    if(as === "string") return String(logSystemVer);
-    else if(as === "number") return Number(logSystemVer);
-    else return -1;
-}
+// /**
+//  * returns the current version of log system
+//  * 
+//  * example:
+//  * 
+//  * let w = getCurrentVersionOfLogSystem("string");
+//  * 
+//  * @param as string or number 
+//  * @returns log system version in type depending of selected
+//  */
+// function getCurrentVersionOfLogSystem(as: "number" | "string" = "string"): string | number {
+//     if(as === "string") return String(logSystemVer);
+//     else if(as === "number") return Number(logSystemVer);
+//     else return -1;
+// }
 
-// group settings
-interface groupSettings{
-    messageVisible?: boolean,
-    messageWho?: string | logNode,
-    error?: boolean
-}
+// // group settings
+// interface groupSettings{
+//     messageVisible?: boolean,
+//     messageWho?: string | logNode,
+//     error?: boolean
+// }
 
-/**
- * creates (joins) a new group for that log
- * @param name the group name
- * @returns the new current group string
- */
-function logGroup(name: string, info: Omit<groupSettings, "error"> = {}): string{
+// /**
+//  * creates (joins) a new group for that log
+//  * @param name the group name
+//  * @returns the new current group string
+//  */
+// function logGroup(name: string, info: Omit<groupSettings, "error"> = {}): string{
 
-    if(!("messageVisible" in info) || info.messageVisible){
-        const whoS = info.messageWho ? info.messageWho : undefined;
-        log(LogType.GROUP, name, whoS);
-    }
+//     if(!("messageVisible" in info) || info.messageVisible){
+//         const whoS = info.messageWho ? info.messageWho : undefined;
+//         log(LogType.GROUP, name, whoS);
+//     }
 
-    logGroups.push(name);
+//     logGroups.push(name);
 
-    // return currentGroupString = currentGroupString.slice(0, currentGroupString.indexOf(lastLogGroupText)) + singleLogGroupText + lastLogGroupText;
+//     // return currentGroupString = currentGroupString.slice(0, currentGroupString.indexOf(lastLogGroupText)) + singleLogGroupText + lastLogGroupText;
 
-    return reconstructLogGroup();
-}
+//     return reconstructLogGroup();
+// }
 
-/**
- * leaves the group created with logGroup / group
- * @returns the new current group group string
- */
-function logGroupEnd(info: Omit<groupSettings, "messageVisible" | "messageWho"> = {}): string {
+// /**
+//  * leaves the group created with logGroup / group
+//  * @returns the new current group group string
+//  */
+// function logGroupEnd(info: Omit<groupSettings, "messageVisible" | "messageWho"> = {}): string {
 
     
-    // currentGroupString = currentGroupString.slice(0, currentGroupString.lastIndexOf(singleLogGroupText)) + lastLogGroupText;
+//     // currentGroupString = currentGroupString.slice(0, currentGroupString.lastIndexOf(singleLogGroupText)) + lastLogGroupText;
 
-    // // TODO: MAYBE IN THE FUTURE? better group ending
+//     // // TODO: MAYBE IN THE FUTURE? better group ending
 
-    // return currentGroupString;
+//     // return currentGroupString;
 
 
-    if(logGroups.length === 0){
-        if("error" in info && info.error){
-            throw new logSystemError("there's no group");
-        }
+//     if(logGroups.length === 0){
+//         if("error" in info && info.error){
+//             throw new logSystemError("there's no group");
+//         }
 
-        return currentGroupString;
-    }
+//         return currentGroupString;
+//     }
 
-    logGroups.pop();
+//     logGroups.pop();
 
-    return reconstructLogGroup();
-}
+//     return reconstructLogGroup();
+// }
 
-/**
- * recreates a currentGroupString from other things
- * @returns currentGroupString
- */
-function reconstructLogGroup(): string{
-    currentGroupString = "";
+// /**
+//  * recreates a currentGroupString from other things
+//  * @returns currentGroupString
+//  */
+// function reconstructLogGroup(): string{
+//     currentGroupString = "";
 
-    for(let i = 0; i < logGroups.length; i++){
-        currentGroupString += config.singleLogGroupText;
-    }
+//     for(let i = 0; i < logGroups.length; i++){
+//         currentGroupString += config.singleLogGroupText;
+//     }
 
-    if(logGroups.length !== 0)
-    currentGroupString += config.lastLogGroupText + " ";
+//     if(logGroups.length !== 0)
+//     currentGroupString += config.lastLogGroupText + " ";
 
-    return currentGroupString;
-}
+//     return currentGroupString;
+// }
 
-/**
- * creates a new timer with specified name
- * @param label the timer name
- * @param info configuration information
- * @returns the start time
- */
-function logTimeStart(label: string, info: Omit<groupSettings, "error"> = {}): number{
-    const time = Date.now();
+// /**
+//  * creates a new timer with specified name
+//  * @param label the timer name
+//  * @param info configuration information
+//  * @returns the start time
+//  */
+// function logTimeStart(label: string, info: Omit<groupSettings, "error"> = {}): number{
+//     const time = Date.now();
 
-    timers[label] = time;
+//     timers[label] = time;
 
-    if(!("messageVisible" in info) || info.messageVisible){
-        const whoS = info.messageWho ? info.messageWho : undefined;
-        log(LogType.GROUP, `timer '${label}' started`, whoS);
-    }
+//     if(!("messageVisible" in info) || info.messageVisible){
+//         const whoS = info.messageWho ? info.messageWho : undefined;
+//         log(LogType.GROUP, `timer '${label}' started`, whoS);
+//     }
 
-    return time;
-}
+//     return time;
+// }
 
-/**
- * stops a timer with specified name
- * 
- * if info.error set to true, it causes an error if there's no timer with that name, otherwise it just ignores it
- * 
- * @param label the timer name
- * @param info configuration information
- * @returns elapsed time
- */
-function logTimeEnd(label: string, info: groupSettings = {}): number{
-    if(!(label in timers) && "error" in info && info.error){
-        throw new logSystemError("there's no timer with that name");
-    }
+// /**
+//  * stops a timer with specified name
+//  * 
+//  * if info.error set to true, it causes an error if there's no timer with that name, otherwise it just ignores it
+//  * 
+//  * @param label the timer name
+//  * @param info configuration information
+//  * @returns elapsed time
+//  */
+// function logTimeEnd(label: string, info: groupSettings = {}): number{
+//     if(!(label in timers) && "error" in info && info.error){
+//         throw new logSystemError("there's no timer with that name");
+//     }
 
-    const elapsed = Date.now() - timers[label];
-    delete timers[label];
+//     const elapsed = Date.now() - timers[label];
+//     delete timers[label];
 
-    if(!("messageVisible" in info) || info.messageVisible){
-        const whoS = info.messageWho ? info.messageWho : undefined;
-        log(LogType.GROUP, `timer '${label}' ended. ${elapsed}ms`, whoS);
-    }
+//     if(!("messageVisible" in info) || info.messageVisible){
+//         const whoS = info.messageWho ? info.messageWho : undefined;
+//         log(LogType.GROUP, `timer '${label}' ended. ${elapsed}ms`, whoS);
+//     }
 
-    return elapsed;
-}
+//     return elapsed;
+// }
 
-/**
- * returns the current time of the timer
- * @param label the timer name
- * @param info configuration information
- * @returns the current time
- */
-function logTimeStamp(label: string, info: groupSettings = {}): number{
-    if(!(label in timers) && "error" in info && info.error){
-        throw new logSystemError("there's no timer with that name");
-    }
+// /**
+//  * returns the current time of the timer
+//  * @param label the timer name
+//  * @param info configuration information
+//  * @returns the current time
+//  */
+// function logTimeStamp(label: string, info: groupSettings = {}): number{
+//     if(!(label in timers) && "error" in info && info.error){
+//         throw new logSystemError("there's no timer with that name");
+//     }
 
-    const elapsed = Date.now() - timers[label];
+//     const elapsed = Date.now() - timers[label];
 
-    if(!("messageVisible" in info) || info.messageVisible){
-        const whoS = info.messageWho ? info.messageWho : undefined;
-        log(LogType.GROUP, `timer '${label}' stamp: ${elapsed}ms`, whoS);
-    }
+//     if(!("messageVisible" in info) || info.messageVisible){
+//         const whoS = info.messageWho ? info.messageWho : undefined;
+//         log(LogType.GROUP, `timer '${label}' stamp: ${elapsed}ms`, whoS);
+//     }
 
-    return elapsed;
-}
+//     return elapsed;
+// }
 
 
 // the default behaviour for inspect
@@ -3922,14 +3918,14 @@ function keepProcessAlive(resolveTime: number = 20){
     })();
 }
 
-/**
- * allows you to easily create multilined strings without bad readability in code
- * @param data the data
- * @returns joined data with \n
- */
-function multiLineConstructor(...data: string[]): string{
-    return data.join("\n");
-}
+// /**
+//  * allows you to easily create multilined strings without bad readability in code
+//  * @param data the data
+//  * @returns joined data with \n
+//  */
+// function multiLineConstructor(...data: string[]): string{
+//     return data.join("\n");
+// }
 
 /**
  * in theory it should allow you to restart the current process
@@ -3952,24 +3948,24 @@ function processRestart(){
 // log(LogType.INIT, "new log session completely created!");
 
 // writting the welcome message
-if(config.quickHello){
-    log(LogType.INIT, `log system v${logSystemVer} by Naticzka was properly loaded!`);
-}
-else
-{
-    const s = new multiDisplayer();
+// if(config.quickHello){
+//     log(LogType.INIT, `log system v${logSystemVer} by Naticzka was properly loaded!`);
+// }
+// else
+// {
+//     const s = new multiDisplayer();
 
-    s.push("Log system has been properly loaded!\n", consoleColors.FgGreen);
-    s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
-    s.push("\n\n");
-    s.push(`Welcome to the log system v${logSystemVer} `, consoleColors.FgCyan);
-    s.push("by Naticzka\n", combineColors(consoleColors.FgMagenta, consoleColors.Blink));
-    s.push("\n")
-    s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
-    s.push("\n");
-    s.push("start using it by writting 'help' or '?'\n")
-    s.useConsoleWrite(false);
-}
+//     s.push("Log system has been properly loaded!\n", consoleColors.FgGreen);
+//     s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
+//     s.push("\n\n");
+//     s.push(`Welcome to the log system v${logSystemVer} `, consoleColors.FgCyan);
+//     s.push("by Naticzka\n", combineColors(consoleColors.FgMagenta, consoleColors.Blink));
+//     s.push("\n")
+//     s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
+//     s.push("\n");
+//     s.push("start using it by writting 'help' or '?'\n")
+//     s.useConsoleWrite(false);
+// }
 
 
 // exports
