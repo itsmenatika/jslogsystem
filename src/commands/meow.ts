@@ -22,7 +22,7 @@ const commandTable = quickCmdWithAliases("meow", {
             g.push(" ( | | )\n");
             g.push("(__d b__)\n");
 
-            if(args.includes("-t") || !askForLegacy(this).pipes){
+            if(args.includes("-§") || !askForLegacy(this).pipes){
                 g.useConsoleWrite(undefined, false, this.sessionName);
             }
 

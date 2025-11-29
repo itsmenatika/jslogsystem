@@ -14,10 +14,20 @@ const commandTable = quickCmdWithAliases("eval", {
         isAlias: false,
         callback(args: string[]): any{
             let toUse: string = "";
-            for(const cur of args.slice(1)){
-                if(cur === "-t") continue;
+            const toExps: Record<string, any> = {};
 
-                toUse += cur + " ";
+            for(const cur of args.slice(1)){
+                switch(typeof cur){
+                    case "object":
+                        Object.assign(toExps, cur);
+                        break;
+                    default:
+                        if(cur === "-§") break;
+                        toUse += cur + " ";
+                }
+                // if(cur === "-t") continue;
+
+                // toUse += cur + " ";
             }
 
             let code = toUse.trim();
@@ -34,9 +44,19 @@ const commandTable = quickCmdWithAliases("eval", {
                 let prev = globalThis.$newConsole;
                 // @ts-ignore
                 let prev2 = globalThis.$con;
+                // @ts-ignore
+                let imp = globalThis.$imp;
+                // @ts-ignore
+                let bargs = globalThis.$args;
+
 
                 // @ts-ignore
                 globalThis.$newConsole = globalThis.$con = new consoleShortHand(this.sessionName);
+
+                // @ts-ignore
+                globalThis.$imp = toExps;
+                // @ts-ignore
+                globalThis.$args = args;
 
                 answer = globalEval(code);
 
@@ -44,6 +64,10 @@ const commandTable = quickCmdWithAliases("eval", {
                 globalThis.$newConsole = prev;
                 // @ts-ignore
                 globalThis.$con = prev2;
+                // @ts-ignore
+                globalThis.$imp = imp;
+                // @ts-ignore
+                globalThis.$args = bargs;
                 
 
                 // globalThis.$newConsole = prev;

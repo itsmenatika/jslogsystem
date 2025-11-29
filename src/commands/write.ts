@@ -11,7 +11,7 @@ const commandTable = quickCmdWithAliases("write", {
     callback: (args: string[]): string => {
         let toPrint: string = "";
         for(const cur of args.slice(1)){
-            if(cur === "-t") continue;
+            if(cur === "-§") continue;
 
             toPrint += cur + " ";
         }

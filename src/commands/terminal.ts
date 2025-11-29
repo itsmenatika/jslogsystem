@@ -49,7 +49,7 @@ const commandTable = quickCmdWithAliases("terminal", {
         "   ** -c -> process group (exit, cd)", 
         "   ** -T -> that shell group (logs, hide, help, clear, bind, exists, version, terminal)",   
         "   ** -o -> other shells group (eval, cmd)",  
-        "   IT's RECOMENDED TO HAVE -r, -t or -a. You won't be able to to go back from that session otherwise!",
+        "   IT's RECOMENDED TO HAVE -r, -T or -a. You won't be able to to go back from that session otherwise!",
         "* terminal remove <sessionName> -> it will remove a terminal",
         "   ** NOTE: it's impossible to remove main and the session from which was that command executed",
         "* terminal inspect [<sessionName>] -> it will return the everything that the session currently stores (IT MAY BE REMOVED IN THE FUTURE! IT SHOULD BE ONLY USED FOR TESTING!)",

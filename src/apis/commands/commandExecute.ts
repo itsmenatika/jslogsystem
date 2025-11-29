@@ -5,7 +5,7 @@ import { getTerminalOPJ, getTerminalOPJTYPE, terminalSession } from "../../progr
 import { commandDividerInternal } from "./commandParser.js";
 import { isControlType, isExplicitUndefined, isOnlyToRedirect, isPipeHalt, pipeHalt, specialTypes } from "./commandSpecialTypes.js";
 import { commandExecParams, commandExecParamsProvide, commandPipe, getReadyParams, pipeType } from "./common.js";
-import { appendFileSync, readFileSync, writeFileSync } from "fs";
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { logSystemError } from "../../ultrabasic.js";
 import { formatError } from "../../texttools.js";
@@ -155,7 +155,7 @@ function divider(data: string): [string[], boolean]{
     return [toRet, closedQuotas];
 }
 
-function commandInternalExec(
+async function commandInternalExec(
     text: string, 
     options: commandExecParamsProvide
 ){
@@ -176,7 +176,7 @@ function commandInternalExec(
         const pipeTree = commandDividerInternal(text);
         // console.log(pipeTree);
         // return; 
-        [res, prints] = pipeExecutor(pipeTree, options);
+        [res, prints] = await pipeExecutor(pipeTree, options);
     }
     else{
         // const parts = text.split(" ");
@@ -192,10 +192,10 @@ function commandInternalExec(
             partsToUse = parts;
         }
         else{
-            partsToUse = [parts[0], "-t" , ...parts.slice(1)];
+            partsToUse = [parts[0], "-§" , ...parts.slice(1)];
         }
 
-        res = handleCommandInternal(partsToUse, options);
+        res = await handleCommandInternal(partsToUse, options, [partsToUse, partsToUse]);
     }
 
     if(!op.onlyReturn)
@@ -262,8 +262,8 @@ function internalIsTrue(obj: any): boolean{
     }
 }
 
-function pipeExecutor(pipeTree: commandPipe[], options: commandExecParamsProvide = {}):
-[any, number]{
+async function pipeExecutor(pipeTree: commandPipe[], options: commandExecParamsProvide = {}):
+Promise<[any, number]>{
     // console.log(pipeTree);
     const [op, session] = getReadyParams(options);
 
@@ -303,9 +303,14 @@ function pipeExecutor(pipeTree: commandPipe[], options: commandExecParamsProvide
             }
 
             case pipeType.fileFrom: {
+                let where = join(process.cwd(), pipe.val as string);
 
+                if(!existsSync(where)){
+                    result = undefined;
+                    break;
+                }
 
-                let f = readFileSync(join(process.cwd(), pipe.val as string));
+                let f = readFileSync(where);
 
                 result = f;
                 break;
@@ -372,12 +377,13 @@ function pipeExecutor(pipeTree: commandPipe[], options: commandExecParamsProvide
                         )
                     )
                 ){
-                    commandPartsToUse.push("-t");
+                    commandPartsToUse.push("-§");
                 }
                 // console.log(commandPartsToUse);
 
                 commandPartsToUse.push(...commandExecParts.slice(1));
 
+                const provided = [...commandPartsToUse];
 
                 if(Array.isArray(result)){
                     commandPartsToUse.push(...result);
@@ -387,8 +393,8 @@ function pipeExecutor(pipeTree: commandPipe[], options: commandExecParamsProvide
                 }
 
                 // console.log('dadad ', commandPartsToUse);
-                const cmdRes = handleCommandInternal(
-                    commandPartsToUse, options
+                const cmdRes = await handleCommandInternal(
+                    commandPartsToUse, options, [provided, result]
                 );
 
                 // console.log(cmdRes);s
@@ -446,10 +452,11 @@ function pipeExecutor(pipeTree: commandPipe[], options: commandExecParamsProvide
 
 
 // that functions handles commands. It's for internal usage
-function handleCommandInternal(
+async function handleCommandInternal(
     parts: any[], 
-    options: commandExecParamsProvide
-): cmdCallbackResponse | void{
+    options: commandExecParamsProvide,
+    execPar: [any[], any[]]
+): Promise<cmdCallbackResponse | void>{
 
     const [op, session] = getReadyParams(options);
     const conf = session.config;
@@ -462,7 +469,9 @@ function handleCommandInternal(
         sessionName: session.sessionName,
         cwd: session.cwd,
         _terminalSession: session,
-        runAt: Date.now()
+        runAt: Date.now(),
+        providedArgs: execPar[0],
+        passedArgs: execPar[1]
     };
 
 
@@ -526,11 +535,11 @@ function handleCommandInternal(
 
             // execute it
             if(orginalCmd.async){
-                (cmdToUse.callback as cmdCallbackAsync).apply(thisObj, [parts]);
-                return true;
+                return await (cmdToUse.callback as cmdCallbackAsync).apply(thisObj, [parts]);
+                // return true;
             }
             else{
-                return (cmdToUse.callback as cmdcallback).apply(thisObj, [parts]);
+                return await (cmdToUse.callback as cmdcallback).apply(thisObj, [parts]);
             }
 
 

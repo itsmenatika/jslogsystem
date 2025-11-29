@@ -7,9 +7,11 @@ import { commandTable as strs } from "../commands/string.js";
 import { commandTable as num } from "../commands/number.js";
 import { commandTable as inspect } from "../commands/inspect.js";
 import { commandTable as parameter } from "../commands/parameter.js";
+import { commandTable as objtar } from "../commands/objecttoarray.js";
+import { commandTable as revr } from "../commands/reverse.js";
+import { commandTable as tonext } from "../commands/tonext.js";
 import { cmdTableToCommandCompounts } from "../tools/commandCreatorTools.js";
 import { commandCollection } from "../tools/commandCollection.js";
-
 
 const commandTable = {
     ...args,
@@ -21,6 +23,9 @@ const commandTable = {
     ...num,
     ...inspect,
     ...parameter,
+    ...objtar,
+    ...revr,
+    ...tonext
 };
 
 const compounds = cmdTableToCommandCompounts(commandTable);

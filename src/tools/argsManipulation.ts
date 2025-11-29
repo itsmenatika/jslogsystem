@@ -93,7 +93,7 @@ interface smartArgumentList{
     [inspect.custom](depth: number, options: InspectOptions, inspect: (value: any, opts?: InspectOptionsStylized) => string): string
 }
 
-const internalArgsList = ["-t"];
+const internalArgsList = ["-§"];
 
 function smartArgs(preargs: any[], context: terminalSession | commandContext): smartArgumentList{
     let usesInternalArgs = true;
@@ -137,7 +137,7 @@ function smartArgs(preargs: any[], context: terminalSession | commandContext): s
                 internalArgs.push(arg);
     
                 // console.log(arg, arg === "-t")
-                if(arg === "-t") isEnding ||= true;
+                if(arg === "-§") isEnding ||= true;
             }
             else{
                 argsFiltered.push(arg);

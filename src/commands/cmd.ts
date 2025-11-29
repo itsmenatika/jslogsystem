@@ -15,7 +15,7 @@ const commandTable = quickCmdWithAliases("cmd", {
         callback(args: string[]){
             let toUse: string = "";
             for(const cur of args.slice(1)){
-                if(cur === "-t") continue;
+                if(cur === "-§") continue;
 
                 toUse += cur + " ";
             }

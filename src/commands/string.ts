@@ -14,6 +14,9 @@ const commandTable = quickCmdWithAliases("string", {
 
 
         for(const obj of args){
+            if(obj instanceof Blob){
+                toReturn.push(obj.text());
+            } else
             toReturn.push(String(obj));
         }
 

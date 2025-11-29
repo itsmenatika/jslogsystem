@@ -48,7 +48,7 @@ interface pipeExplicitUndefined extends controlTypes{
  * @returns result
  */
 function isControlType(val: any): val is controlTypes{
-    return typeof val === "object" && "__$special" in val;
+    return typeof val === "object" && val && "__$special" in val;
 }
 
 /**
@@ -95,7 +95,7 @@ function pipeHalt(): pipeExecutorHalt{
 }
 
 function isPipeHalt(val: any): val is pipeExecutorHalt{
-    return typeof val === "object" && "__$special" in val &&
+    return typeof val === "object" && val && "__$special" in val &&
     val.__$special === specialTypes.pipeExecutorHalt;
 }
 
@@ -114,7 +114,7 @@ function explicitUndefined(): pipeExplicitUndefined{
 }
 
 function isExplicitUndefined(val: any): val is pipeExplicitUndefined{
-    return typeof val === "object" && "__$special" in val &&
+    return typeof val === "object" && val && "__$special" in val &&
     val.__$special === specialTypes.explicitUndefined;
 }
 

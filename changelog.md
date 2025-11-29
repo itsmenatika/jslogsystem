@@ -10,6 +10,8 @@ changes:
 * commands were added:
   * parameter -> to isolate parameters
   * terminal -> for managing terminals
+  * reverse -> reversing the flow of the arguments
+  * objecttoarray -> converting an object to an array of objects
 * commands were reintroduced:
   * info -> it has been mistakely removed from the preview versions
 * commands were rewritten:
@@ -20,7 +22,8 @@ changes:
 * commands changes:
   * hide -> it now supports a custom hide message
   * eval -> it now uses silent tasks without logging
-  * cmd -> it now uses silent tasks without logging
+  * cmd -> it now uses silent tasks without logging. $imp and $args were introduced. Imp stores all imported arguments from other commands and args is the list of all arguments
+  * string -> it now accepts more types
 * '--' argument can now be used for indicating that the next stuff are not dashed parameters
 * quotas can now be used to pass arguments with space as one
 * terminal sessions were added
@@ -40,6 +43,7 @@ changes:
   * processCommands
   * streams
   * thatShell
+  * webGroup
 * command creator tools were added: quickCmdWithAliases cmdTableToCommandCompounts, commandCompoundsToCmdTable
 * useWith has now options
 * nodeJsConsole was added (it uses orginal node.js front-end of console and sends output to the jslogsystem)
@@ -48,7 +52,13 @@ changes:
 * consoleUltraRawWrite was added
 * legacy system was rewritten
 * it is now possible to run jslogsystem standalone without importing it
+* async commands now work properly instead of just returning true
+* -§ is now sent instead of -§ to the last command
+* command context was added (as this)
 
+bugfixes:
+* returned null now doesn't crash a program
+* nonexisting file while reading from one now doesn't cause a crash
 
 compatibility:
 * some commands may suffer from change in the position of arguments, but it's very rare and for rarely used parameters
@@ -56,6 +66,7 @@ compatibility:
 * consoleShortHand is 100% compatible with node.js console
 * nodeJsConsole is a easy tool to replace node.js console using the orginal node.js console class
 * timers now use "DEFAULT" if label is not specified
+* -§ is now sent instead of -§ to the last command
 
 
 ## 1.2X

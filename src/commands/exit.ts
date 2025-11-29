@@ -11,7 +11,7 @@ const commandTable = quickCmdWithAliases("exit", {
     isAlias: false,
     callback(args: string[]): boolean{
         let exitCode: any = args.slice(1).filter(s => {
-            return s != "-t";
+            return s != "-§";
         })
         .join(" ").trim();
         

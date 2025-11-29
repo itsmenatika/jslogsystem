@@ -80,13 +80,16 @@ const commandTable = quickCmdWithAliases("echo", {
         "",
         "you can use \\cC to quickly use colors, where c is the code to print",
         "",
-        "it will not check whether the terminal supports colors, it's up to you"
+        "it will not check whether the terminal supports colors, it's up to you",
+        "",
+        "§ will be used equally to \\c",
+        "$N where n is a number starting from 0 will be replace with according passed parameter (passed, not provided)"
     ),
     hidden: false,
     changeable: false,
     isAlias: false,
     callback(preArgs: string[]){
-        const args = smartArgs(preArgs, this);
+        const args = smartArgs(this.providedArgs, this);
         const legacy = askForLegacy(this);
 
         const raw = args.dashCombined.includes("r");
@@ -97,13 +100,14 @@ const commandTable = quickCmdWithAliases("echo", {
         if(args.dashCombined.includes("o")){
             colors = legacy.pipes && !legacy.specialArguments;
         }
-        colors ||= (args.dashCombined.includes("t") || !args.dashCombined.includes("c"));
+        colors ||= (args.dashCombined.includes("§") || !args.dashCombined.includes("c"));
 
         const toparse = args.argsWithoutDash.filter(s => typeof s == "string").join(" ");
 
         if(raw) return toparse;
 
         let text = "";
+        let textAr = [];
         for(let i = 0; i < toparse.length; i++){
             if(toparse[i] == "§"){
                 if(i + 1 < toparse.length){
@@ -159,6 +163,25 @@ const commandTable = quickCmdWithAliases("echo", {
                     default:
                         text += toparse[i];                
                 }
+            }
+            else if(toparse[i] == "$"){
+                i++;
+                if(toparse.length > i){
+                    let sym = toparse[i];
+
+
+                    // switch(sym){
+                    //     case ".": {
+                    //         text += 
+                    //     }
+                    //     default:
+
+                    // }
+                    const n = Number(sym);
+
+                    text += this.passedArgs[n];
+                }
+                else text += "$";
             }
             else text += toparse[i];
         }

@@ -18,7 +18,11 @@ interface commandContext {
     _terminalSession: terminalSession,
 
     executedAs: "BIND" | "ALIAS" | "ORGINAL" | "UNKOWN",
-    runAt: number
+    runAt: number,
+
+
+    passedArgs: any[],
+    providedArgs: any[]
 };
 
 function isCommandContext(obj: any): obj is commandContext{

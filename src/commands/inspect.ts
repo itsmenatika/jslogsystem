@@ -35,7 +35,7 @@ const commandTable = quickCmdWithAliases("inspect", {
         const useColors = (
             args.dashCombined.includes("f") || (
             args.dashCombined.includes("c") && (
-                args.dashCombined.includes("t") || args.isEnding || (
+                args.dashCombined.includes("§") || args.isEnding || (
                     !args.dashCombined.includes("o") && legacyApi.pipes && !legacyApi.specialArguments
                 )
             )
