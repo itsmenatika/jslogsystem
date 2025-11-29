@@ -30,7 +30,12 @@
     "typescript",
     "ts",
     "terminal",
-    "node"
+    "node",
+    "jslogsystem",
+    "logging",
+    "cli",
+    "debugger",
+    "debug"
   ],
   "author": "naticzka",
   "license": "MIT",
