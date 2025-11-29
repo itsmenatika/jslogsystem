@@ -17,6 +17,7 @@ import { commandTable as pipeGrp } from "../commandGroups/pipeGroup.js";
 import { commandTable as thatShell } from "../commandGroups/thatShell.js";
 import { commandTable as otherShells } from "../commandGroups/othershells.js";
 import { commandTable as alls } from "../commandGroups/all.js";
+import { commandTable as webgroup } from "../commandGroups/webGroup.js";
 import { cd } from "../apis/commands/osApis/filesystem.js";
 import { textboxVisibility } from "../apis/terminal/textbox.js";
 import { printTextBox } from "../formatingSessionDependent.js";
@@ -49,6 +50,7 @@ const commandTable = quickCmdWithAliases("terminal", {
         "   ** -c -> process group (exit, cd)", 
         "   ** -T -> that shell group (logs, hide, help, clear, bind, exists, version, terminal)",   
         "   ** -o -> other shells group (eval, cmd)",  
+        "   ** -w -> web group (getonlinedataservice)",  
         "   IT's RECOMENDED TO HAVE -r, -T or -a. You won't be able to to go back from that session otherwise!",
         "* terminal remove <sessionName> -> it will remove a terminal",
         "   ** NOTE: it's impossible to remove main and the session from which was that command executed",
@@ -268,6 +270,11 @@ const commandTable = quickCmdWithAliases("terminal", {
                 // that shell group
                 if(args.dashCombined.includes("T")){
                     Object.assign(tb, thatShell);
+                }
+
+                // web group
+                if(args.dashCombined.includes("w")){
+                    Object.assign(tb, webgroup);
                 }
 
                 // if(all || args.dashCombined.includes("t")){
