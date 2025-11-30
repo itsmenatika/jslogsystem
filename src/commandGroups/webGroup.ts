@@ -1,4 +1,4 @@
-import { commandTable as gods} from "../commands/gods.js";
+import { commandTable as gods} from "../commands/getonlinedataservice.js";
 import { commandCollection } from "../tools/commandCollection.js";
 import { cmdTableToCommandCompounts } from "../tools/commandCreatorTools.js";
 

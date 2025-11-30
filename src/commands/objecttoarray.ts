@@ -19,7 +19,9 @@ const commandTable = quickCmdWithAliases("objecttoarray", {
         "",
         "undefined will be produced if there is not specified data",
         "",
-        "§ can be used to traverse through data"
+        "§ can be used to traverse through data",
+        "",
+        "NOTE: if multiple objects are provided, then it may get very flattened!"
     ),
     hidden: false,
     changeable: false,
@@ -37,6 +39,7 @@ const commandTable = quickCmdWithAliases("objecttoarray", {
        }
 
     //    const toRet: any[] = [];
+    // console.log(objToParse);
 
        for(const arg of args.args){
             if(typeof arg === "string"){

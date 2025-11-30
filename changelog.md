@@ -12,6 +12,8 @@ changes:
   * terminal -> for managing terminals
   * reverse -> reversing the flow of the arguments
   * objecttoarray -> converting an object to an array of objects
+  * getonlinedataservice -> allows fetching data from the web
+  * json -> allows converting from and to json strings
 * commands were reintroduced:
   * info -> it has been mistakely removed from the preview versions
 * commands were rewritten:

@@ -9,9 +9,9 @@ const commandTable = quickCmdWithAliases("getonlinedataservice", {
         "fetches data from the web",
         "",
         "available arguments:",
-        "-j <- convert to object according to the json format",
-        "-t <- convert to the text",
-        "-s <- get status code",
+        "-j <- convert to an object according to the json format",
+        "-t <- convert to a text",
+        "-s <- get the status code",
         "-o <- returns true or false according to whether the communication was successful",
         "-r <- returns true or false according to whether the communication was redirected",
         "-b <- returns blob (default)",
@@ -28,6 +28,10 @@ const commandTable = quickCmdWithAliases("getonlinedataservice", {
         const args = smartArgs(preArgs, this);
 
         const url = args.argsWithoutArguments[0];
+
+        if(!url){
+            return "USAGE: getonlinedataservice [<-j/-t/-s/-o/-r/-b>] <URL>";
+        }
 
         const fetched = await fetch(url);
 
