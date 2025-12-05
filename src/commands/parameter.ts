@@ -20,6 +20,8 @@ const commandTable = quickCmdWithAliases("parameter", {
         "c -> the very first argument (so 0, so basically also the name by which it was called)",
         "m -> the middle (it is floored to the nearest integer)",
         "n -> the middle (it is ceiled to the nearest integer)",
+        "r -> to get a random number in the bounds of an array size",
+        "q -> to get a unique random number in the bounds of an array size. If no unique number can be found, undefined will be returned and section ignored"
     ),
     hidden: false,
     changeable: false,
@@ -38,20 +40,30 @@ const commandTable = quickCmdWithAliases("parameter", {
         const toUse = [args[0], ...args.slice(2)];
         const toRet = [];
 
+        const data = {unique: []};
+
+        for(let i = 1; i < toUse.length; i++){
+            // shut up typescript
+            // @ts-expect-error
+            data.unique.push(i);
+        }
 
         for(const section of ident.split("/"))
         {
             const parts = section.split("..");
 
             if(parts.length == 1){
-                const n = parseIdent(parts[0], toUse);
+                const n = parseIdent(parts[0], toUse, data);
+                if(n === undefined) continue;
                 toRet.push(toUse[n]);
             }
             else if(parts.length == 2){
-                const start = parseIdent(parts[0], toUse);
+                const start = parseIdent(parts[0], toUse, data);
                 
 
-                const end =parseIdent(parts[1], toUse);
+                const end = parseIdent(parts[1], toUse, data);
+
+                if(end === undefined || start === undefined) continue;
 
                 if(end >= start)
                 toRet.push(...toUse.slice(start, end+1));
@@ -68,7 +80,7 @@ const commandTable = quickCmdWithAliases("parameter", {
     }
 }, ["par"]);
 
-function parseIdent(ident: string, toUse: any[]){
+function parseIdent(ident: string, toUse: any[], data: Record<string, any>){
     switch(ident.toLowerCase()){
         case "e":
         case "^":
@@ -82,6 +94,42 @@ function parseIdent(ident: string, toUse: any[]){
             return Math.floor(toUse.length / 2);
         case "n":
             return Math.ceil(toUse.length / 2);
+        case "r":
+            return Math.floor(Math.random() * toUse.length);
+        case "q":
+            if(data.unique.length == 0) return undefined;
+
+            const which = Math.floor(Math.random() * data.unique.length);
+            const d = data.unique[which];
+            data.unique = [...data.unique.slice(0, which), ...data.unique.slice(which + 1)];
+
+            console.log(d, which, data.unique.length);
+
+
+
+            return d;
+
+            // if(data.unique.length === toUse.length) return undefined;
+
+
+
+            // let tries = 1000000;
+            // while(true && tries > 0){
+            //     let toTest =  Math.ceil(Math.random() * toUse.length);
+
+            //     if(data.unique.includes(toTest)){
+            //         tries--;
+            //         continue;
+            //     }
+
+            //     data.unique.push(toTest);
+
+            //     return toTest;
+            // }
+
+            // return undefined;
+
+        
         default:
             return Number(ident);
     }

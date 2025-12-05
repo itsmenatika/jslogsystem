@@ -91,13 +91,17 @@ function divider(data: string): [string[], boolean]{
     let cur: string = "";
     let closedQuotas: boolean = true;
     while(i < data.length){
+        // console.log('da', i, data.length, data[i]);
         switch(data[i]){
             case "\\": {
-                i++;
-                switch(data[i]){
+                if(i + 1 >= data.length){
+                    cur += "\\";
+                    break;
+                }
+                switch(data[i + 1]){
                     case "\\":
                         cur += "\\";
-                        i--;
+                        i++;
                         break;
                     case "\"":
                         cur += "\""
@@ -105,7 +109,6 @@ function divider(data: string): [string[], boolean]{
                         break;
                     default:
                         cur += "\\";
-                        i--;
                         break;
                 }
                 break;
@@ -118,21 +121,46 @@ function divider(data: string): [string[], boolean]{
                     i < data.length
                 ){
                     if(
-                        data[i] == "\\"
+                        data[i] === "\\"
                         &&
                         i + 1 < data.length
-                        &&
-                        data[i + 1] == "\""
+                        && 
+                        data[i + 1] === "\""
                     ){
-                        cur += "\"";
-                        i += 2;
+                        i++;
+                        continue;
                     }
-                    else if(data[i] == "\""){
+
+                    if(
+                        data[i] === "\""
+                        &&
+                        i != 0
+                        &&
+                            data[i - 1] != "\\"
+                    ){
                         closedQuotas = true;
                         break;
                     }
-                    else cur += data[i];
+
+                    cur += data[i];
                     i++;
+
+                    // if(
+                    //     data[i] == "\\"
+                    //     &&
+                    //     i + 1 < data.length
+                    //     &&
+                    //     data[i + 1] == "\""
+                    // ){
+                    //     cur += "\"";
+                    //     i += 2;
+                    // }
+                    // else if(data[i] == "\""){
+                    //     closedQuotas = true;
+                    //     break;
+                    // }
+                    // else cur += data[i];
+                    // i++;
                 }
 
                 break;
@@ -470,8 +498,8 @@ async function handleCommandInternal(
         cwd: session.cwd,
         _terminalSession: session,
         runAt: Date.now(),
-        providedArgs: execPar[0],
-        passedArgs: execPar[1]
+        providedArgs: execPar[0] || [],
+        passedData: execPar[1] || []
     };
 
 

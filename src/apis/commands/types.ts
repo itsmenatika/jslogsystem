@@ -21,7 +21,7 @@ interface commandContext {
     runAt: number,
 
 
-    passedArgs: any[],
+    passedData: any,
     providedArgs: any[]
 };
 

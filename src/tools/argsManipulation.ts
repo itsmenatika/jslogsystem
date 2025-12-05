@@ -1,6 +1,7 @@
 import { inspect, InspectOptionsStylized, InspectOptions } from "util";
 import { terminalSession } from "../programdata";
 import { commandContext, isCommandContext } from "../apis/commands/types.js";
+import { askForLegacy } from "../apis/allApis.js";
 
 function removeInternalArguments(ar: any[]): any[]{
     return ar.filter(
@@ -79,11 +80,22 @@ interface smartArgumentList{
      * arguments excluding internal ones, - ones. Note: it does not include objects passed as arguments
      * if you want objects: use .argsWithoutArguments 
     */
-    argsWithoutDash: string[],
+    argsWithoutDash: any[],
     /**
      * it excludes any string that has the first character "-" and internal arguments
      */
-    argsWithoutArguments: string[],
+    argsWithoutArguments: any[],
+
+    /**
+     * the orginal array without the execution name
+     */
+    argsWithoutOne: any[],
+
+
+    /**
+     * arguments with -- dashes
+     */
+    argsWithDoubleDash: Record<string, any>,
 
     /**
      * iterates through .args
@@ -95,62 +107,135 @@ interface smartArgumentList{
 
 const internalArgsList = ["-§"];
 
-function smartArgs(preargs: any[], context: terminalSession | commandContext): smartArgumentList{
+interface smartArgsOptions{
+    /**
+     * whether to use faster functions, that may be buggy or not work in the future
+     * 
+     * It defaults to true.
+     * 
+     * change it to false if undefined behaviour is occuring.
+     * 
+     * example of changes:
+     * 
+     * 
+     * // VERSION WITH BYPASS
+     * usesInternalArgs = context._terminalSession.config.legacy.specialArguments;
+     * 
+     * // VERSION WITHOUT BYPASS
+     * usesInternalArgs = askForLegacy(context).specialArguments;
+     * 
+     */
+    bypass?: boolean
+}
+
+/**
+ * parses the provided arguments into easy to use object with different options
+ * 
+ * @param preargs arg list
+ * @param context the context, that will be used as a help. it is optional but recommended
+ * @param options the options
+ * @returns 
+ */
+function smartArgs(
+    preargs: any[], 
+    context?: terminalSession | commandContext,
+    options: smartArgsOptions = {}
+): smartArgumentList{
+    
+    // whether to expect internal arguments like -§
     let usesInternalArgs = true;
     if(isCommandContext(context)){
-        usesInternalArgs = context._terminalSession.config.legacy.specialArguments;
+        if(options.bypass !== false){
+            // use a bypass of _terminalSession to speedup it
+            usesInternalArgs = context._terminalSession.config.legacy.specialArguments;
+        }
+        else
+
+        // VERSION WITHOUT BYPASS
+        usesInternalArgs = askForLegacy(context).specialArguments;
     }
-    else{
+    else if(context !== undefined){
         usesInternalArgs = context.config.legacy.specialArguments;
     }
     
-    const commandName = preargs[0];
-    const argsWithoutOne = preargs.slice(1);
-    // console.log(argsWithoutOne, preargs);
+    const commandName = preargs[0]; // the name that executed that
+    const argsWithoutOne = preargs.slice(1); // arguments without that name
     
-    const argsFiltered: string[] = [];
-    const argsWithDash: string[] = [];
-    const argsWithoutDash: string[] = [];
+    const argsFiltered: any[] = []; // arguments without internal ones
+    const argsWithDash: string[] = []; // arguments that were proceeded by - and not by --
+    const argsWithDoubleDash: Record<string, any> = {}; // arguments that were proceeded by --
+    const argsWithoutDash: string[] = []; // arguments without all dashed arguments (string ONES)
 
-    const argsWithoutArguments: string[] = [];
+    const argsWithoutArguments: any[] = []; // arguments without all dashes arguments (all of them)
 
-    const internalArgs = [];
-    let isEnding: boolean = !usesInternalArgs;
+    const internalArgs: string[] = []; // internal args list
+
+    let isEnding: boolean = !usesInternalArgs; // whether it is the last command
     
-    let usedDoubleDashOnly: boolean = false;
+    let noArgumentsPassThisPoint: boolean = false; // whether arguments are no longer accepted
 
-    for(const arg of argsWithoutOne){
-        // console.log(typeof arg, arg, arg === "-t", arg == "-t", arg in internalar);
+    
+
+    // go through all of the arguments
+    for(let i = 0; i < argsWithoutOne.length; i++){
+        const arg = argsWithoutOne[i];
+
+        // if it is a string type
         if(typeof arg === "string"){
+            // whether it is a special sign
             if(arg === "--"){
-                usedDoubleDashOnly = true;
+                noArgumentsPassThisPoint = true;
                 continue;
             }
 
-            if(usedDoubleDashOnly){
+            // if there was no arguments pass that point
+            if(noArgumentsPassThisPoint){
                 argsWithoutDash.push(arg);
                 argsFiltered.push(arg);
+                argsWithoutArguments.push(arg);
                 continue;
             }
 
+            // if it is a internal argument
             if(internalArgsList.includes(arg)){
+                // add to internal ones
                 internalArgs.push(arg);
     
-                // console.log(arg, arg === "-t")
+                // change isEnding if it was -§
                 if(arg === "-§") isEnding ||= true;
             }
             else{
+                // add to filtered ones without special arguments
                 argsFiltered.push(arg);
             }
             
+            // dashed arguments
             if(arg.length > 0 && arg[0] === "-"){
+                // double dashed
+                if(arg.length > 1 && arg[1] === "-"){
+                    const name: string = arg.slice(2);
+
+                    let value: any = void 0;
+                    if( i + 1 < argsWithoutOne.length){
+                        value = argsWithoutOne[++i];
+                    }
+                    
+                    argsWithDoubleDash[name] = value;
+
+
+                    continue;
+                }
+
+                // single dashed
                 argsWithDash.push(arg.slice(1));
             }
+            // if it was not a dashed argument
             else{
                 argsWithoutDash.push(arg);
                 argsWithoutArguments.push(arg);
             }
         }
+        // if it was something different from string
         else{
             argsFiltered.push(arg);
             argsWithoutArguments.push(arg);
@@ -161,24 +246,40 @@ function smartArgs(preargs: any[], context: terminalSession | commandContext): s
         
     }
 
+    // combine all single dashed arguments
     const dashCombined = argsWithDash.join("");
 
     return {
-        name: commandName,
-        commandName,
-        args: argsFiltered,
+        // orginal ones
         array: preargs,
         orginal: preargs,
         orginalLength: preargs.length,
+
+        argsWithoutOne,
+
+        // executed as:
+        name: commandName,
+        commandName,
+
+        // arguments without the name
+        args: argsFiltered,
+        length: argsFiltered.length,
+
+        // internals
         internalArgs,
         internal: internalArgs,
         isEnding,
-        length: argsFiltered.length,
+
+        // dashed
         dashed: argsWithDash,
         argsWithDash,
         dashCombined,
         argsWithoutDash,
         argsWithoutArguments,
+        
+        argsWithDoubleDash,
+
+        // internal js functions
         [Symbol.iterator](){
             let i = 0;
             return {

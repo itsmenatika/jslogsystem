@@ -70,6 +70,7 @@ function consoleWrite(
     end: string = "\n",
     terminal: getTerminalOPJTYPE = "main"
 ){
+    // console.log(textToWrite, WithColor, writeToFile, end, terminal);
     // // get that terminal
     // let getFrom: string = "";
     // if(typeof terminalName === "string"){

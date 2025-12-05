@@ -14,6 +14,8 @@ legacyData, legacyDataProvide } from "./config.js";
 import { resolve } from "node:path";
 import { quickSetup } from "./tools/quickSetup.js";
 import { fileURLToPath } from "node:url";
+import { allGroup_collection } from "./commandGroups/allGroups.js";
+import { commandTable as commandTableInternal } from "./commands/internal.js";
 
 export {
     // *****
@@ -131,7 +133,9 @@ if(
     resolve(process.argv[1]) ==
     resolve(fileURLToPath(import.meta.url))
 ){
-    quickSetup();
+    quickSetup({
+        commandTable: allGroup_collection.copy().extend(commandTableInternal)
+    });
     log(LogType.ERROR, "jslogsystem was not exported!");
     log(LogType.INFO, "use 'import [...] from 'jslogsystem' next time!");
     log(LogType.INFO, "examples:\n * import * from 'jslogsystem';\n * import { quickSetup } from 'jslogystem';");
@@ -141,4 +145,6 @@ if(
     log(LogType.WARNING, "It was not possible to know the user intention, so the default 'main' terminal session was loaded with all commands available. If that was not your intention, try importing it, instead of directly launching it");
 
     log(LogType.INFO, "more information can be found on github (https://github.com/itsmenatika/jslogsystem) or npm (https://www.npmjs.com/package/jslogsystem)");
+
+    log(LogType.INFO, "'internal' command was added for testing purposes");
 }

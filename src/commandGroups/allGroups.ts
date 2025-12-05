@@ -28,3 +28,8 @@ export {
     compounds as thatShell_compounds, 
     collection as thatShell_collection
 } from "./thatShell.js";
+export {
+    commandTable as thatShellUserFriendly_commandTable, 
+    compounds as thatShellUserFriendly_compounds, 
+    collection as thatShellUserFriendly_collection
+} from "./thatShellUserFriendly.js";

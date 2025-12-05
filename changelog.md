@@ -14,6 +14,7 @@ changes:
   * objecttoarray -> converting an object to an array of objects
   * getonlinedataservice -> allows fetching data from the web
   * json -> allows converting from and to json strings
+  * internal -> internal command that is not included by default
 * commands were reintroduced:
   * info -> it has been mistakely removed from the preview versions
 * commands were rewritten:

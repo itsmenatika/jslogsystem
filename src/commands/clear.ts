@@ -1,5 +1,7 @@
 import { onlyIfRedirected, onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
 import { cmdTable, commandAlias, commandCompoundTableType, commandDataRegular } from "../apis/commands/types";
+import { multiLineConstructor } from "../texttools.js";
+import { smartArgs } from "../tools/argsManipulation.js";
 import { clearConsole } from "../tools/clearConsole.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 
@@ -8,11 +10,24 @@ import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/comman
 const commandTable = quickCmdWithAliases("clear", {
     usageinfo: "clear",
     desc: "clears the whole screen",
-    longdesc: "It clears the whole screen using clearConsole(). Aliases: cls",
+    longdesc: multiLineConstructor(
+        "It clears the whole screen using clearConsole(). Aliases: cls",
+        "",
+        "use --message MSG to send its return message. Use quotas for space"
+    ),
     hidden: false,
     changeable: false,
     isAlias: false,
-    callback(args: string[]): onlyIfRedirected{
+    callback(preargs: string[]): onlyIfRedirected{
+        const args = smartArgs(preargs, this);
+
+        if(
+            "message" in args.argsWithDoubleDash
+        ){
+            clearConsole(this.sessionName);
+            return args.argsWithDoubleDash['message'];
+        }
+
         clearConsole(this.sessionName);
         return onlyToRedirect(true);
 

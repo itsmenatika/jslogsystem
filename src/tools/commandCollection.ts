@@ -8,16 +8,36 @@ interface commandCompound{
     data: unifiedCommandTypes
 }
 
+/**
+ * a HIGH Level command Collection
+ */
 class commandCollection{
     #cmdTable: cmdTable = {}
 
-    constructor(from: cmdTable = {}){
-        Object.assign(
-            this.#cmdTable,
-            {
-                ...from
-            }
-        );
+    constructor(from: cmdTable | commandCollection = {}){
+        if(from instanceof commandCollection){
+            Object.assign(
+                this.#cmdTable, {
+                    ...from.get(true)
+                }
+            )
+        }
+        else{
+            Object.assign(
+                this.#cmdTable,
+                {
+                    ...from
+                }
+            );
+        }
+    }
+
+    /**
+     * copies the command list and returns it
+     * @returns the copy
+     */
+    copy(): commandCollection{
+        return new commandCollection(this);
     }
 
     clear(): commandCollection{
@@ -25,6 +45,11 @@ class commandCollection{
         return this;
     }
 
+    /**
+     * filters commands by name
+     * @param names names to return
+     * @returns collection with only those names
+     */
     names(...names: string[]): commandCollection{
         const toCr: cmdTable = {};
 
@@ -71,6 +96,15 @@ class commandCollection{
         return this.#cmdTable;
     }
 
+    /**
+     * extends the collection by additional commands
+     * 
+     * NOTE: it does not return a new collection. It edites it!
+     * 
+     * @param by additional commands
+     * @param edit whether to allow overwritting existing data. It defaults to true. No error is thrown
+     * @returns collection
+     */
     extend(by: cmdTable | commandCollection, edit: boolean = false): commandCollection{
         if(by instanceof commandCollection){
             by = by.get();

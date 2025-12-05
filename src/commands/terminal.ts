@@ -15,9 +15,11 @@ import { commandTable as strm } from "../commandGroups/streams.js";
 import { commandTable as procGr } from "../commandGroups/processCommands.js";
 import { commandTable as pipeGrp } from "../commandGroups/pipeGroup.js";
 import { commandTable as thatShell } from "../commandGroups/thatShell.js";
+import { commandTable as thatShellUserFriendly } from "../commandGroups/thatShellUserFriendly.js";
 import { commandTable as otherShells } from "../commandGroups/othershells.js";
 import { commandTable as alls } from "../commandGroups/all.js";
 import { commandTable as webgroup } from "../commandGroups/webGroup.js";
+import { commandTable as internalCmd } from "../commands/internal.js";
 import { cd } from "../apis/commands/osApis/filesystem.js";
 import { textboxVisibility } from "../apis/terminal/textbox.js";
 import { printTextBox } from "../formatingSessionDependent.js";
@@ -48,9 +50,11 @@ const commandTable = quickCmdWithAliases("terminal", {
         "   ** -s -> stream group (echo, write)", 
         "   ** -p -> pipe group (arguments, argumentslength, true, false, nil, string, number)",       
         "   ** -c -> process group (exit, cd)", 
-        "   ** -T -> that shell group (logs, hide, help, clear, bind, exists, version, terminal)",   
+        "   ** -T -> that shell group (logs, hide, help, clear, bind, exists, version, terminal)",  
+        "   **  -U -> user friendly shell groups (help, clear, bind, version)", 
         "   ** -o -> other shells group (eval, cmd)",  
         "   ** -w -> web group (getonlinedataservice)",  
+        "   ** -i -> internal commands (this is not a group) (internal)",
         "   IT's RECOMENDED TO HAVE -r, -T or -a. You won't be able to to go back from that session otherwise!",
         "* terminal remove <sessionName> -> it will remove a terminal",
         "   ** NOTE: it's impossible to remove main and the session from which was that command executed",
@@ -272,10 +276,22 @@ const commandTable = quickCmdWithAliases("terminal", {
                     Object.assign(tb, thatShell);
                 }
 
+                if(args.dashCombined.includes("U")){
+                    Object.assign(tb, thatShellUserFriendly);
+                }
+
                 // web group
                 if(args.dashCombined.includes("w")){
                     Object.assign(tb, webgroup);
                 }
+
+
+                if(args.dashCombined.includes("i")){
+                    Object.assign(tb, internalCmd);
+                }
+
+
+    
 
                 // if(all || args.dashCombined.includes("t")){
                 //     Object.assign(tb, {

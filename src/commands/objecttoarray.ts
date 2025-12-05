@@ -29,24 +29,35 @@ const commandTable = quickCmdWithAliases("objecttoarray", {
     callback(preargs: any[]): any{
        const args = smartArgs(preargs, this);
 
-       const objToParse: Record<string, any> = {};
-       const toRet: any[] = [];
+       const objectFlattening = args.dashCombined.includes("f");
 
-       for(const arg of args.args){
+       const objToParse: Record<string, any> = {};
+       const parseObjList : Object[] = [];
+        const argsToExtract: Array<Array<string | number>> = [];
+
+       let toRet: any[] = [];
+       
+
+       for(const arg of args.argsWithoutArguments){
             if(typeof arg === "object"){
-                Object.assign(objToParse, arg);
+                if(objectFlattening)
+                    Object.assign(objToParse, arg);
+                else
+                    parseObjList.push(arg);
+            }
+            else if(typeof arg === "string"){
+                
+                argsToExtract.push(arg.split("§"));
+            }
+            else if(typeof arg === "number"){
+                argsToExtract.push([arg]);
             }
        }
 
-    //    const toRet: any[] = [];
-    // console.log(objToParse);
-
-       for(const arg of args.args){
-            if(typeof arg === "string"){
-                const pathList: string[] = arg.split("§");
-
+       if(objectFlattening){
+            for(const arg of argsToExtract){
                 let cur = objToParse;
-                for(const one of pathList){
+                for(const one of arg){
                     cur = cur[one];
                     if(cur === undefined) break;
                 }
@@ -54,8 +65,35 @@ const commandTable = quickCmdWithAliases("objecttoarray", {
                 toRet.push(cur);
             }
        }
+       else{
+            for(const obj of parseObjList){
+                let toAdd = [];
+                for(const arg of argsToExtract){
+                    let cur = obj;
+                    for(const one of arg){
+                        // @ts-expect-error
+                        cur = cur[one];
+                        if(cur === undefined) break;
+                    }
 
-       return toRet;
+                    toAdd.push(cur);
+                } 
+
+                if(toAdd.length == 1){
+                    toRet.push(toAdd[0]);
+                }
+                else
+                toRet.push(toAdd);
+            }
+       }
+
+       if(toRet && Array.isArray(toRet) && !objectFlattening && toRet.length == 1 && Array.isArray(toRet[0])){
+            toRet = toRet[0];
+       }
+
+        if(toRet.length == 1) return toRet;
+        else if(toRet.length == 0) return undefined;
+        return toRet;
     }
 }, ["objtar"])
 

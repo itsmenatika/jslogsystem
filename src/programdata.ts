@@ -95,7 +95,17 @@ interface terminalCreateData{
     out?: Writable | streamWrapper<Writable | typeof process.stdout> | null,
     in?: typeof process.stdin | streamWrapper<typeof process.stdin> | null,
     config?: configDataProvide,
-    process?: typeof process | null
+    process?: typeof process | null,
+
+
+    /**
+     * NOTE IT DOESNT WORK IN LOW LEVEL APIS. IT WORKS ONLY IN THE MIDDLE AND HIGHER ONES!
+     */
+    setupProcessInterrups?: boolean,
+    /**
+     * NOTE IT DOESNT WORK IN LOW LEVEL APIS. IT WORKS ONLY IN THE MIDDLE AND HIGHER ONES!
+     */
+    chwdToSelectedCwd?: boolean
 }
 
 function createNewTerminalData(
@@ -171,7 +181,6 @@ function createNewTerminalData(
         }
     }
 
-
     const d = {
         sessionName: name,
         config: config,
@@ -224,7 +233,12 @@ function createNewTerminalData(
 function createNewTerminal(name: string, data: terminalCreateData = {}){
     const dataT = createNewTerminalData(name, data);
     saveterminalSessionObj(name, dataT);
-    return getTerminal(name);
+
+    const t = getTerminal(name);
+
+    if(!t) return undefined;
+
+    return t;
 }
 
 const terminalSessionObjSaved: Record<string, terminalSession> = {};

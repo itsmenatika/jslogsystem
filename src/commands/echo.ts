@@ -92,6 +92,11 @@ const commandTable = quickCmdWithAliases("echo", {
         const args = smartArgs(this.providedArgs, this);
         const legacy = askForLegacy(this);
 
+        let psD = this.passedData;
+        if(!Array.isArray(psD)){
+            psD = [psD];
+        }
+
         const raw = args.dashCombined.includes("r");
         const newline = args.dashCombined.includes("n");
         const slashes = !args.dashCombined.includes("E");
@@ -179,7 +184,12 @@ const commandTable = quickCmdWithAliases("echo", {
                     // }
                     const n = Number(sym);
 
-                    text += this.passedArgs[n];
+                    if(n < psD.length){
+                        text += String(psD[n]);
+                    }
+                    else{
+                        text += "?";
+                    }
                 }
                 else text += "$";
             }

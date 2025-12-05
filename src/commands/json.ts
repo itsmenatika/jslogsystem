@@ -40,7 +40,7 @@ const commandTable = quickCmdWithAliases("json", {
             }
         }
 
-        if(toRet.length == 1) return toRet;
+        if(toRet.length == 1) return toRet[0];
         else if(toRet.length == 0) return undefined;
         return toRet;
     }

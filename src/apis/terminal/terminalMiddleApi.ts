@@ -1,6 +1,9 @@
+import { existsSync, mkdirSync } from "fs";
 import { setupInHandlerListener } from "../../in.js";
+import { setUpInterrupsForProcess } from "../../interrup.js";
 import { createNewTerminal, terminalCreateData } from "../../programdata.js"
 import { welcome } from "../../tools/welcome.js";
+import { cd } from "../allApis.js";
 
 /**
  * 
@@ -21,6 +24,24 @@ function createTerminalQuick(name: string, data: terminalCreateData): boolean{
 
     welcome(s);
     setupInHandlerListener(s);
+
+    if(
+        data.setupProcessInterrups === true ||
+        (data.setupProcessInterrups === undefined && name === "main")
+    ){
+        setUpInterrupsForProcess(s);
+    }
+
+    if(
+        s.procLinked &&
+        data.chwdToSelectedCwd === true ||
+        (data.chwdToSelectedCwd === undefined && name === "main")
+    ){
+        if(!existsSync(s.cwd)){
+            mkdirSync(s.cwd, {recursive: true});
+        }
+        s.procLinked?.chdir(s.cwd);
+    }
 
     return true;
 }
