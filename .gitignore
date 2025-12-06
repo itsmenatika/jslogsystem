@@ -1,6 +1,7 @@
-# Logs
+# Logs / dev
 logs
 dev/logs/
+dev/
 
 *.log
 npm-debug.log*

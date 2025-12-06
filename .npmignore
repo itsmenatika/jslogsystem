@@ -1,4 +1,4 @@
-.gititnore
+.gitignore
 app.js
 app.ts
 logSystemMIN.js
@@ -12,4 +12,3 @@ node_modules/
 .vscode/
 dev/
 _logSystemOLD.ts
-dev/
