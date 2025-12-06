@@ -408,12 +408,12 @@ const default_configData: configDataProvide | {
     },
     logFileHeader(){
         const dateObj = new Date();
-        return `----------------\nLOGS FROM ${dateObj.toISOString()} UTC TIME ${dateObj.getHours()}:${dateObj.getMinutes()}:${dateObj.getSeconds()}\n`;
+        return `----------------\nLOGS FROM ${dateObj.toISOString()} UTC TIME ${dateObj.getHours()}:${dateObj.getMinutes()}:${dateObj.getSeconds()}\n\n`;
     },
     saveTheLatest(date, previousFilePath, config) {
         renameSync(
             previousFilePath, 
-            join(config.LogDirectory, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()}-${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
+            join(config.$cache$LogDirectoryPath, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()}-${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
         );
     },
     viewTextBoxStart: true,

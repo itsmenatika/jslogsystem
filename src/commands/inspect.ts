@@ -20,7 +20,15 @@ const commandTable = quickCmdWithAliases("inspect", {
         "-a -> force output as an array",
         "-g -> allows for getters and setters to be seen",
         "-n -> number seperator",
+        // "-w -> only owned properties",
+        "--depth DEPTH -> to set the depth",
+        "--arlen LENGTH -> to set max array size",
+        "--strlen LENGTH -> to set max string size",
+        "--brklen LENGTH -> to set the length at which input values are split across multiple lines",
         "",
+        "exclusive:",
+        "-k -> parse only keys of top level",
+        "-v -> parse only values of top level",
         "",
         "if provided with more than one arguments it will return an array",
         "if provided with less than one argument then it will return that object"
@@ -44,8 +52,6 @@ const commandTable = quickCmdWithAliases("inspect", {
 
         const showHidden = args.dashCombined.includes("h");
 
-        const depth = 3;
-
         const customInspect = !args.dashCombined.includes("d");
 
 
@@ -55,17 +61,67 @@ const commandTable = quickCmdWithAliases("inspect", {
 
         const numericSeparator = args.dashCombined.includes("n");
 
+        const depth = args.argsWithDoubleDash['depth'] || 2;
+        const arrayLength = args.argsWithDoubleDash['arlen'] || 100;
+        const stringLength = args.argsWithDoubleDash['strlen'] || 10000;
+        const breakLength = args.argsWithDoubleDash['brklen'] || 80;
+
+        const getKeys = args.dashCombined.includes("k");
+        const getValues = args.dashCombined.includes("v");
+        const ownedProperties = args.dashCombined.includes("w");
+
+        if(getKeys && getValues){
+            return "-k and -v are exclusive";
+        }
+
+        // const toParse: any[] = args.argsWithoutArguments.map(
+        //     (arg) => {
+        //         if(ownedProperties){
+
+        //         }
+        //         else return arg;
+        //     }
+        // )
+
         const toRet: any[] = args.argsWithoutArguments.map(
             (arg) => {
-                return inspect(arg, {
+
+                let toInsp = arg;
+                // if(ownedProperties){
+                //     toInsp = Object.getOwnPropertyNames(toInsp).reduce(
+                //         (obj, key) => {
+                //             (obj as any)[key] = toInsp[key];
+
+                //             return obj;
+                //         }
+                //     );
+
+                // }
+
+
+                if(getKeys){
+
+                    toInsp = Object.keys(toInsp);
+                }
+                else if(getValues){
+                    toInsp = Object.values(toInsp);
+                }
+                else{
+                    toInsp = toInsp;
+                }
+
+                return inspect(toInsp, {
                     colors: useColors,
                     showHidden,
                     customInspect,
                     sorted: true,
                     compact,
                     getters,
-                    numericSeparator
-
+                    numericSeparator,
+                    depth,
+                    maxArrayLength: arrayLength,
+                    maxStringLength: stringLength,
+                    breakLength
                 })
             }
         );

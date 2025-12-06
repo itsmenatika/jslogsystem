@@ -1,4 +1,4 @@
-import { createWriteStream } from "fs";
+import { createWriteStream, existsSync, writeFileSync } from "fs";
 import { Writable } from "stream";
 import { logSystemError, pseudoStreamWriteAble, streamWrapper, withWriteFunc } from "./ultrabasic.js";
 import { configData, configDataProvide, constructConfig, logsReceiveType } from "./config.js";
@@ -105,19 +105,38 @@ interface terminalCreateData{
     /**
      * NOTE IT DOESNT WORK IN LOW LEVEL APIS. IT WORKS ONLY IN THE MIDDLE AND HIGHER ONES!
      */
-    chwdToSelectedCwd?: boolean
+    chwdToSelectedCwd?: boolean,
+
+    trustConfig?: boolean   
 }
 
+/**
+ * ULTRA LOW LEVEL API
+ * 
+ * LOW LEVEL: createNewTerminal
+ * MIDDLE LEVEL: createNewTerminalQuick
+ * HIGH LEVEL: terminalApi
+ * 
+ * It only creates internal data for terminal. It doesn't even save it. Don't use it please. It's only useful for internal use and certain very low level commands.
+ * 
+ * I expose that, to not limit users.
+ * 
+ * @param name terminal name
+ * @param data data
+ * @returns 
+ */
 function createNewTerminalData(
     name: string,
     data: terminalCreateData
 ): terminalSession{
-    const config = constructConfig(data.config);
+    const config = data.trustConfig ? data.config as configData : constructConfig(data.config);
     const procToUse = data.process ? data.process : process;
 
     let dout: void | streamWrapper<any> = void 0;
     let din: void | streamWrapper<any> = void 0;
     let dfileout: void | streamWrapper<any> = void 0;
+
+    let stf: boolean = data.out !== null;
 
     if(data.out === null){
         dout = new streamWrapper();
@@ -137,6 +156,8 @@ function createNewTerminalData(
         dfileout = new streamWrapper();
     }
     else if(!data.fileout){
+        // ensure that latest log is existent
+
         dfileout = new streamWrapper(
             createWriteStream(config.$cache$latestLogPath, {flags: "a"})
         );
@@ -181,6 +202,8 @@ function createNewTerminalData(
         }
     }
 
+    // ensure the existence of cwd    
+
     const d = {
         sessionName: name,
         config: config,
@@ -212,7 +235,7 @@ function createNewTerminalData(
 
         inHandlerFuncPrev: undefined,
 
-        flags: {},
+        flags: {stf},
 
         cache: {},
 
@@ -230,7 +253,24 @@ function createNewTerminalData(
     return d;
 }
 
-function createNewTerminal(name: string, data: terminalCreateData = {}){
+/**
+ * LOW LEVEL
+ * 
+ * MIDDLE LEVEL: createNewTerminalQuick
+ * HIGH LEVEL: terminalApi
+ * 
+ * It creates a new terminal. It almost only a plain object 
+ * 
+ * It's recommended to use at least middle api!
+ * 
+ * Use it only if you're certain about what you're doing
+ * 
+ * 
+ * @param name name
+ * @param data data
+ * @returns session or undefined
+ */
+function createNewTerminal(name: string, data: terminalCreateData = {}): undefined | terminalSession{
     const dataT = createNewTerminalData(name, data);
     saveterminalSessionObj(name, dataT);
 
@@ -243,16 +283,40 @@ function createNewTerminal(name: string, data: terminalCreateData = {}){
 
 const terminalSessionObjSaved: Record<string, terminalSession> = {};
 
+/**
+ * ULTRA LOW LEVEL APi
+ * 
+ * it saves forcefully the session after given name
+ * 
+ * @param name the name
+ * @param data the session
+ */
 function saveterminalSessionObj(name: string, data: terminalSession){
     terminalSessionObjSaved[name] = data;
 }
 
+/**
+ * LOW LEVEL API
+ * 
+ * IT IS SAFE TO USE THAT LOW LEVEL API THO!
+ * 
+ * tries to get a session from the name
+ * @param name the name
+ * @returns session of undefined
+ */
 function getTerminal(name: string): terminalSession | undefined{
     return terminalSessionObjSaved[name];
 }
 
 type getTerminalOPJTYPE = string | terminalSession | commandContext | terminalApi;
 
+/**
+ * 
+ * checks whether a value may qualify to be used in getTerminalOPJ()
+ * 
+ * @param val value
+ * @returns info
+ */
 function isGetTerminalOPJTYPE(val: any): val is getTerminalOPJTYPE{
     console.log(typeof val);
 
@@ -275,6 +339,19 @@ function isGetTerminalOPJTYPE(val: any): val is getTerminalOPJTYPE{
     return false;
 }
 
+/**
+ * LOW LEVEL API
+ * 
+ * Tries to get a terminal session from provided object
+ * 
+ * it assumes that you know for sure that it has it
+ * 
+ * It can be used with: terminalApi, consoleShortHand, commandContext, string, session 
+ * 
+ * 
+ * @param d object
+ * @returns terminalSession
+ */
 function getTerminalOPJ(d: getTerminalOPJTYPE): terminalSession{
     // return typeof d === "string" ? getTerminal(d) as terminalSession : d;
 
@@ -289,6 +366,17 @@ function getTerminalOPJ(d: getTerminalOPJTYPE): terminalSession{
 
 }
 
+/**
+ * LOW LEVEL API
+ * 
+ * It's recommended to use middle level api instead! (removeTerminalQuick)
+ * 
+ * It will not handle saving the latest file and more!
+ * 
+ * @param name the name of a terminal
+ * @param causeError if it should cause error if there was no terminal. It defaults to true
+ * @returns if it was successful
+ */
 function removeTerminal(name: string, causeError: boolean = true): boolean{
     if(!Object.hasOwn(terminalSessionObjSaved, name)){
         if(causeError){

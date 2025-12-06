@@ -70,6 +70,8 @@ const commandTable = quickCmdWithAliases("echo", {
         "-c -> prints asci special characters only if it has -t special argument provided. It also tries to use legacy data to simulate -t argument. it's can be useful for coloring",
         "-o -> only uses the real -t argument and doesn't care about legacy (an option to -c)",
         "-E -> disable slashes", 
+        "-L -> will add the color list to the text to show how to use it",
+        "-e -> to allow all arguments to be used by $. Only the first one will be used as a template then.",
         "",
         "it supports escape characters:",
         "\\n - new line; \\t - tab; \\a - asci escape; \\xAB - insert a character by hexidecimal code, where A and B are the code",
@@ -89,17 +91,24 @@ const commandTable = quickCmdWithAliases("echo", {
     changeable: false,
     isAlias: false,
     callback(preArgs: string[]){
-        const args = smartArgs(this.providedArgs, this);
+        let args = smartArgs(this.providedArgs, this);
         const legacy = askForLegacy(this);
 
-        let psD = this.passedData;
-        if(!Array.isArray(psD)){
-            psD = [psD];
-        }
+        const allArguments = args.dashCombined.includes("e");
 
         const raw = args.dashCombined.includes("r");
         const newline = args.dashCombined.includes("n");
         const slashes = !args.dashCombined.includes("E");
+
+        let temp;
+        if(allArguments){
+            temp = smartArgs(preArgs);
+        }
+
+        let psD = allArguments ? (temp as any).argsWithoutArguments.slice(1) : this.passedData;
+        if(!Array.isArray(psD)){
+            psD = [psD];
+        }
 
         let colors = false;
         if(args.dashCombined.includes("o")){
@@ -107,7 +116,7 @@ const commandTable = quickCmdWithAliases("echo", {
         }
         colors ||= (args.dashCombined.includes("§") || !args.dashCombined.includes("c"));
 
-        const toparse = args.argsWithoutDash.filter(s => typeof s == "string").join(" ");
+        const toparse = allArguments ? (temp as any).argsWithoutArguments[0] : args.argsWithoutArguments.filter(s => typeof s == "string").join(" ");
 
         if(raw) return toparse;
 
@@ -197,6 +206,11 @@ const commandTable = quickCmdWithAliases("echo", {
         }
 
         
+        if(args.dashCombined.includes("L")){
+            for(const [code, color] of Object.entries(minecraftColorPallete)){
+                text += `* ${code} -> ${color}TEXT${consoleColors.Reset}\n`
+            }
+        }
 
 
         // consoleWrite(theString + "\n", consoleColors.FgWhite);

@@ -127,13 +127,13 @@ export * from "./apis/allApis.js";
 
 export { unregisterInterrups, setUpInterrupsForProcess} from "./interrup.js";
 
-
-// if it was not exported, then
+(async () => {
+    // if it was not exported, then
 if(
     resolve(process.argv[1]) ==
     resolve(fileURLToPath(import.meta.url))
 ){
-    quickSetup({
+    await quickSetup({
         commandTable: allGroup_collection.copy().extend(commandTableInternal)
     });
     log(LogType.ERROR, "jslogsystem was not exported!");
@@ -148,3 +148,5 @@ if(
 
     log(LogType.INFO, "'internal' command was added for testing purposes");
 }
+
+})();

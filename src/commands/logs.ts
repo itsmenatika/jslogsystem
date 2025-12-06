@@ -1,4 +1,5 @@
 import { existsSync, readdirSync, readFileSync, unlinkSync } from "fs";
+import { access, readdir, readFile, unlink } from "fs/promises";
 import { onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
 import { commandContext } from "../apis/commands/types";
 import { log, LogType } from "../log.js";
@@ -24,14 +25,15 @@ const commandTable = quickCmdWithAliases("logs", {
     hidden: false,
     changeable: false,
     isAlias: false,
-    callback(preArgs: string[]): any{
+    async: true,
+    async callback(preArgs: string[]): Promise<any>{
         const args = smartArgs(preArgs, this);
         const g = new multiDisplayer();
 
         const logDic = logLocs(this).logDirectory;
 
         if(args.length === 0){
-            const f = readdirSync(logDic);
+            const f = await readdir(logDic);
 
             for(let file of f){
                 if(file === "temp") continue;
@@ -47,7 +49,7 @@ const commandTable = quickCmdWithAliases("logs", {
 
             let res;
             if(existsSync(path)){
-                res = readFileSync(path);
+                res = await readFile(path);
                 
                 if(args.isEnding){
                     g.push("CONTENT OF " + path, combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
@@ -61,7 +63,7 @@ const commandTable = quickCmdWithAliases("logs", {
                 }
             }
             else if(existsSync(path + ".txt")){
-                res = readFileSync(path + ".txt");
+                res = await readFile(path + ".txt");
                 if(args.isEnding){
                     g.push("CONTENT OF " + path + ".txt", combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
                     g.push("\n");
@@ -81,54 +83,76 @@ const commandTable = quickCmdWithAliases("logs", {
             }
         }
         else if(args.args.includes("-d") && args.args.includes("-a")){
-            const f = readdirSync(logDic).filter(
+            const f = await readdir(logDic);
+
+            // const f = readdirSync(logDic).filter(
+            //     (s) => s !== "latest.txt" && s !== "temp"
+            // );
+
+            const files = f.filter(
                 (s) => s !== "latest.txt" && s !== "temp"
+                ||
+                !s.startsWith("_")
             );
 
-            for(const file of f){
-                g.push("* ", consoleColors.FgYellow);
-                g.push(file, consoleColors.FgWhite);
-                unlinkSync(join(logDic, file));
-                g.push(" DELETED \n");
-            }
+            // for(const file of f){
+            //     g.push("* ", consoleColors.FgYellow);
+            //     g.push(file, consoleColors.FgWhite);
+            //     unlinkSync(join(logDic, file));
+            //     g.push(" DELETED \n");
+            // }
 
-            g.push("\n");
-            g.push(`${f.length}/${f.length+1} DELETED`, consoleColors.BgMagenta);
-            g.push("\n");
+            // g.push("\n");
+            // g.push(`${f.length}/${f.length+1} DELETED`, consoleColors.BgMagenta);
+            // g.push("\n");
+
+            await deleteThat(f, g, logDic);
         }
         else if(args.args.includes("-d")){
             const whatToDelete = args.args.filter(
                 (s) => s !== "-d"
             );
 
-            let c = 0;
-            for(let del of whatToDelete){
-                let where = join(logDic, del);
+            await deleteThat(whatToDelete, g, logDic);
 
-                if(existsSync(where)){
-                    unlinkSync(where);
-                    g.push("* ", consoleColors.FgYellow);
-                    g.push(where, consoleColors.FgWhite);
-                    g.push(" DELETED \n");
-                    c++;
-                }
-                else if(existsSync(where+".txt")){
-                    unlinkSync(where+".txt");
-                    g.push("* ", consoleColors.FgYellow);
-                    g.push(where, consoleColors.FgWhite);
-                    g.push(" DELETED \n");
-                    c++;
-                }
-                else{
-                    g.push("* ", consoleColors.FgYellow);
-                    g.push(where, consoleColors.FgWhite);
-                    g.push(" NOT FOUND \n");
-                }
 
-                g.push("\n");
-                g.push(`${c}/${whatToDelete.length} DELETED`, consoleColors.BgMagenta);
-                g.push("\n");
-            }
+
+
+            // for(let del of whatToDelete){
+            //     let where = join(logDic, del);
+
+
+
+            //     // await Promise.allSettled([
+            //     //     (async () => {
+
+            //     //     })()
+            //     // ]);
+
+            //     // if(existsSync(where)){
+            //     //     unlinkSync(where);
+            //     //     g.push("* ", consoleColors.FgYellow);
+            //     //     g.push(where, consoleColors.FgWhite);
+            //     //     g.push(" DELETED \n");
+            //     //     c++;
+            //     // }
+            //     // else if(existsSync(where+".txt")){
+            //     //     unlinkSync(where+".txt");
+            //     //     g.push("* ", consoleColors.FgYellow);
+            //     //     g.push(where, consoleColors.FgWhite);
+            //     //     g.push(" DELETED \n");
+            //     //     c++;
+            //     // }
+            //     // else{
+            //     //     g.push("* ", consoleColors.FgYellow);
+            //     //     g.push(where, consoleColors.FgWhite);
+            //     //     g.push(" NOT FOUND \n");
+            //     }
+
+            //     g.push("\n");
+            //     g.push(`${c}/${whatToDelete.length} DELETED`, consoleColors.BgMagenta);
+            //     g.push("\n");
+            // }
         }
 
 
@@ -138,5 +162,42 @@ const commandTable = quickCmdWithAliases("logs", {
         return g.toRawString();
     },
 }, [])
+
+
+async function deleteThat(whatToDelete: string[], g: multiDisplayer, where: string, c: number = 0): Promise<number>{
+    const toRun = [];
+    for(const del of whatToDelete){
+        toRun.push(
+            (async () => {
+                const toTry = [
+                    del,
+                    del+".txt"
+                ];
+
+                let U: boolean = false;
+                for(const thatOne of toTry){
+                    try {
+                        await unlink(join(where, thatOne));
+                        g.push("* ", consoleColors.FgYellow);
+                        g.push(thatOne, consoleColors.FgWhite);
+                        g.push(" DELETED \n");
+                        U = true;
+                    } catch (error) {}
+                }
+
+                if(U) c++;
+            })()
+        )
+    }
+
+
+    await Promise.allSettled(toRun);
+
+    g.push("\n");
+    g.push(`${c}/${whatToDelete.length} DELETED`, consoleColors.BgMagenta);
+    g.push("\n");
+
+    return c;
+}
 
 export {commandTable};

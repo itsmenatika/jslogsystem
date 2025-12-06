@@ -1,7 +1,7 @@
-import { textboxVisibility } from "./apis/allApis.js";
+import { removeTerminalQuick, textboxVisibility } from "./apis/allApis.js";
 import { log, LogType } from "./log.js";
 import { consoleWrite } from "./out.js";
-import { getTerminalOPJ, getTerminalOPJTYPE, terminalSession } from "./programdata.js";
+import { getTerminalOPJ, getTerminalOPJTYPE, removeTerminal, terminalSession, terminalSessionObjSaved } from "./programdata.js";
 import { consoleColors, formatError } from "./texttools.js";
 import { actualCrash } from "./tools/exit.js";
 
@@ -39,7 +39,6 @@ function internalInterupHandlerSIGINT(
         
     }
 
-    textboxVisibility(false, data.session);
     actualCrash(`The execution was manually stopped by ${mes}!`, data.author, -1);
 }
 
@@ -65,7 +64,7 @@ function setUpInterrupsForProcess(session: getTerminalOPJTYPE): singleCallback[]
         ses.procLinked.addListener("SIGINT", sigIntFunc);
         toRet.push(["SIGINT", sigIntFunc]);
 
-        const exitFunc = () => {
+        const exitFunc = async () => {
             textboxVisibility(false);
             consoleWrite("", consoleColors.Reset, false);
         }

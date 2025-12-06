@@ -25,12 +25,12 @@ import { createTerminalQuick } from "../apis/allApis.js";
  * @param configD the config of that (OPTIONAL)
  * @param chwdToSelectedCwd whether to sync cwd
  */
-function quickSetup(configD: configDataProvide = {}){
+async function quickSetup(configD: configDataProvide = {}){
     const toSend = {commandTable: collection};
 
     Object.assign(toSend, configD);
 
-    const nT = createTerminalQuick("main", {
+    const nT = await createTerminalQuick("main", {
         config: toSend,
         out: process.stdout,
         in: process.stdin,
