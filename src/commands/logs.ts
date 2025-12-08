@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, unlinkSync } from "fs";
+import { createReadStream, createWriteStream, existsSync, readdirSync, readFileSync, unlinkSync } from "fs";
 import { access, readdir, readFile, unlink } from "fs/promises";
 import { onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
 import { commandContext } from "../apis/commands/types";
@@ -8,7 +8,10 @@ import { smartArgs } from "../tools/argsManipulation.js";
 import { quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { multiDisplayer } from "../tools/multiDisplayer.js";
 import { logLocs } from "../apis/commands/osApis/filesystem.js";
-import { join } from "path";
+import { basename, join } from "path";
+import { createUnzip } from "zlib";
+import { Duplex } from "stream";
+import { pipeline } from "stream/promises";
 
 const commandTable = quickCmdWithAliases("logs", {
     usageinfo: "logs [<-d [...names]|-a>]",
@@ -39,48 +42,103 @@ const commandTable = quickCmdWithAliases("logs", {
                 if(file === "temp") continue;
                 g.push("* ", consoleColors.FgYellow);
 
+                if(file.endsWith(".gz")) file = file.slice(0, -3);
                 if(file.endsWith(".txt")) file = file.slice(0, -4);
                 g.push(file, consoleColors.FgWhite);
                 g.push("\n");
             }
         }
         else if(args.length === 1){
-            const path = join(logDic, args.args[0]);
+            const extensions = [
+                ".txt",
+                ".txt.gz"
+            ];
 
-            let res;
-            if(existsSync(path)){
-                res = await readFile(path);
-                
+            for(const ext of extensions){
+                const path = join(logDic, args.args[0] + ext);
+
+                if(!existsSync(path)) continue;
+
+                const basen = basename(path);
+
+                const from = createReadStream(path);
+
+                let data: string = "";
+                if(basen.endsWith(".gz")){
+                    const engine = createUnzip();
+
+
+                    await pipeline(
+                        from,
+                        engine
+                    );
+
+                    
+                    for await(const chunk of engine){
+                        data += chunk;
+                    }
+                }
+                else{
+                    for await(const chunk of from){
+                        data += chunk;
+                    }
+                }
+
+
                 if(args.isEnding){
                     g.push("CONTENT OF " + path, combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
                     g.push("\n");
                 }
-                g.push(String(res));
-                
+
+                g.push(data);
+
                 if(args.isEnding){
                     g.push("CONTENT OF " + path, combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
                     g.push("\n");
                 }
+
+                break;
             }
-            else if(existsSync(path + ".txt")){
-                res = await readFile(path + ".txt");
-                if(args.isEnding){
-                    g.push("CONTENT OF " + path + ".txt", combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
-                    g.push("\n");
-                }
-                g.push(String(res));
+
+
+            // const path = join(logDic, args.args[0]);
+
+
+
+            // let res;
+            // if(existsSync(path)){
+            //     res = await readFile(path);
                 
-                if(args.isEnding){
-                    g.push("CONTENT OF " + path + ".txt", combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
-                    g.push("\n");
-                }
-            }
-            else{
-                g.push(path, consoleColors.FgWhite);
-                g.push(" NOT FOUND", consoleColors.FgRed);
-                if(args.isEnding)
-                g.push("\n");
-            }
+            //     if(args.isEnding){
+            //         g.push("CONTENT OF " + path, combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
+            //         g.push("\n");
+            //     }
+            //     g.push(String(res));
+                
+            //     if(args.isEnding){
+            //         g.push("CONTENT OF " + path, combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
+            //         g.push("\n");
+            //     }
+            // }
+            // else if(existsSync(path + ".txt")){
+            //     res = await readFile(path + ".txt");
+            //     if(args.isEnding){
+            //         g.push("CONTENT OF " + path + ".txt", combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
+            //         g.push("\n");
+            //     }
+            //     g.push(String(res));
+                
+            //     if(args.isEnding){
+            //         g.push("CONTENT OF " + path + ".txt", combineColors(consoleColors.BgMagenta, consoleColors.FgWhite));
+            //         g.push("\n");
+            //     }
+            // }
+            // else{
+            //     g.push(path, consoleColors.FgWhite);
+            //     g.push(" NOT FOUND", consoleColors.FgRed);
+            //     if(args.isEnding)
+            //     g.push("\n");
+            // }
         }
         else if(args.args.includes("-d") && args.args.includes("-a")){
             const f = await readdir(logDic);
@@ -89,11 +147,20 @@ const commandTable = quickCmdWithAliases("logs", {
             //     (s) => s !== "latest.txt" && s !== "temp"
             // );
 
+            // const files = f.filter(
+            //     (s) => basename(s) !== "latest.txt" && basename(s) !== "temp"
+            //     &&
+            //     !((basename(s)).startsWith("_"))
+            // );
+
             const files = f.filter(
-                (s) => s !== "latest.txt" && s !== "temp"
-                ||
-                !s.startsWith("_")
-            );
+                (s) => {
+                    const bs = basename(s);
+
+                    return bs !== "latest.txt" && bs !== "temp" &&
+                    !s.startsWith("_");
+                }
+            )
 
             // for(const file of f){
             //     g.push("* ", consoleColors.FgYellow);
@@ -106,7 +173,7 @@ const commandTable = quickCmdWithAliases("logs", {
             // g.push(`${f.length}/${f.length+1} DELETED`, consoleColors.BgMagenta);
             // g.push("\n");
 
-            await deleteThat(f, g, logDic);
+            await deleteThat(files, g, logDic);
         }
         else if(args.args.includes("-d")){
             const whatToDelete = args.args.filter(

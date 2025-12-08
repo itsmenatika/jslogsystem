@@ -1,6 +1,6 @@
 // CONFIG
 
-import { PathLike, renameSync } from "fs";
+import { createReadStream, createWriteStream, PathLike, renameSync } from "fs";
 import { join, dirname } from "path";
 import { logSystemError } from "./ultrabasic.js";
 import { combineColors, consoleColor, consoleColorRGB, consoleColors, consoleColorsMulti, generateAnsiColor } from "./texttools.js";
@@ -8,6 +8,8 @@ import { cmdTable } from "./apis/commands/types.js";
 
 import type { commandCollection } from "./tools/commandCollection.js";
 import { InspectOptions, InspectOptionsStylized, inspect } from "util";
+import { createGzip } from "zlib";
+import { unlink } from "fs/promises";
 
 
 enum logsReceiveType{}
@@ -411,10 +413,24 @@ const default_configData: configDataProvide | {
         return `----------------\nLOGS FROM ${dateObj.toISOString()} UTC TIME ${dateObj.getHours()}:${dateObj.getMinutes()}:${dateObj.getSeconds()}\n\n`;
     },
     saveTheLatest(date, previousFilePath, config) {
+        const newPath = join(config.$cache$LogDirectoryPath, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()}-${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
+
         renameSync(
             previousFilePath, 
-            join(config.$cache$LogDirectoryPath, `${date.getFullYear()}.${date.getMonth()}.${date.getDate()}-${date.getHours()}.${date.getMinutes()}.${date.getSeconds()}.txt`)
+            newPath
         );
+
+
+        const from = createReadStream(newPath);
+        const to = createWriteStream(newPath.replace(".txt", ".txt.gz"));
+
+        const engine = createGzip();
+
+        from.pipe(engine).pipe(to);
+
+        to.on("finish", async () => {
+            await unlink(newPath);
+        });
     },
     viewTextBoxStart: true,
     logsReceiveStart: logsReceiveType.normal,

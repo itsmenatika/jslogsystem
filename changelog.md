@@ -27,6 +27,7 @@ changes:
   * eval -> it now uses silent tasks without logging
   * cmd -> it now uses silent tasks without logging. $imp and $args were introduced. Imp stores all imported arguments from other commands and args is the list of all arguments
   * string -> it now accepts more types
+  * logs -> it can now read gzipped files
 * '--' argument can now be used for indicating that the next stuff are not dashed parameters
 * quotas can now be used to pass arguments with space as one
 * terminal sessions were added
@@ -60,6 +61,7 @@ changes:
 * command context was added (as this)
 * command binds can now take parameters properly
 * a lot of bugs with binds was fixed
+* logs are now compressed by default
 
 bugfixes:
 * returned null now doesn't crash a program
