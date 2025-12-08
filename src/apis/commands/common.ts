@@ -33,7 +33,9 @@ interface commandExecParamsProvide{
     logNode?: string | logNode,
     silent?: boolean,
     onlyReturn?: boolean,
-    terminal?: getTerminalOPJTYPE
+    terminal?: getTerminalOPJTYPE,
+    startingResult?: any,
+    thereIsMore?: boolean
 }
 
 interface commandExecParams extends Required<commandExecParamsProvide>{};
@@ -42,7 +44,9 @@ const default_execParams = {
     logNode: "core",
     silent: false,
     onlyReturn: false,
-    terminal: "main"
+    terminal: "main",
+    startingResult: undefined,
+    thereIsMore: false
 } as commandExecParams;
 
 function getReadyParams(data: commandExecParamsProvide = {}): [commandExecParams, terminalSession]{

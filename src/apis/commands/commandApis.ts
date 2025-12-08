@@ -1,7 +1,7 @@
 import { connectedToSpecificTerminal, getTerminal, getTerminalOPJ, getTerminalOPJTYPE, terminalSession } from "../../programdata.js";
 import { commandCollection } from "../../tools/commandCollection.js";
 import { logSystemError } from "../../ultrabasic.js";
-import { cmdTable, commandCompoundType, commandContext, commandData } from "./types";
+import { cmdTable, commandCompoundTableType, commandCompoundType, commandContext, commandData, unifiedCommandTypes } from "./types";
 
 type commandType = number;
 
@@ -22,8 +22,8 @@ class commandApi extends connectedToSpecificTerminal{
      * 
      * NOTE: it will create a new copy of a command table as terminal configs are not mutable
      */
-    get collection(): commandCollection{
-        return new commandCollection(this.session.config.commandTable);
+    get collection(): Readonly<commandCollection>{
+        return new commandCollection(this.session.config.commandTable, {readonly: true});
     }
 
     get commandTable(): Readonly<cmdTable>{
@@ -84,6 +84,12 @@ class commandApi extends connectedToSpecificTerminal{
 
         return Object.freeze(toRet);
     }
+
+    findByName(name: string): undefined | unifiedCommandTypes{
+        const toRet = this.commandTable[name];
+
+        return Object.freeze(toRet);
+    }   
 
 
     get aliases(): cmdTable{

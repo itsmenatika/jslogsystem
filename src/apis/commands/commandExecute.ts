@@ -19,6 +19,10 @@ import { printTextBox } from "../../formatingSessionDependent.js";
 //     }
 // }
 
+function setResult(){
+    
+}
+
 function tryToGetAsStringToPrint(val: any, canUseColors: boolean = false): string {
     let toPrint: string;
     // toPrint = inspect(val, true, null, canUseColors); 
@@ -220,7 +224,7 @@ async function commandInternalExec(
             partsToUse = parts;
         }
         else{
-            partsToUse = [parts[0], "-§" , ...parts.slice(1)];
+            partsToUse = [parts[0], !op.onlyReturn ? "-§" : "" , ...parts.slice(1)];
         }
 
         res = await handleCommandInternal(partsToUse, options, [partsToUse, partsToUse]);
@@ -297,8 +301,7 @@ Promise<[any, number]>{
 
 
     let pipeHaltCalled: boolean = false;
-    let result: any = void 0;
-
+    let result: any = options.startingResult;
     let prints: number = 0;
 
 
@@ -320,7 +323,7 @@ Promise<[any, number]>{
 
         switch(pipe.type){
             case pipeType.unkown: {
-                log(LogType.WARNING, "UNKOWN TYPE PIPE", "pipeExec", session);
+                log(LogType.WARNING, "UNKNOWN TYPE PIPE", "pipeExec", session);
                 break;
             }
             case pipeType.dataTryWrite: {
@@ -395,6 +398,8 @@ Promise<[any, number]>{
                 const commandPartsToUse = [commandExecParts[0]];
 
                 // console.log("meow ", i, pipeTree.length);
+
+                let addThereIsMore: boolean = false
                 if(
                     session.config.legacy.specialArguments &&(
                         i === pipeTree.length - 1
@@ -404,8 +409,14 @@ Promise<[any, number]>{
                             pipeTree[i + 1].type === pipeType.dataClear
                         )
                     )
+                    &&
+                    !op.onlyReturn
                 ){
+                    if(!options.thereIsMore)
                     commandPartsToUse.push("-§");
+                }
+                else{
+                    addThereIsMore = true;
                 }
                 // console.log(commandPartsToUse);
 
@@ -422,18 +433,37 @@ Promise<[any, number]>{
 
                 // console.log('dadad ', commandPartsToUse);
                 const cmdRes = await handleCommandInternal(
-                    commandPartsToUse, options, [provided, result]
+                    commandPartsToUse, addThereIsMore ? {...options, thereIsMore: true} : options, [provided, result]
                 );
 
                 // console.log(cmdRes);s
 
                 if(isControlType(cmdRes)){
-                    if(isOnlyToRedirect(cmdRes) 
-                        && (
-                            i !== pipeTree.length - 1
-                            &&
-                            pipeTree[i + 1].type !== pipeType.dataTryWrite
+                    // console.log(options.thereIsMore);
+                    if(
+                        isOnlyToRedirect(cmdRes)
+                        &&
+                        (
+                            options.thereIsMore
+                            || (
+                                i !== pipeTree.length - 1
+                                &&
+                                pipeTree[i + 1].type !== pipeType.dataTryWrite
+                            )
+                            ||
+                            op.onlyReturn
                         )
+                    // if(
+                    //     isOnlyToRedirect(cmdRes) 
+                    //     &&
+                    //     options.thereIsMore
+                    //     && (
+                    //         i !== pipeTree.length - 1
+                    //         &&
+                    //         pipeTree[i + 1].type !== pipeType.dataTryWrite
+                    //     )
+                    //     ||
+                    //     op.onlyReturn
                     ){
                         result = cmdRes.val;
                     }
@@ -478,6 +508,15 @@ Promise<[any, number]>{
 }
 
 
+
+// async function handleCommandInternalFinal(
+//     parts: any[],
+//     options: commandExecParams,
+//     execPar: [any[], any[]],
+//     executedAs: "UNKNOWN" | "BIND" | "ORGINAL" | "ALIAS"
+// ) {
+    
+// }
 
 // that functions handles commands. It's for internal usage
 async function handleCommandInternal(
@@ -587,11 +626,13 @@ async function handleCommandInternal(
         // log(LogType.INFO, `This bind has been executed: '${text}'`, logNode);
 
         let bindD = session.bindTable[parts[0]];
+
+        let sr = parts.slice(1);
         try {
             // for(const command of bindD.commands){
             //     commandInternalExec(command, true);
             // }
-            return commandInternalExec(bindD.executor, {...options, silent: true, onlyReturn: true});
+            return commandInternalExec(bindD.executor, {...options, silent: true, onlyReturn: true, startingResult: sr});
         } catch (error) {
             log(LogType.ERROR, "The error has occured during the bind execution:\n" + formatError(error), op.logNode, session);
             return {__$special: specialTypes.pipeExecutorHalt};

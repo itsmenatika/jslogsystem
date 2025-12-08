@@ -1,5 +1,5 @@
 import { exit } from "process";
-import { terminalApi } from "../apis/allApis.js";
+import { askForBindApi, askForCommandApi, commandCompoundType, terminalApi } from "../apis/allApis.js";
 import { commandDividerInternal, pipeDividerInternal } from "../apis/commands/commandParser.js";
 import { multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
@@ -7,6 +7,7 @@ import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/comman
 import { consoleShortHand } from "../tools/consoleShortHand.js";
 import { consoleWrite } from "../out.js";
 import { uptimeVar } from "../ultrabasic.js";
+import { commandCompound } from "../tools/commandConfigGenerator.js";
 
 const commandTable = quickCmdWithAliases("internal", {
     usageinfo: "internal <function> [<...data>]",
@@ -26,7 +27,7 @@ const commandTable = quickCmdWithAliases("internal", {
         "isend -> is Ending",
         "internalargs -> internal args",
         "terminalApi",
-        "shorhand",
+        "shorthand",
         "pipedivide",
         "commanddivide",
         "this",
@@ -34,6 +35,9 @@ const commandTable = quickCmdWithAliases("internal", {
         "smartargspassed",
         "exit",
         "uptimevar",
+        "getcmdobj",
+        "bindapi",
+        "cmdapi",
         "",
         "those functions won't be documented"
     ),
@@ -106,6 +110,46 @@ const commandTable = quickCmdWithAliases("internal", {
 
             case "uptimevar":
                 return uptimeVar;
+
+            case "cmdapi":
+                return askForCommandApi(this);
+
+            case "bindapi":
+                return askForBindApi(this);
+
+            case "getcmdobj": {
+                const cmdName = args.args.at(1);
+                const api = askForCommandApi(this);
+
+                if(!cmdName){
+                    return "NO NAME SPECIFIED";
+                }
+
+                if(!api.exists(cmdName)){
+                    return "NO COMMAND FOUND";
+                }
+
+                // const list: Readonly<commandCompoundType[]> = api.find({
+                //     name: cmdName
+                // }, 1);
+
+                // if(!list || list.length === 0){
+                //     return "NO COMMAND FOUND";
+                // }
+
+
+                return api.findByName(cmdName);
+                
+            }
+
+            case "test": {
+                const api = askForCommandApi(this);
+
+                api.collection.clear();
+                
+
+                return "s";
+            }
         }
 
         return undefined;

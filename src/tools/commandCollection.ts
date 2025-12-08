@@ -8,13 +8,28 @@ interface commandCompound{
     data: unifiedCommandTypes
 }
 
+
+interface commandCollectionOptions{
+    readonly?: boolean
+}
+
+type commandCollectionOptionsReq = Required<commandCollectionOptions>;
+
+
+const commandCollectionOptionsReq_DEFAULT: commandCollectionOptionsReq = {
+    readonly: false
+}
+
+class commandCollectionError extends logSystemError{};
+
 /**
  * a HIGH Level command Collection
  */
 class commandCollection{
     #cmdTable: cmdTable = {}
+    #options: commandCollectionOptionsReq;
 
-    constructor(from: cmdTable | commandCollection = {}){
+    constructor(from: cmdTable | commandCollection = {}, options: commandCollectionOptions = {}){
         if(from instanceof commandCollection){
             Object.assign(
                 this.#cmdTable, {
@@ -30,17 +45,24 @@ class commandCollection{
                 }
             );
         }
+
+        this.#options = {...commandCollectionOptionsReq_DEFAULT};
+        Object.assign(this.#options, options);
     }
 
     /**
      * copies the command list and returns it
      * @returns the copy
      */
-    copy(): commandCollection{
-        return new commandCollection(this);
+    copy(usedOptions: commandCollectionOptions = this.#options): commandCollection{
+        return new commandCollection(this, usedOptions);
     }
 
     clear(): commandCollection{
+        if(this.#options.readonly){
+            throw new commandCollectionError("That command collection is readonly!");
+        }
+
         this.#cmdTable = {};
         return this;
     }
@@ -57,7 +79,7 @@ class commandCollection{
             if(names.includes(name)) toCr[name] = this.#cmdTable[name];
         }
 
-        return new commandCollection(toCr);
+        return new commandCollection(toCr, this.#options);
     }
 
     get aliases(): commandCollection{
@@ -69,7 +91,7 @@ class commandCollection{
             }
         }
 
-        return new commandCollection(toRet);
+        return new commandCollection(toRet, this.#options);
     }
 
 
@@ -82,7 +104,7 @@ class commandCollection{
             }
         }
 
-        return new commandCollection(toRet);
+        return new commandCollection(toRet, this.#options);
     }
 
     get length(){
@@ -106,6 +128,10 @@ class commandCollection{
      * @returns collection
      */
     extend(by: cmdTable | commandCollection, edit: boolean = false): commandCollection{
+        if(this.#options.readonly){
+            throw new commandCollectionError("That command collection is readonly!");
+        }
+
         if(by instanceof commandCollection){
             by = by.get();
         }
@@ -132,6 +158,10 @@ class commandCollection{
 
 
     removeCommand(name: string, ignoreError: boolean = false): commandCollection{
+        if(this.#options.readonly){
+            throw new commandCollectionError("That command collection is readonly!");
+        }
+
         if(!Object.hasOwn(this.#cmdTable, name)){
             if(!ignoreError){
                 throw new logSystemError(`command named '${name}' doesn't exist`);
@@ -153,6 +183,10 @@ class commandCollection{
     }
 
     removeCommands(...names: string[]): commandCollection{
+        if(this.#options.readonly){
+            throw new commandCollectionError("That command collection is readonly!");
+        }
+
         for(const name of names){
             this.removeCommand(name);
         }
@@ -161,6 +195,10 @@ class commandCollection{
     }
 
     registerCommand(name: string, data: unifiedCommandTypes, edit: boolean = false, ignoreError: boolean = false): commandCollection{
+            if(this.#options.readonly){
+            throw new commandCollectionError("That command collection is readonly!");
+        }
+        
         if(Object.hasOwn(this.#cmdTable, name)){
             if(!edit){
                 throw new logSystemError(`command named '${name}' does exist`);

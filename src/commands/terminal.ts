@@ -329,7 +329,7 @@ const commandTable = quickCmdWithAliases("terminal", {
 
                 const res = api.destroy(false);
 
-                return onlyToRedirect(res);
+                return true;
             }
 
             case "exec": {

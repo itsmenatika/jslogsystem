@@ -58,6 +58,8 @@ changes:
 * async commands now work properly instead of just returning true
 * -§ is now sent instead of -§ to the last command
 * command context was added (as this)
+* command binds can now take parameters properly
+* a lot of bugs with binds was fixed
 
 bugfixes:
 * returned null now doesn't crash a program
