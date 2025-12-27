@@ -7,12 +7,17 @@ import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/comman
 import { multiDisplayer } from "../tools/multiDisplayer.js";
 
 const commandTable = quickCmdWithAliases("bind", {
-    usageinfo: "bind [<'command':'executor>']",
-    desc: "manages binds",
+    usageinfo: "bind [<`command`:`executor>`]",
+    desc: "manages binds in the current terminal sessions",
     longdesc: multiLineConstructor(
         "manages binds in the current terminal sessions",
         "",
-        ""
+        "bind without arguments will return the list of binds",
+        "bind `NAME`:`` will remove a selected bind",
+        "bind `NAME`:`EXECUTOR` will set a bind",
+        "",
+        "examples:",
+        "bind `clearmeow`:`clear\\;meow"
     ),
     hidden: false,
     changeable: false,

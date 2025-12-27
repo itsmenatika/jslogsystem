@@ -51,7 +51,6 @@ function logTimeEnd(
     }
 
     const elapsed = Date.now() - d.timers[label]; // get how much time has passed
-    delete d.timers[label]; // delete that timer
 
     // print it
     if(!("messageVisible" in info) || info.messageVisible){
@@ -64,6 +63,8 @@ function logTimeEnd(
         }
 
     }
+
+    delete d.timers[label]; // delete that timer
 
     // return it
     return elapsed;
@@ -115,9 +116,17 @@ function logTimeExist(label: string, terminal: getTerminalOPJTYPE = "main"){
     return Object.hasOwn(d.timers, label);
 }
 
+function timerList(terminal: getTerminalOPJTYPE = "main"): Readonly<Record<string, number>>{
+    // get terminal
+    const d = getTerminalOPJ(terminal);
+
+    return Object.freeze({...d.timers})
+}
+
 export {
     logTimeStart,
     logTimeEnd,
     logTimeStamp,
-    logTimeExist
+    logTimeExist,
+    timerList
 }
