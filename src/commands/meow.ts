@@ -27,8 +27,6 @@ const commandTable = quickCmdWithAliases("meow", {
             }
 
             return onlyToRedirect(g.toRawString());
-
-            // }
         }               
 }, ["miau", "mrau", "meow~", ":3"]);
 

@@ -318,7 +318,7 @@ type getTerminalOPJTYPE = string | terminalSession | commandContext | terminalAp
  * @returns info
  */
 function isGetTerminalOPJTYPE(val: any): val is getTerminalOPJTYPE{
-    console.log(typeof val);
+    // console.log(typeof val);
 
     if(typeof val === "string") return true;
     if(typeof val === "object"){

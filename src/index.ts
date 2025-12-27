@@ -10,6 +10,13 @@ import { formatPrintTextbox, printTextBox } from "./formatingSessionDependent.js
 import { constructConfig, constructStyles, terminalStyles, terminalStylesProvide, configData, configDataProvide, getPreset, savePreset,logsReceiveType, colorTable, colorTableProvide,
 legacyData, legacyDataProvide } from "./config.js";
 
+const consolLog = console.log;
+
+console.log = (...args) => {
+  debugger;
+  consolLog(...args);
+};
+
 // for safety checks
 import { resolve } from "node:path";
 import { quickSetup } from "./tools/quickSetup.js";
@@ -136,6 +143,8 @@ if(
     await quickSetup({
         commandTable: allGroup_collection.copy().extend(commandTableInternal)
     });
+
+
     log(LogType.ERROR, "jslogsystem was not exported!");
     log(LogType.INFO, "use 'import [...] from 'jslogsystem' next time!");
     log(LogType.INFO, "examples:\n * import * from 'jslogsystem';\n * import { quickSetup } from 'jslogystem';");

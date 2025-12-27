@@ -19,6 +19,9 @@ import { printTextBox } from "../../formatingSessionDependent.js";
 //     }
 // }
 
+
+type execParType = [Array<any>,  any];
+
 function setResult(){
     
 }
@@ -204,6 +207,7 @@ async function commandInternalExec(
 
     let res;
     let prints = 0;
+    // console.log('g');
     if(session.config.legacy.pipes){
         const pipeTree = commandDividerInternal(text);
         // console.log(pipeTree);
@@ -230,10 +234,10 @@ async function commandInternalExec(
         res = await handleCommandInternal(partsToUse, options, [partsToUse, partsToUse]);
     }
 
-    if(!op.onlyReturn)
+    if(!op.onlyReturn && !op.noPrintResult)
     tryToPrintResult(res, op, session);
 
-    if((res !== undefined || prints != 0) && !op.onlyReturn){
+    if((res !== undefined || prints != 0) && !op.onlyReturn && !op.noPrintResult){
         consoleUltraRawWrite(
             "\n",
             "\n",
@@ -399,9 +403,32 @@ Promise<[any, number]>{
 
                 // console.log("meow ", i, pipeTree.length);
 
-                let addThereIsMore: boolean = false
+                let addThereIsMore: boolean = false;
+
+
+                // console.log(pipeTree, op.thereIsMore, addThereIsMore,
+                //     (i >= pipeTree.length), i + 1 < pipeTree.length
+                // );
+
+                // console.log(
+                //     pipeTree,
+
+                //        !op.thereIsMore , !options.onlyReturn
+                //     , session.config.legacy.specialArguments ,
+                //     (
+                //         i === pipeTree.length - 1
+                //         ||
+                //         (
+                //             i + 1 < pipeTree.length &&
+                //             pipeTree[i + 1].type === pipeType.dataClear
+                //         )
+                //     )
+                // );
+
                 if(
-                    session.config.legacy.specialArguments &&(
+                    !op.LaunchedFromBind && !op.thereIsMore && !options.onlyReturn
+                    && session.config.legacy.specialArguments &&
+                    (
                         i === pipeTree.length - 1
                         ||
                         (
@@ -409,15 +436,27 @@ Promise<[any, number]>{
                             pipeTree[i + 1].type === pipeType.dataClear
                         )
                     )
-                    &&
-                    !op.onlyReturn
                 ){
-                    if(!options.thereIsMore)
+                    
                     commandPartsToUse.push("-§");
                 }
-                else{
-                    addThereIsMore = true;
-                }
+
+                // if(
+                //     session.config.legacy.specialArguments &&(
+                //         i === pipeTree.length - 1
+                //         ||
+                //         (
+                //             i + 1 < pipeTree.length &&
+                //             pipeTree[i + 1].type === pipeType.dataClear
+                //         )
+                //     )
+                //     &&
+                //     !op.onlyReturn
+                // ){
+                //     if(!options.thereIsMore)
+                //     commandPartsToUse.push("-§");
+                // }
+
                 // console.log(commandPartsToUse);
 
                 commandPartsToUse.push(...commandExecParts.slice(1));
@@ -431,10 +470,23 @@ Promise<[any, number]>{
                     commandPartsToUse.push(result);
                 }
 
+                // if(i === 0){
+                //     if(Array.isArray(execPar[1])){
+                //         commandPartsToUse.push(...execPar[1]);
+                //     }
+                //     else if(execPar[1] !== undefined){
+                //         commandPartsToUse.push(execPar[1]);
+                //     }
+                // }
+
+
                 // console.log('dadad ', commandPartsToUse);
                 const cmdRes = await handleCommandInternal(
-                    commandPartsToUse, addThereIsMore ? {...options, thereIsMore: true} : options, [provided, result]
+                    commandPartsToUse, addThereIsMore ? {...options, thereIsMore: addThereIsMore || op.thereIsMore, startingResult: undefined} : options,
+                     [provided, result]
                 );
+                
+                // console.log(cmdRes, ' dadad');
 
                 // console.log(cmdRes);s
 
@@ -479,6 +531,8 @@ Promise<[any, number]>{
                     result = cmdRes;
                 }
 
+                // console.log(cmdRes, result, options,  '  d');
+
                 break;
             }
             case pipeType.pipe: {
@@ -522,7 +576,7 @@ Promise<[any, number]>{
 async function handleCommandInternal(
     parts: any[], 
     options: commandExecParamsProvide,
-    execPar: [any[], any[]]
+    execPar: execParType = [[], undefined]
 ): Promise<cmdCallbackResponse | void>{
 
     const [op, session] = getReadyParams(options);
@@ -627,12 +681,15 @@ async function handleCommandInternal(
 
         let bindD = session.bindTable[parts[0]];
 
-        let sr = parts.slice(1);
+        let sr = execPar[0].slice(1);
+        // console.log('w');
         try {
             // for(const command of bindD.commands){
             //     commandInternalExec(command, true);
             // }
-            return commandInternalExec(bindD.executor, {...options, silent: true, onlyReturn: true, startingResult: sr});
+            return await commandInternalExec(
+                bindD.executor + " " + sr.join(" "), {...options, silent: true, LaunchedFromBind: true, noPrintResult: true, startingResult: execPar[1]},
+            );
         } catch (error) {
             log(LogType.ERROR, "The error has occured during the bind execution:\n" + formatError(error), op.logNode, session);
             return {__$special: specialTypes.pipeExecutorHalt};

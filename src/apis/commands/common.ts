@@ -35,7 +35,9 @@ interface commandExecParamsProvide{
     onlyReturn?: boolean,
     terminal?: getTerminalOPJTYPE,
     startingResult?: any,
-    thereIsMore?: boolean
+    thereIsMore?: boolean,
+    noPrintResult?: boolean,
+    LaunchedFromBind?: boolean
 }
 
 interface commandExecParams extends Required<commandExecParamsProvide>{};
@@ -45,8 +47,9 @@ const default_execParams = {
     silent: false,
     onlyReturn: false,
     terminal: "main",
-    startingResult: undefined,
-    thereIsMore: false
+    thereIsMore: false,
+    noPrintResult: false,
+    LaunchedFromBind: false
 } as commandExecParams;
 
 function getReadyParams(data: commandExecParamsProvide = {}): [commandExecParams, terminalSession]{
