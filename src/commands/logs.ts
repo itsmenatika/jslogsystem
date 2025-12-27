@@ -157,8 +157,12 @@ const commandTable = quickCmdWithAliases("logs", {
                 (s) => {
                     const bs = basename(s);
 
-                    return bs !== "latest.txt" && bs !== "temp" &&
-                    !s.startsWith("_");
+                    return bs !== "latest" && bs !== "latest.txt" && bs !== "temp" &&
+                    !bs.startsWith("_") && (
+                        s != this._terminalSession.config.$cache$latestLogPath &&
+                        s != this._terminalSession.config.$cache$latestLogTempPath
+                    )
+                    ;
                 }
             )
 
