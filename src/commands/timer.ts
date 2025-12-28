@@ -17,8 +17,8 @@ const commandTable = quickCmdWithAliases("timer", {
         "* is/exists -> returns a boolean value indicating whether specified timer exists",
         "* start/new -> starts a new timer or resets it if one was already present",
         "* stop/end -> stops a timer and returns time that has passed",
-        "* get/timestamp/stamp * returns current time that has passed according to specified timer",
-        "* list -> returns a object containing timer labels as keys and values containing a starting time of them",
+        "* get/timestamp/stamp * returns current time that has passed according to a specified timer",
+        "* list -> returns an object containing timer labels as keys and values containing a starting time of them",
         "* names -> returns a list of all existing timers (their labels)",
         "* current/cur/now -> returns number of miliseconds since January 1, 1970 (unix time)",
         "",
@@ -73,15 +73,15 @@ const commandTable = quickCmdWithAliases("timer", {
                 if(!label){
                     return "INVALID SYNTAX";
                 }
-                
-                return logTimeStart(label, {terminal: this, messageVisible: visible});
+
+                return logTimeStart(label, {terminal: this, messageVisible: visible, messageWho: this.logNode});
             case "stop":
             case "end":
                 if(!label){
                     return "INVALID SYNTAX";
                 }
 
-                return logTimeEnd(label, {terminal: this, error: true, messageVisible: visible});
+                return logTimeEnd(label, {terminal: this, error: true, messageVisible: visible, messageWho: this.logNode});
             case "get":
             case "timestamp":
             case "stamp":
@@ -89,7 +89,7 @@ const commandTable = quickCmdWithAliases("timer", {
                     return "INVALID SYNTAX";
                 }
 
-                return logTimeStamp(label, {terminal: this, error: true, messageVisible: visible});
+                return logTimeStamp(label, {terminal: this, error: true, messageVisible: visible, messageWho: this.logNode});
             case "list":
                 return timerList(this);
             case "names":

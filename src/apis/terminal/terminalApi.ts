@@ -457,7 +457,20 @@ class terminalApi extends connectedToSpecificTerminal{
      * @returns 
      */
     create(name: string, data: terminalCreateData = {}, hello: boolean = true){
-        return terminalApi.create(name, data, hello);
+        const api =  terminalApi.create(name, data, hello);
+
+        // adding to global space
+        if(api.config.useAddToGlobalAs){
+            const toAdd: Record<string, any> = {};
+
+            for(const name of api.config.addToGlobalAs){
+                toAdd[name] = api;
+            }
+
+            Object.assign(globalThis, toAdd);
+        }
+
+        return api;
     }
 
 

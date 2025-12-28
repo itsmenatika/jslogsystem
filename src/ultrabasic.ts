@@ -94,6 +94,8 @@ type allRoutes = errRoute | outRoute | inRoute;
 
 type withWriteFunc = allRoutes | Writable | Duplex | Socket | undefined;
 
+
+
 class streamWrapper<T extends (
     Writable | ReadableStream | allRoutes | Duplex | Socket | undefined
 )>{
@@ -101,6 +103,7 @@ class streamWrapper<T extends (
     private stream?: T;
     #history: any[] = [];
     private listeners: [string, CallableFunction][] = [];
+
 
     constructor(stream?: T){
         this.stream = stream;
@@ -110,6 +113,8 @@ class streamWrapper<T extends (
         this: streamWrapper<withWriteFunc>,
         chunk: any, callback?: any
     ){
+ 
+
         if(this.stream) this.stream.write(chunk, callback);
         else if(callback) callback();
         this.#history.push(chunk);

@@ -16,6 +16,8 @@ import { logSystemError } from "../../ultrabasic.js";
  * 
  * NOTE: IT WILL NOT ADD ANY DEFAULT COMMANDS!
  * 
+ * NOTE: It can't add to the global space alone!
+ * 
  * @param name the name of the terminal
  * @param data the data
  * @returns whether it has succeded
@@ -76,6 +78,7 @@ async function createTerminalQuick(name: string, data: terminalCreateData): Prom
         }
         s.procLinked?.chdir(s.cwd);
     }
+
 
 
     return true;

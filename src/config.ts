@@ -136,6 +136,9 @@ type terminalStyles = Required<terminalStylesProvide>;
 interface configDataProvide {
     /**
      * the working directory at the start. it change directory on this, unless otherwise specified
+     * 
+     * It should be already resolved
+     * 
      * it defaults to: join(import.meta.dirname, "dev")
      */
     workingDirectory?: string,
@@ -219,6 +222,8 @@ interface configDataProvide {
 
     /**
      * it determines the way of handling logs at the start of terminal session
+     * 
+     * IT DOESNT WORK RIGHT NOW
      */
     logsReceiveStart?: logsReceiveType,
 
