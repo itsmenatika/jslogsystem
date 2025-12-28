@@ -64,6 +64,7 @@ changes:
 * command binds can now take parameters properly
 * a lot of bugs with binds was fixed
 * logs are now compressed by default
+* added templates and colors that you can change via config
 
 bugfixes:
 * returned null now doesn't crash a program
