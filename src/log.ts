@@ -100,7 +100,7 @@ class logNode{
      * @param name the name of the nod
      * @param parent the parent (optional)
      */
-    constructor(name: string, parent?: logNode){
+    constructor(name: string, parent?: logNode | undefined | string){
         this.name = name;
         this.parent;
     }
@@ -120,7 +120,7 @@ class logNode{
     toString(): string {
         let toReturn = ""; // create a string
 
-        let parent: logNode | undefined = this as logNode; // get parent
+        let parent: logNode | undefined | string = this as logNode; // get parent
 
         // loop till there's no more
         while(true){
@@ -128,6 +128,13 @@ class logNode{
             // if no parent, then return
             if(!parent){
                 // toReturn = "core" + "." + toReturn;
+                break;
+            }
+
+            // if parent is a string
+            if(typeof parent === "string"){
+                // add parent name
+                toReturn = parent + "." + toReturn;
                 break;
             }
 

@@ -8,10 +8,24 @@ import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/comman
 import { multiDisplayer } from "../tools/multiDisplayer.js";
 
 const commandTable = quickCmdWithAliases("timer", {
-    usageinfo: "timer <exists|start|end|end|get|stamp|list> [<timerName>] [<-n>] [<--visible (true|false)>] [<--(command|cmd) subCommandName>] [<--(label|name|l) label>]",
+    usageinfo: "timer <is|exists|start|end|end|get|timestamp|stamp|list|names|current|cur|now> [<timerName>] [<-n>] [<--visible (true|false)>] [<--(command|cmd) subCommandName>] [<--(label|name|l) label>]",
     desc: "manages timers in the current terminal session",
     longdesc: multiLineConstructor(
         "manages timers in the current terminal session",
+        "",
+        "the first argument is a subcommand:",
+        "* is/exists -> returns a boolean value indicating whether specified timer exists",
+        "* start/new -> starts a new timer or resets it if one was already present",
+        "* stop/end -> stops a timer and returns time that has passed",
+        "* get/timestamp/stamp * returns current time that has passed according to specified timer",
+        "* list -> returns a object containing timer labels as keys and values containing a starting time of them",
+        "* names -> returns a list of all existing timers (their labels)",
+        "* current/cur/now -> returns number of miliseconds since January 1, 1970 (unix time)",
+        "",
+        "-n to remove an auto message",
+        "--visible True/False can serve the same purpose",
+        "",
+        "A label name will be extracted from the second argument or a --label dashed argument"
     ),
     hidden: false,
     changeable: false,
@@ -55,14 +69,35 @@ const commandTable = quickCmdWithAliases("timer", {
             case "exists":
                 return logTimeExist(label, this);
             case "start":
+            case "new":
+                if(!label){
+                    return "INVALID SYNTAX";
+                }
+                
                 return logTimeStart(label, {terminal: this, messageVisible: visible});
+            case "stop":
             case "end":
+                if(!label){
+                    return "INVALID SYNTAX";
+                }
+
                 return logTimeEnd(label, {terminal: this, error: true, messageVisible: visible});
             case "get":
+            case "timestamp":
             case "stamp":
+                if(!label){
+                    return "INVALID SYNTAX";
+                }
+
                 return logTimeStamp(label, {terminal: this, error: true, messageVisible: visible});
             case "list":
                 return timerList(this);
+            case "names":
+                return Object.keys(timerList(this));
+            case "current":
+            case "cur":
+            case "now":
+                return Date.now();
             default:
                 return "INVALID SYNTAX";
         }

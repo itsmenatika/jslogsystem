@@ -14,13 +14,15 @@ import { configData } from "../../config.js";
 
 
 interface forkOptionsProvide{
-    inheritStreams?: boolean
+    inheritStreams?: boolean,
+    inheritOutHistory?: boolean
 }
 
 type forkOptions = Required<forkOptionsProvide>;
 
 const default_forkOptions: forkOptions = {
-    inheritStreams: false
+    inheritStreams: false,
+    inheritOutHistory: true
 }
 
 /**
@@ -361,8 +363,13 @@ class terminalApi extends connectedToSpecificTerminal{
 
         });
 
-
-        // const toRet = getTerminal(name);
+        // rewrite the history
+        if(op.inheritOutHistory){
+            getTerminal(name)?.out.setHistory(
+                ses.out.getHistory(true)
+            );
+        }
+            // const toRet = getTerminal(name);
 
         // return the terminal api with that terminal
         return new terminalApi(name);

@@ -380,7 +380,7 @@ function getTerminalOPJ(d: getTerminalOPJTYPE): terminalSession{
 function removeTerminal(name: string, causeError: boolean = true): boolean{
     if(!Object.hasOwn(terminalSessionObjSaved, name)){
         if(causeError){
-            throw new logSystemError(`Terminal with name '${name}' doesn't exist!`);
+            throw new logSystemError(`Terminal with the name '${name}' doesn't exist!`);
         }
 
         return false;
@@ -469,7 +469,7 @@ class connectedToSpecificTerminal{
         }
 
         if(!isGetTerminalOPJTYPE(from)){
-            throw new TypeError("It is not a compatible type like string, sessionData, commandContext or terminalApi.");
+            throw new TypeError("It is not a compatible type like a string, sessionData, commandContext or terminalApi.");
             return;
         }
 

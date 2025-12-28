@@ -134,12 +134,16 @@ class streamWrapper<T extends (
         if(clean) this.#history = [];
     }
 
-    getHistory(): any[]{
+    getHistory(asCopy: boolean = false): Readonly<any[]>{
+        if(asCopy){
+            return [...this.#history];
+        }
+
         return this.#history;
     }
 
-    setHistory(data: any[] = []){
-        return this.#history = data;
+    setHistory(data: any[] | Readonly<any[]> = []){
+        return this.#history = data as any[];
     }
 
     getStream(): undefined | T{

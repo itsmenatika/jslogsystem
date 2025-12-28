@@ -8,7 +8,7 @@ import { smartArgs } from "../tools/argsManipulation.js";
 import { clearConsole } from "../tools/clearConsole.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { multiDisplayer } from "../tools/multiDisplayer.js";
-import { log, LogType } from "../log.js";
+import { log, logNode, LogType } from "../log.js";
 import { cmdTable } from "../apis/commands/types.js";
 
 import { commandTable as strm } from "../commandGroups/streams.js";
@@ -43,6 +43,7 @@ const commandTable = quickCmdWithAliases("terminal", {
         "* terminal cmdhis [<sessionName>] -> it will print the command history of that session (or current one)",
         "* terminal switch <sessionName> -> it will switch you to another session",
         "* terminal fork <sessionName> -> it will fork the current state of the current terminal and create with that data a new one with the provided name",
+        "   ** -b -> to disable inheriting out history (that stuff that you see on the screen)",
         "* terminal exists <sessionName> -> checks if terminal with that name exist",
         "* terminal new <sessionName> <...groups/options> -> it will create a new terminal",
         "   ** -a -> all group (all internal commands)",
@@ -213,7 +214,9 @@ const commandTable = quickCmdWithAliases("terminal", {
                     return false;
                 }
 
-                ap.fork(nameOfAnother);
+                ap.fork(nameOfAnother, {
+                    inheritOutHistory: !args.dashCombined.includes("b")
+                });
 
                 log(LogType.SUCCESS, `That terminal session was forked to '${nameOfAnother}'`, 'console', this.sessionName);
 
@@ -319,17 +322,27 @@ const commandTable = quickCmdWithAliases("terminal", {
 
             case "rem":
             case "remove": {
+                // preventing safelock
+                if(nameOfAnother === "main"){
+                    log(LogType.ERROR, "The removal of the 'main' terminal was denied due to safety reasons. You can't remove the 'main' terminal. Older applications or poorly constructed code may relay on the 'main' terminal existing and it may cause unexpected behaviour or even crashes. Also prior to 1.3 update every code was always referring to the 'main' terminal because there was only one. Keep it as it is. You can always mody the 'main' terminal if you need to. But explicit removal is forbidden.",
+                        new logNode("terminal", this.logNode), this
+                    )
+                }
+
+                // dont allow to remove the main terminal and the active one
                 if(
                     nameOfAnother == "main" ||
                     this.sessionName === nameOfAnother
                 ) return false;
 
+                // get that terminal
                 const api = askForTerminalApi(nameOfAnother);
                 if(!api.valid) return false;
 
+                // remove
                 const res = api.destroy(false);
 
-                return true;
+                return res;
             }
 
             case "exec": {
