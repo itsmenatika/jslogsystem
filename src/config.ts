@@ -121,6 +121,21 @@ interface terminalStylesProvide{
      */
     lastLogGroupText?: string,
 
+    /**
+     * The template which is used to displayed the log
+     * 
+     * It defaults to: `{colors.date}{formattedDate}{color.Reset} {logTypeString} {colors.who}{who}{color.Reset}: {color.FgGray}{currentGroupString}{color.Reset}{logColor}{message}{color.Reset}\n`
+     */
+    logDisplayed?: string,
+
+    /**
+     * The template which is used to write the log
+     * 
+     * It defaults to: `{formattedDate} {logTypeString} {who}: {currentGroupString}{message}\n`
+     */
+    logWritten?: string,
+
+
     colors?: colorTable
 
 }
@@ -342,9 +357,14 @@ const default_colorTable: colorTable = {
 }
 
 
+//  const toWrite: string = `${formattedDate} ${logTypeString} ${who}: ${terminalData?.currentGroupString}${message}\n`;
+//     const toDisplay: string = `${ct.date}${formattedDate}${consoleColors.Reset} ${logTypeString} ${ct.who}${who}${consoleColors.Reset}: ${consoleColors.FgGray}${terminalData?.currentGroupString}${consoleColors.Reset}${logColor}${message}${consoleColors.Reset}\n`;
+
 const default_terminalStyles: terminalStyles = {
     singleLogGroupText: "┄┅",
     lastLogGroupText: "░",
+    logDisplayed: `{colors.date}{formattedDate}{color.Reset} {logTypeString} {colors.who}{who}{color.Reset}: {color.FgGray}{currentGroupString}{color.Reset}{logColor}{message}{color.Reset}\n`,
+    logWritten: `{formattedDate} {logTypeString} {who}: {currentGroupString}{message}\n`,
     colors: default_colorTable
 };
 

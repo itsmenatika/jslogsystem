@@ -2,6 +2,7 @@ import { logsReceiveType, colorTable } from "./config.js";
 import { printTextBox } from "./formatingSessionDependent.js";
 import { getTerminalOPJ, getTerminalOPJTYPE } from "./programdata.js";
 import {clearEntireLineCODE, consoleColor, consoleColors, textBoxPrefix} from "./texttools.js";
+import { templateReplacer } from "./ultrabasic.js";
 
 /**
  * the type of log
@@ -192,8 +193,31 @@ function log(
     const logColor: consoleColor = resolveLogColor(type, ct);
     
     // create strings to write
-    const toWrite: string = `${formattedDate} ${logTypeString} ${who}: ${terminalData?.currentGroupString}${message}\n`;
-    const toDisplay: string = `${ct.date}${formattedDate}${consoleColors.Reset} ${logTypeString} ${ct.who}${who}${consoleColors.Reset}: ${consoleColors.FgGray}${terminalData?.currentGroupString}${consoleColors.Reset}${logColor}${message}${consoleColors.Reset}\n`;
+    // const toWrite: string = `${formattedDate} ${logTypeString} ${who}: ${terminalData?.currentGroupString}${message}\n`;
+
+
+    const varTable: Record<string, string | object> = {
+        color: consoleColors,
+        colors: terminalData.config.styles.colors,
+        formattedDate,
+        logTypeString,
+        who,
+        logColor,
+        currentGroupString: String(terminalData?.currentGroupString),
+        message
+    }
+
+    const toDisplay = templateReplacer(
+        terminalData.config.styles.logDisplayed,
+        varTable
+    );
+
+    const toWrite = templateReplacer(
+        terminalData.config.styles.logWritten,
+        varTable
+    );
+
+    // const toDisplay: string = `${ct.date}${formattedDate}${consoleColors.Reset} ${logTypeString} ${ct.who}${who}${consoleColors.Reset}: ${consoleColors.FgGray}${terminalData?.currentGroupString}${consoleColors.Reset}${logColor}${message}${consoleColors.Reset}\n`;
 
     // remove the view textbox if there was
     if(terminalData.viewTextbox){

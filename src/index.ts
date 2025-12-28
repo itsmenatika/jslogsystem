@@ -1,4 +1,4 @@
-import { logSystemError, streamWrapper, uptimeVar } from "./ultrabasic.js";
+import { logSystemError, streamWrapper, templateReplacer, uptimeVar } from "./ultrabasic.js";
 import { getCurrentVersionOfLogSystem, getTerminal, getTerminalOPJ, createNewTerminal, removeTerminal, connectedToSpecificTerminal, saveterminalSessionObj } from "./programdata.js";
 import { multiLineConstructor, consoleColor, consoleColorsMulti, consoleColors, consoleColorRGB, generateAnsiColor, combineColors, formatError, formatTaskError, printViewTextbox, textBoxPrefix, ansiEscape, clearEntireLineCODE, clearScrenDownCODE, clearEntireBuffer, hideCursorCODE,
     showCursorCODE, cursorAbs, cursorRel} from "./texttools.js";
@@ -10,12 +10,12 @@ import { formatPrintTextbox, printTextBox } from "./formatingSessionDependent.js
 import { constructConfig, constructStyles, terminalStyles, terminalStylesProvide, configData, configDataProvide, getPreset, savePreset,logsReceiveType, colorTable, colorTableProvide,
 legacyData, legacyDataProvide } from "./config.js";
 
-const consolLog = console.log;
+// const consolLog = console.log;
 
-console.log = (...args) => {
-  debugger;
-  consolLog(...args);
-};
+// console.log = (...args) => {
+//   debugger;
+//   consolLog(...args);
+// };
 
 // for safety checks
 import { resolve } from "node:path";
@@ -156,6 +156,11 @@ if(
     log(LogType.INFO, "more information can be found on github (https://github.com/itsmenatika/jslogsystem) or npm (https://www.npmjs.com/package/jslogsystem)");
 
     log(LogType.INFO, "'internal' command was added for testing purposes");
+
+
+    // console.log(
+    // templateReplacer("hej {imie}, to ja {drugieimie}!!", {imie: "nati", drugieimie: "sati"})
+    // );
 }
 
 })();
