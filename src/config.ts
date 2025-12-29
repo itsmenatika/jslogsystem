@@ -439,7 +439,7 @@ const default_configData: configDataProvide | {
     LogDirectory: "logs",
     latestLog: "latest.txt",
     getVersionData(): string {
-        return "THE BETA BUILD OF 1.3"
+        return "That update was focused on terminal sessions and configuration\nHope you enjoy it!\n\nYou can change it by changing config.getVersionData() function";
     },
     logFileHeader(){
         const dateObj = new Date();
