@@ -1,4 +1,4 @@
-import { getEnvApi } from "../apis/allApis.js";
+import { askForCommandApi, askForEnvApi } from "../apis/allApis.js";
 import { textboxVisibility } from "../apis/terminal/textbox.js";
 import { multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
@@ -32,7 +32,7 @@ const commandTable = quickCmdWithAliases("environment", {
         const args = smartArgs(preargs, this);
 
         // get api
-        const api = getEnvApi(this);
+        const api = askForEnvApi(this);
 
         // subcommand
         switch(args.args[0]){

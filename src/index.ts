@@ -23,7 +23,6 @@ import { quickSetup } from "./tools/quickSetup.js";
 import { fileURLToPath } from "node:url";
 import { allGroup_collection } from "./commandGroups/allGroups.js";
 import { commandTable as commandTableInternal } from "./commands/internal.js";
-import { getEnvApi } from "./apis/allApis.js";
 
 export {
     // *****
@@ -161,13 +160,6 @@ if(
 
     log(LogType.INFO, "'internal' command was added for testing purposes");
     log(LogType.INFO, "The main terminal was launched with addProcessEnvToSessionEnv enabled");
-
-
-    // console.log(
-    // templateReplacer("hej {imie}, to ja {drugieimie}!!", {imie: "nati", drugieimie: "sati"})
-    // );
-
-
 }
 
 })();

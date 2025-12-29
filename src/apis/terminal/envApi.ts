@@ -58,8 +58,8 @@ class envApi extends connectedToSpecificTerminal{
     }
 }
 
-function getEnvApi(from: getTerminalOPJTYPE): envApi{
+function askForEnvApi(from: getTerminalOPJTYPE): envApi{
     return new envApi(from);
 }
 
-export {envApi, getEnvApi}
+export {envApi, askForEnvApi}
