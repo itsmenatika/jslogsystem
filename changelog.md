@@ -17,6 +17,7 @@ changes:
   * internal -> internal command that is not included by default
   * powershell -> allows you to execute powershell commands
   * timer -> allows you to manage session timers
+  * environment -> allows you manage session environment variables
 * commands were reintroduced:
   * info -> it has been mistakely removed from the preview versions
 * commands were rewritten:
@@ -65,6 +66,7 @@ changes:
 * a lot of bugs with binds was fixed
 * logs are now compressed by default
 * added templates and colors that you can change via config
+* added environment (session specific) apis
 
 bugfixes:
 * returned null now doesn't crash a program
