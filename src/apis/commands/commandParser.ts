@@ -6,20 +6,23 @@ import { logTimeEnd } from "../console/timers.js";
 import { commandParsingStop, commandPipe, pipeType, specialChars } from "./common.js";
 
 
-function commandDividerInternal(text: string){
-    if(text.length == 0) return [];
+function commandDividerInternal(text: string): [commandPipe[], boolean]{
+    if(text.length == 0) return [[] as commandPipe[], true];
 
     let commandPipe: Array<commandPipe> = [];
     let i: number = 0;
+    let quotas: boolean = true;
     while(i < text.length){
         // console.log(text[i], ' wda');
-        const [theNewI, commandData] = pipeDividerInternal(text, i);
+        const [theNewI, commandData, quotasTemp] = pipeDividerInternal(text, i);
+
+        quotas &&= !quotasTemp;
 
         commandPipe.push(...commandData);
         i = theNewI;
 
         while(text.length > i && text[i] == " ") i++;
-        if(!(i < text.length)) return commandPipe;
+        if(!(i < text.length)) return [commandPipe, quotas];
 
 
         switch(text[i]){
@@ -71,11 +74,11 @@ function commandDividerInternal(text: string){
         }
     }
 
-    return commandPipe;
+    return [commandPipe, quotas];
 }
 
 
-function pipeDividerInternal(text: string, startingPoint: number): [number, Array<commandPipe>]{
+function pipeDividerInternal(text: string, startingPoint: number): [number, Array<commandPipe>, boolean]{
     let toReturn: Array<commandPipe> = [];
 
     let cmd: string = "";
@@ -194,10 +197,10 @@ function pipeDividerInternal(text: string, startingPoint: number): [number, Arra
         val: cmd
     });
 
-    if(!(i < text.length)) return [i, toReturn];
+    if(!(i < text.length)) return [i, toReturn, quotas];
 
     if(!specialChars.includes(text[i]) || commandParsingStop.includes(text[i])){
-        return [i, toReturn];
+        return [i, toReturn, quotas];
     }
 
     let loopAllowed = true;
@@ -253,7 +256,7 @@ function pipeDividerInternal(text: string, startingPoint: number): [number, Arra
        }
     );
 
-    return [i, toReturn];
+    return [i, toReturn, quotas];
 }
 
 

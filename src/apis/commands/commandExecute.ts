@@ -6,12 +6,13 @@ import { commandDividerInternal } from "./commandParser.js";
 import { isControlType, isExplicitUndefined, isOnlyToRedirect, isPipeHalt, pipeHalt, specialTypes } from "./commandSpecialTypes.js";
 import { commandExecParams, commandExecParamsProvide, commandPipe, getReadyParams, pipeType } from "./common.js";
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+import { dirname, join, relative } from "path";
 import { logSystemError } from "../../ultrabasic.js";
 import { formatError } from "../../texttools.js";
 import { cmdcallback, cmdCallbackAsync, cmdCallbackResponse, commandContext, commandDataAsync, commandDataRegular } from "./types.js";
 import { textboxVisibility } from "../terminal/textbox.js";
 import { printTextBox } from "../../formatingSessionDependent.js";
+import { access, appendFile, constants, mkdir, readFile, writeFile } from "fs/promises";
 
 // function commandExec(text: string, ses: terminalSession, silent: boolean = false){
 //     if(!silent){
@@ -194,6 +195,7 @@ async function commandInternalExec(
     text: string, 
     options: commandExecParamsProvide
 ){
+    let quotasFin: boolean = false;
     const [op, session] = getReadyParams(options);
 
     // the information about the command execution
@@ -209,29 +211,31 @@ async function commandInternalExec(
     let prints = 0;
     // console.log('g');
     if(session.config.legacy.pipes){
-        const pipeTree = commandDividerInternal(text);
+        const [pipeTree, quotas] = commandDividerInternal(text);
+        quotasFin = quotas;
+
+
         // console.log(pipeTree);
         // return; 
+        if(quotas)
         [res, prints] = await pipeExecutor(pipeTree, options);
     }
     else{
         // const parts = text.split(" ");
         const [parts, quotas] = divider(text);
-        if(!quotas){
-            if(op.silent !== true)
-            log(LogType.ERROR, "unclosed quotas", "console", session);
-            return undefined;
-        }
+        quotasFin = quotas;
 
-        let partsToUse;
-        if(!session.config.legacy.specialArguments){
-            partsToUse = parts;
+        if(quotas){
+            let partsToUse;
+            if(!session.config.legacy.specialArguments){
+                partsToUse = parts;
+            }
+            else{
+                partsToUse = [parts[0], !op.onlyReturn ? "-§" : "" , ...parts.slice(1)];
+            }
+    
+            res = await handleCommandInternal(partsToUse, options, [partsToUse, partsToUse]);
         }
-        else{
-            partsToUse = [parts[0], !op.onlyReturn ? "-§" : "" , ...parts.slice(1)];
-        }
-
-        res = await handleCommandInternal(partsToUse, options, [partsToUse, partsToUse]);
     }
 
     if(!op.onlyReturn && !op.noPrintResult)
@@ -246,6 +250,10 @@ async function commandInternalExec(
         );   
     }
 
+    if(!quotasFin){
+        if(op.silent !== true)
+        log(LogType.ERROR, "unclosed quotas", "console", session);
+    }
 
     if(!Object.hasOwn(session.flags, 'dontChangeTextboxVisiblity') && !op.onlyReturn){
         // printTextBox(session);
@@ -340,12 +348,18 @@ Promise<[any, number]>{
             case pipeType.fileFrom: {
                 let where = join(process.cwd(), pipe.val as string);
 
-                if(!existsSync(where)){
+                try {
+                    await access(where, constants.R_OK);
+                } catch (error) {
                     result = undefined;
+
+                    const loc = relative(session.config.workingDirectory, where);
+
+                    log(LogType.ERROR, `It was not possible to access '${loc}'!`, "pipeExec", session);
                     break;
                 }
 
-                let f = readFileSync(where);
+                let f = await readFile(where);
 
                 result = f;
                 break;
@@ -363,7 +377,23 @@ Promise<[any, number]>{
                     m = Buffer.of(m);
                 }
 
-                appendFileSync(join(process.cwd(), pipe.val as string), m);
+
+                const where = join(process.cwd(), pipe.val as string);
+
+                try {
+                    await mkdir(dirname(where), {recursive: true});
+                    await appendFile(where, m, undefined);
+                } catch (error) {
+                    result = undefined;
+
+                    const loc = relative(session.config.workingDirectory, where);
+
+                    log(LogType.ERROR, `It was not possible to access '${loc}'!`, "pipeExec", session);
+                    pipeHaltCalled = true;
+                    break;
+                }
+
+                // appendFileSync(where, m);
                 break;
             }
 
@@ -379,7 +409,29 @@ Promise<[any, number]>{
                     m = Buffer.of(m);
                 }
 
-                writeFileSync(join(process.cwd(), pipe.val as string), m);
+                const where = join(process.cwd(), pipe.val as string);
+
+                
+                
+                try {
+                    await mkdir(dirname(where), {recursive: true});
+                    await writeFile(where, m, undefined);
+                } catch (error) {
+                    result = undefined;
+
+                    const loc = relative(session.config.workingDirectory, where);
+
+                    log(LogType.ERROR, `It was not possible to access '${loc}'!`, "pipeExec", session);
+                    pipeHaltCalled = true;
+                    break;
+                }
+
+                // writeFileSync(where, m);
+
+                const dir = dirname(where);
+
+                
+
                 break;
             }
             case pipeType.dataClear: {
@@ -395,8 +447,8 @@ Promise<[any, number]>{
                 if(!quotas){
                     pipeHaltCalled = true;
                     if(op.silent !== true)
-                    log(LogType.ERROR, "unclosed quotas", "console", session);
-                    return result;
+                    log(LogType.ERROR, "unclosed quotas", "pipeExec", session);
+                    return [result, prints];
                 }
 
                 const commandPartsToUse = [commandExecParts[0]];

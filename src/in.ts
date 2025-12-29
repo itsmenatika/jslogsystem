@@ -247,12 +247,12 @@ async function inHandler(data: any, ses: terminalSession){
 
             // command exec
             // commandInternalExec(text, ses);
-                await commandInternalExec(text, {
-                    logNode: "console",
-                    silent: false,
-                    onlyReturn: false,
-                    terminal: ses
-                });
+            await commandInternalExec(text, {
+                logNode: "console",
+                silent: false,
+                onlyReturn: false,
+                terminal: ses
+            });
 
 
             // print a new line
