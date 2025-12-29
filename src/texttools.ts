@@ -313,6 +313,9 @@ function templateReplacer(from: string, varTable: varTableType = {}): string{
                      throw new SyntaxError("number is missing");
                 }
                 
+                if(!Object.hasOwn(varTable, numChar)){
+                    throw new ReferenceError("Unknown reference to " + numChar);
+                }
 
                 toRet.push(String(varTable[numChar]));
                 break;
@@ -327,6 +330,21 @@ function templateReplacer(from: string, varTable: varTableType = {}): string{
                 }
 
                 switch(specialChar){
+                    case "b":
+                        toRet.push("\b");
+                        break;
+                    case "r":
+                        toRet.push("\r");
+                        break;
+                    case "f":
+                        toRet.push("\f");
+                        break;
+                    case "v":
+                        toRet.push("\v");
+                        break;
+                    case "0":
+                        toRet.push("\0");
+                        break;
                     case "n":
                         toRet.push("\n");
                         break;

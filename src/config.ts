@@ -252,14 +252,22 @@ interface configDataProvide {
      * 
      * it defaults to false
      */
-    useAddToGlobalAs?: boolean;
+    useAddToGlobalAs?: boolean,
 
     /**
      * whether the object should polute the global scope. The names
      * 
      * it defaults to ["newConsole"]
      */
-    addToGlobalAs?: string[];
+    addToGlobalAs?: string[],
+
+
+    /**
+     * whether process.env should be added to that session environment
+     * 
+     * It defaults to false
+     */
+    addProcessEnvToSessionEnv?: boolean,
     
     /**
      * whether the standard welcome message on terminal should be one lined.
@@ -462,6 +470,7 @@ const default_configData: configDataProvide | {
     styles: constructStyles(),
     useAddToGlobalAs: false,
     addToGlobalAs: ["newConsole"],
+    addProcessEnvToSessionEnv: false,
     quickHello: false,
     message: "",
     tempLatest: "temp",

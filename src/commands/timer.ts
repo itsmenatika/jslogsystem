@@ -62,7 +62,7 @@ const commandTable = quickCmdWithAliases("timer", {
             visible = args.argsWithDoubleDash["visible"] && args.argsWithDoubleDash["visible"]?.toLowerCase() !== "false";
         }
 
-
+        visible &&= args.isEnding;
 
        
         switch(subCommand){

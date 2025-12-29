@@ -83,7 +83,9 @@ interface terminalSession{
 
     flags: Record<string, any>,
 
-    cache: Record<string, any>
+    cache: Record<string, any>,
+
+    env: Record<string | number | symbol, any>,
     
     [Symbol.toStringTag]: () => string;
     [inspect.custom](depth: number, options: InspectOptions, inspect: (value: any, opts?: InspectOptionsStylized) => string): string;
@@ -236,6 +238,8 @@ function createNewTerminalData(
         inHandlerFuncPrev: undefined,
 
         flags: {stf},
+        
+        env: config.addProcessEnvToSessionEnv ? {...process.env} : {},
 
         cache: {},
 

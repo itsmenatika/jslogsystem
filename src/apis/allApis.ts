@@ -23,3 +23,5 @@ export * from "./terminal/cache.js";
 export * from "./terminal/terminalApi.js";
 export * from "./terminal/terminalMiddleApi.js";
 export * from "./terminal/textbox.js";
+export * from "./terminal/envMiddle.js";
+export * from "./terminal/envApi.js";

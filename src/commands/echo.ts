@@ -84,11 +84,12 @@ const commandTable = quickCmdWithAliases("echo", {
             color: consoleColors,
             mcolors: minecraftColorPallete,
             colors: this._terminalSession.config.styles.colors,
-            styles: {...this._terminalSession.config.styles, colors: undefined}
+            styles: {...this._terminalSession.config.styles, colors: undefined},
+            ...this._terminalSession.env
         };
 
         
-        for(let i = 0; i < 10; i++){
+        for(let i = 0; i < Object.keys(psD).length; i++){
             varTable[String(i) as keyof typeof varTable] = psD[i];
         }
 

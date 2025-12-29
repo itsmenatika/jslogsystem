@@ -7,6 +7,7 @@ import { commandTable as existsx } from "../commands/exists.js";
 import { commandTable as versionZ } from "../commands/version.js";
 import { commandTable as term } from "../commands/terminal.js";
 import { commandTable as timer } from "../commands/timer.js";
+import { commandTable as envZ } from "../commands/environment.js";
 import { cmdTableToCommandCompounts } from "../tools/commandCreatorTools.js";
 import { commandCollection } from "../tools/commandCollection.js";
 
@@ -20,7 +21,8 @@ const commandTable = {
     ...existsx,
     ...term,
     ...versionZ,
-    ...timer
+    ...timer,
+    ...envZ
 };
 
 const compounds = cmdTableToCommandCompounts(commandTable);
