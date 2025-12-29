@@ -2,61 +2,11 @@
 import { stripVTControlCharacters } from "util";
 import { onlyIfRedirected, onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
 import { askForLegacy } from "../apis/meta/legacyApi.js";
-import { ansiEscape, combineColors, consoleColor, consoleColors, multiLineConstructor } from "../texttools.js";
+import { ansiEscape, combineColors, consoleColor, consoleColors, minecraftColorPallete, multiLineConstructor, templateReplacer } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { multiDisplayer } from "../tools/multiDisplayer.js";
 
-const minecraftColorPallete: Record<string, consoleColor> = {
-    "1": consoleColors.FgBlack,
-    "2": consoleColors.FgBlue,
-    "3": consoleColors.FgYellow,
-    "4": consoleColors.FgMagenta,
-    "5": consoleColors.FgRed,
-    "6": consoleColors.FgGreen,
-    "7": consoleColors.FgCyan,
-    "8": consoleColors.FgGray,
-
-    "9": consoleColors.Bright,
-    "0": consoleColors.Dim,
-
-    // "9": combineColors(consoleColors.FgBlack, consoleColors.Bright),
-    // "0": combineColors(consoleColors.FgBlue, consoleColors.Bright),
-    // "a": combineColors(consoleColors.FgYellow, consoleColors.Bright),
-    // "b": combineColors(consoleColors.FgMagenta, consoleColors.Bright),
-    // "c": combineColors(consoleColors.FgRed, consoleColors.Bright),
-    // "d": combineColors(consoleColors.FgGreen, consoleColors.Bright),
-    // "e": combineColors(consoleColors.FgCyan, consoleColors.Bright),
-    // "g": combineColors(consoleColors.FgGray, consoleColors.Bright),    
-
-    // "h": combineColors(consoleColors.FgBlack, consoleColors.Dim),
-    // "i": combineColors(consoleColors.FgBlue, consoleColors.Dim),
-    // "j": combineColors(consoleColors.FgYellow, consoleColors.Dim),
-    // "k": combineColors(consoleColors.FgMagenta, consoleColors.Dim),
-    // "l": combineColors(consoleColors.FgRed, consoleColors.Dim),
-    // "m": combineColors(consoleColors.FgGreen, consoleColors.Dim),
-    // "n": combineColors(consoleColors.FgCyan, consoleColors.Dim),
-    // "o": combineColors(consoleColors.FgGray, consoleColors.Dim),  
-    
-    "a": consoleColors.BgBlack,
-    "c": consoleColors.BgBlue,
-    "d": consoleColors.BgYellow,
-    "e": consoleColors.BgMagenta,
-    "g": consoleColors.BgRed,
-    "h": consoleColors.BgGreen,
-    "j": consoleColors.BgCyan,
-    "k": consoleColors.BgGray,
-
-    "i": consoleColors.Italic,
-    "v": consoleColors.Reverse,
-    "u": consoleColors.Underscore,
-    "s": consoleColors.strikeThrough,
-    "b": consoleColors.Blink,
-
-    "f": consoleColors.FgWhite,
-
-    "r": consoleColors.Reset
-}
 
 const commandTable = quickCmdWithAliases("echo", {
     usageinfo: "echo <data>",
@@ -85,7 +35,13 @@ const commandTable = quickCmdWithAliases("echo", {
         "it will not check whether the terminal supports colors, it's up to you",
         "",
         "§ will be used equally to \\c",
-        "$N where n is a number starting from 0 will be replace with according passed parameter (passed, not provided)"
+        "",
+        "$N where n is a number starting from 0 will be replace with according passed parameter (passed, not provided)",
+        "you can use {VARNAME} to reference variables",
+        "all passed arguments will have assigned a number starting from 0",
+        "you can traverse using dot symbol",
+        "The final product should be a string, boolean or number. Otherwise an error will be thrown",
+        "you can also access: sessionName, color, colors, mcolors, styles and specified enviromental variables"
     ),
     hidden: false,
     changeable: false,
@@ -120,97 +76,127 @@ const commandTable = quickCmdWithAliases("echo", {
 
         if(raw) return toparse;
 
-        let text = "";
-        let textAr = [];
-        for(let i = 0; i < toparse.length; i++){
-            if(toparse[i] == "§"){
-                if(i + 1 < toparse.length){
-                    i++;
-                    if( Object.hasOwn(minecraftColorPallete, toparse[i])){
-                        const col = minecraftColorPallete[toparse[i]];
-                        text += col;
-                    }
-                    else{
-                        text += "\\c" + toparse[i];
-                    }
-                }
-            }
-            else if(toparse[i] == "\\" && slashes){
-                i++;
-                switch(toparse[i]){
-                    case "c": {
-                        if(i + 1 < toparse.length){
-                            i++;
-                            if( Object.hasOwn(minecraftColorPallete, toparse[i])){
-                                const col = minecraftColorPallete[toparse[i]];
-                                text += col;
-                            }
-                            else{
-                                text += "\\c" + toparse[i];
-                            }
-                        }
-                        else text += "\\c";
-                        break;
-                    }
-
-                    case "n":
-                        text += "\n";
-                        break;
-                    case "t":
-                        text += "\t";
-                        break;
-                    case "a":
-                        text += ansiEscape;
-                        break;
-                    case "x":
-                        i++;
-                        let firstChar = toparse[i];
-                        i++;
-                        let secondChar = toparse[i];
-
-                        text += String.fromCharCode(
-                            Number.parseInt(firstChar, 16) * 16
-                            +
-                            Number.parseInt(secondChar, 16)
-                        );
-                        break;
-                    default:
-                        text += toparse[i];                
-                }
-            }
-            else if(toparse[i] == "$"){
-                i++;
-                if(toparse.length > i){
-                    let sym = toparse[i];
 
 
-                    // switch(sym){
-                    //     case ".": {
-                    //         text += 
-                    //     }
-                    //     default:
 
-                    // }
-                    const n = Number(sym);
-
-                    if(n < psD.length){
-                        text += String(psD[n]);
-                    }
-                    else{
-                        text += "?";
-                    }
-                }
-                else text += "$";
-            }
-            else text += toparse[i];
-        }
+        const varTable: Record<string, any> = {
+            sessionName: this.sessionName,
+            color: consoleColors,
+            mcolors: minecraftColorPallete,
+            colors: this._terminalSession.config.styles.colors,
+            styles: {...this._terminalSession.config.styles, colors: undefined}
+        };
 
         
-        if(args.dashCombined.includes("L")){
-            for(const [code, color] of Object.entries(minecraftColorPallete)){
-                text += `* ${code} -> ${color}TEXT${consoleColors.Reset}\n`
-            }
+        for(let i = 0; i < 10; i++){
+            varTable[String(i) as keyof typeof varTable] = psD[i];
         }
+
+
+        let text;
+        try {
+            text = templateReplacer(
+                toparse, varTable
+            );
+        } catch (error) {
+            if(error instanceof Error){
+                return error.cause || error.message || error.name;
+            }
+
+            return error;   
+        }
+
+        // let text = "";
+        // let textAr = [];
+        // for(let i = 0; i < toparse.length; i++){
+        //     if(toparse[i] == "§"){
+        //         if(i + 1 < toparse.length){
+        //             i++;
+        //             if( Object.hasOwn(minecraftColorPallete, toparse[i])){
+        //                 const col = minecraftColorPallete[toparse[i]];
+        //                 text += col;
+        //             }
+        //             else{
+        //                 text += "\\c" + toparse[i];
+        //             }
+        //         }
+        //     }
+        //     else if(toparse[i] == "\\" && slashes){
+        //         i++;
+        //         switch(toparse[i]){
+        //             case "c": {
+        //                 if(i + 1 < toparse.length){
+        //                     i++;
+        //                     if( Object.hasOwn(minecraftColorPallete, toparse[i])){
+        //                         const col = minecraftColorPallete[toparse[i]];
+        //                         text += col;
+        //                     }
+        //                     else{
+        //                         text += "\\c" + toparse[i];
+        //                     }
+        //                 }
+        //                 else text += "\\c";
+        //                 break;
+        //             }
+
+        //             case "n":
+        //                 text += "\n";
+        //                 break;
+        //             case "t":
+        //                 text += "\t";
+        //                 break;
+        //             case "a":
+        //                 text += ansiEscape;
+        //                 break;
+        //             case "x":
+        //                 i++;
+        //                 let firstChar = toparse[i];
+        //                 i++;
+        //                 let secondChar = toparse[i];
+
+        //                 text += String.fromCharCode(
+        //                     Number.parseInt(firstChar, 16) * 16
+        //                     +
+        //                     Number.parseInt(secondChar, 16)
+        //                 );
+        //                 break;
+        //             default:
+        //                 text += toparse[i];                
+        //         }
+        //     }
+        //     else if(toparse[i] == "$"){
+        //         i++;
+        //         if(toparse.length > i){
+        //             let sym = toparse[i];
+
+
+        //             // switch(sym){
+        //             //     case ".": {
+        //             //         text += 
+        //             //     }
+        //             //     default:
+
+        //             // }
+        //             const n = Number(sym);
+
+        //             if(n < psD.length){
+        //                 text += String(psD[n]);
+        //             }
+        //             else{
+        //                 text += "?";
+        //             }
+        //         }
+        //         else text += "$";
+        //     }
+        //     else text += toparse[i];
+        // }
+
+        
+        // if(args.dashCombined.includes("L")){
+        //     for(const [code, color] of Object.entries(minecraftColorPallete)){
+        //         text += `* ${code} -> ${color}TEXT${consoleColors.Reset}\n`
+        //     }
+        // }
 
 
         // consoleWrite(theString + "\n", consoleColors.FgWhite);

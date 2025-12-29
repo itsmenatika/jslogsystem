@@ -176,6 +176,227 @@ function combineColors(...colors: consoleColor[]): consoleColorsMulti{
 }
 
 
+const minecraftColorPallete: Record<string, consoleColor> = {
+    "1": consoleColors.FgBlack,
+    "2": consoleColors.FgBlue,
+    "3": consoleColors.FgYellow,
+    "4": consoleColors.FgMagenta,
+    "5": consoleColors.FgRed,
+    "6": consoleColors.FgGreen,
+    "7": consoleColors.FgCyan,
+    "8": consoleColors.FgGray,
+
+    "9": consoleColors.Bright,
+    "0": consoleColors.Dim,
+
+    // "9": combineColors(consoleColors.FgBlack, consoleColors.Bright),
+    // "0": combineColors(consoleColors.FgBlue, consoleColors.Bright),
+    // "a": combineColors(consoleColors.FgYellow, consoleColors.Bright),
+    // "b": combineColors(consoleColors.FgMagenta, consoleColors.Bright),
+    // "c": combineColors(consoleColors.FgRed, consoleColors.Bright),
+    // "d": combineColors(consoleColors.FgGreen, consoleColors.Bright),
+    // "e": combineColors(consoleColors.FgCyan, consoleColors.Bright),
+    // "g": combineColors(consoleColors.FgGray, consoleColors.Bright),    
+
+    // "h": combineColors(consoleColors.FgBlack, consoleColors.Dim),
+    // "i": combineColors(consoleColors.FgBlue, consoleColors.Dim),
+    // "j": combineColors(consoleColors.FgYellow, consoleColors.Dim),
+    // "k": combineColors(consoleColors.FgMagenta, consoleColors.Dim),
+    // "l": combineColors(consoleColors.FgRed, consoleColors.Dim),
+    // "m": combineColors(consoleColors.FgGreen, consoleColors.Dim),
+    // "n": combineColors(consoleColors.FgCyan, consoleColors.Dim),
+    // "o": combineColors(consoleColors.FgGray, consoleColors.Dim),  
+    
+    "a": consoleColors.BgBlack,
+    "c": consoleColors.BgBlue,
+    "d": consoleColors.BgYellow,
+    "e": consoleColors.BgMagenta,
+    "g": consoleColors.BgRed,
+    "h": consoleColors.BgGreen,
+    "j": consoleColors.BgCyan,
+    "k": consoleColors.BgGray,
+
+    "i": consoleColors.Italic,
+    "v": consoleColors.Reverse,
+    "u": consoleColors.Underscore,
+    "s": consoleColors.strikeThrough,
+    "b": consoleColors.Blink,
+
+    "f": consoleColors.FgWhite,
+
+    "r": consoleColors.Reset
+}
+
+type varTableType = Record<string, string | object>;
+
+
+/**
+ * uses standard template on something
+ * @param from starting string
+ * @param varTable variable list
+ * @returns parsed string
+ */
+function templateReplacer(from: string, varTable: varTableType = {}): string{
+    let toRet: string[] = [];
+
+    for(let i = 0; i < from.length; i++){
+        const char = from[i];
+
+        switch(char){
+            case "§":
+                i++;
+                if(i < from.length){
+                    const charToGetFromPallete = from[i];
+
+                    if(!charToGetFromPallete){
+                        toRet.push("§");
+                        break;
+                    }
+
+                    if(!Object.hasOwn(minecraftColorPallete, charToGetFromPallete)){
+                        toRet.push("§" + charToGetFromPallete);
+                        break;
+                    }
+
+                    toRet.push(minecraftColorPallete[charToGetFromPallete]);
+                    break;
+                }
+
+                toRet.push("§");
+                break;
+            case "{":
+                i++;
+
+                let startI: number = i;
+                let cur: string | object = varTable;
+                while(
+                    i < from.length
+                ){
+                    if(from[i] === "." || from[i] === "}"){
+                        const nameToTraverse: string = from.slice(startI, i).trim();
+
+                        startI = i + 1;
+
+                        cur = cur[nameToTraverse as keyof typeof cur];
+
+                        if(cur === undefined || cur === null){
+                            throw new ReferenceError("Unknown reference to " + nameToTraverse);
+                        }
+                    }
+
+                    if(from[i] === "}") break;
+
+                    i++;
+                }
+
+                if(typeof cur === "object"){
+                    throw new ReferenceError("You can't reference anything else than strings, numbers or booleans");
+                }
+
+                toRet.push(String(cur));
+
+                
+                if(
+                    !(i < from.length) ||
+                    from[i] != "}"
+                ){
+                    throw new SyntaxError("} is missing");
+                }
+
+                break;
+
+            case "$":
+                i++;
+
+                const numChar = from[i];
+                if(!numChar){
+                     throw new SyntaxError("number is missing");
+                }
+                
+
+                toRet.push(String(varTable[numChar]));
+                break;
+            case "\\":
+                i++;
+
+                const specialChar = from[i];
+
+                if(!specialChar){
+                    toRet.push("\\");
+                    break;
+                }
+
+                switch(specialChar){
+                    case "n":
+                        toRet.push("\n");
+                        break;
+                    case "t":
+                        toRet.push("\t");
+                        break;
+                    case "a":
+                        toRet.push(ansiEscape);
+                        break;
+                    case "x":
+                        i++;
+                        const firstChar = from[i];
+
+                        if(!firstChar){
+                            toRet.push("\\x");
+                            break;
+                        }
+
+                        i++;
+                        const secondChar = from[i];
+
+                        if(!secondChar){
+                            toRet.push("\\x"); toRet.push(firstChar);
+                            break;
+                        }
+
+                        const toAdd = String.fromCharCode(
+                            Number.parseInt(firstChar, 16) * 16
+                            +
+                            Number.parseInt(secondChar, 16)
+                        );
+
+                        toRet.push(toAdd);
+                        break;
+                    case "c":
+                        i++;
+                        if(i < from.length){
+                            const charToGetFromPallete = from[i];
+
+                            if(!charToGetFromPallete){
+                                toRet.push("\\c");
+                                break;
+                            }
+
+                            if(!Object.hasOwn(minecraftColorPallete, charToGetFromPallete)){
+                                toRet.push("\\c"); toRet.push(charToGetFromPallete);
+                                break;
+                            }
+
+                            toRet.push(minecraftColorPallete[charToGetFromPallete]);
+                            break;
+                        }
+
+                        toRet.push("\\c");
+                        
+                        break;
+                    default:
+                        toRet.push(specialChar);
+                        break;
+                }
+                break;
+            default:
+                toRet.push(char);
+        }
+    }
+
+
+    return toRet.join("");
+}
+
 
 
 export {
@@ -195,5 +416,8 @@ export {
     hideCursorCODE,
     showCursorCODE,
     cursorAbs,
-    cursorRel
+    cursorRel,
+
+    minecraftColorPallete,
+    templateReplacer
 }

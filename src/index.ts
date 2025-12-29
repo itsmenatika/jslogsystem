@@ -1,7 +1,7 @@
-import { logSystemError, streamWrapper, templateReplacer, uptimeVar } from "./ultrabasic.js";
+import { logSystemError, streamWrapper,uptimeVar } from "./ultrabasic.js";
 import { getCurrentVersionOfLogSystem, getTerminal, getTerminalOPJ, createNewTerminal, removeTerminal, connectedToSpecificTerminal, saveterminalSessionObj } from "./programdata.js";
 import { multiLineConstructor, consoleColor, consoleColorsMulti, consoleColors, consoleColorRGB, generateAnsiColor, combineColors, formatError, formatTaskError, printViewTextbox, textBoxPrefix, ansiEscape, clearEntireLineCODE, clearScrenDownCODE, clearEntireBuffer, hideCursorCODE,
-    showCursorCODE, cursorAbs, cursorRel} from "./texttools.js";
+    showCursorCODE, cursorAbs, cursorRel, templateReplacer, minecraftColorPallete} from "./texttools.js";
 import { consoleUltraRawWrite, streamArray, consoleWrite, consolePairWrite,consoleMultiWrite, hideCursor, showCursor } from "./out.js";
 import { LogType, logNode, log, assertConsole, info, error, init, warning, warn, timer, group, crash, success
 } from "./log.js"
@@ -43,6 +43,8 @@ export {
     combineColors, // uniform color combining function
     formatTaskError, formatError, // error formating
     printViewTextbox, // DEPRECATED. a function to print view textbox that was used before 1.3
+    templateReplacer,
+    minecraftColorPallete,
 
 
     textBoxPrefix, // prefix used in textbox and by printViewTextbox

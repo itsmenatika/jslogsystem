@@ -2,7 +2,7 @@ import { logsReceiveType, colorTable } from "./config.js";
 import { printTextBox } from "./formatingSessionDependent.js";
 import { getTerminalOPJ, getTerminalOPJTYPE } from "./programdata.js";
 import {clearEntireLineCODE, consoleColor, consoleColors, textBoxPrefix} from "./texttools.js";
-import { templateReplacer } from "./ultrabasic.js";
+import { templateReplacer } from "./texttools.js";
 
 /**
  * the type of log
