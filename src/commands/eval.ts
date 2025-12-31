@@ -23,7 +23,7 @@ const commandTable = quickCmdWithAliases("eval", {
             " * $provided -> it provides the provided argument array",
             " * $passed -> it provides the passed argument array",
             "",
-            " * $old -> provides the orginal variables listed there"
+            " * $old -> provides the orginal variables listed here"
         ),
 
         hidden: false,

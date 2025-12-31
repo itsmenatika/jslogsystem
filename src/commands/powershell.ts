@@ -74,7 +74,7 @@ const commandTable = quickCmdWithAliases("powershell", {
 
             // }
     }                
-}, ["pwrsh"])
+}, ["pwrsh", 'pwsh'])
 
 
 const compounds = cmdTableToCommandCompounts(commandTable)
