@@ -184,6 +184,16 @@ function pipeDividerInternal(text: string, startingPoint: number): [number, Arra
                 }
             }
         }
+        else if(
+            text[i] == "\\"
+            &&
+            i + 1 < text.length
+            &&
+            text[i + 1] == "$"
+        ){
+            i++;
+            cmd += "§";
+        }
         else{
             if(specialChars.includes(text[i]) || commandParsingStop.includes(text[i])) break;
             cmd += text[i];

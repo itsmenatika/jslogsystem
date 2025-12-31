@@ -2,7 +2,7 @@
 import { stripVTControlCharacters } from "util";
 import { onlyIfRedirected, onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
 import { askForLegacy } from "../apis/meta/legacyApi.js";
-import { ansiEscape, combineColors, consoleColor, consoleColors, minecraftColorPallete, multiLineConstructor, templateReplacer } from "../texttools.js";
+import { ansiEscape, capitalize, combineColors, consoleColor, consoleColors, minecraftColorPallete, multiLineConstructor, templateReplacer } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { multiDisplayer } from "../tools/multiDisplayer.js";
@@ -10,9 +10,9 @@ import { multiDisplayer } from "../tools/multiDisplayer.js";
 
 const commandTable = quickCmdWithAliases("echo", {
     usageinfo: "echo <data>",
-    desc: "allows you to print on the screen with special characters",
+    desc: "advanced tool to create texts",
     longdesc: multiLineConstructor(
-        "allows you to print on the screen with special characters",
+        "advanced tool to create texts",
         "",
         "additional arguments:",
         "-r -> force to not support escape characters",
@@ -22,6 +22,11 @@ const commandTable = quickCmdWithAliases("echo", {
         "-E -> disable slashes", 
         "-L -> will add the color list to the text to show how to use it",
         "-e -> to allow all arguments to be used by $. Only the first one will be used as a template then.",
+        "--split SIGN -> will automatically split the result by specified sentence (§ can be used to add more than one)",
+        "--lstrip SIGN -> to strip from the left",
+        "--rstrip SIGN -> to strip from the right",
+        "--strip SIGN -> to strip from both sides",
+        "--case lower|l|upper|u|capitalize|c -> to force the case",
         "",
         "it supports escape characters:",
         "\\n - new line; \\t - tab; \\a - asci escape; \\xAB - insert a character by hexidecimal code, where A and B are the code",
@@ -56,6 +61,11 @@ const commandTable = quickCmdWithAliases("echo", {
         const newline = args.dashCombined.includes("n");
         const slashes = !args.dashCombined.includes("E");
 
+
+        const lstrip = args.argsWithDoubleDash['lstrip'];
+        const rstrip = args.argsWithDoubleDash['rstrip'];
+        const strip = args.argsWithDoubleDash['strip'];
+
         let temp;
         if(allArguments){
             temp = smartArgs(preArgs);
@@ -85,14 +95,13 @@ const commandTable = quickCmdWithAliases("echo", {
             mcolors: minecraftColorPallete,
             colors: this._terminalSession.config.styles.colors,
             styles: {...this._terminalSession.config.styles, colors: undefined},
-            ...this._terminalSession.env
         };
 
+        
         
         for(let i = 0; i < Object.keys(psD).length; i++){
             varTable[String(i) as keyof typeof varTable] = psD[i];
         }
-
 
         let text;
         try {
@@ -208,7 +217,100 @@ const commandTable = quickCmdWithAliases("echo", {
             return stripVTControlCharacters(text);
         }
 
-        return text;
+
+        let toRet: string[] = [text];
+        if(args.argsWithDoubleDash['split']){
+            if(typeof args.argsWithDoubleDash['split'] !== "string"){
+                throw new SyntaxError("--split only accepts strings");
+            }
+
+            const splitByThose: string[] = args.argsWithDoubleDash['split'].split("§");
+
+            for(let i = 0; i < splitByThose.length; i++){
+                if(Array.isArray(toRet)){
+                    let tmp: string[] = [];
+                    for(let y = 0; y < toRet.length; y++){
+                        tmp.push(...(toRet[y].split(splitByThose[i])));
+                    }
+
+                    toRet = tmp;
+
+                    continue;
+                }
+
+                // toRet = toRet.split(splitByThose[i]);
+            }
+        }
+
+
+
+        for(let i = 0; i < toRet.length; i++){
+            if(lstrip && toRet[i].startsWith(lstrip)){
+                toRet[i] = toRet[i].slice(lstrip.length);
+            }
+
+            if(rstrip && toRet[i].endsWith(rstrip)){
+                toRet[i] = toRet[i].slice(0, -rstrip.length);
+            }
+
+            if(strip){
+                if(toRet[i].startsWith(strip))
+                toRet[i] = toRet[i].slice(strip.length);
+
+                if(toRet[i].endsWith(strip))
+                toRet[i] = toRet[i].slice(0, -strip.length);
+            }
+        }
+
+        const changeToCase = args.argsWithDoubleDash['case'];
+
+        if(changeToCase){
+            if(typeof changeToCase !== "string"){
+                return "--case have to be a string";
+            }
+
+            switch(changeToCase){
+                case "u":
+                case "upper":
+                    for(let i = 0; i < toRet.length; i++){
+                        toRet[i] = toRet[i].toUpperCase();
+                    }
+                    break;
+                case "l":
+                case "lower":
+                    for(let i = 0; i < toRet.length; i++){
+                        toRet[i] = toRet[i].toLowerCase();
+                    }
+                    break;
+                case "c":
+                case "capitalize":
+                    for(let i = 0; i < toRet.length; i++){
+                        toRet[i] = capitalize(toRet[i]);
+                    }
+                    break;                   
+            }
+        }
+        
+
+        // if(lstrip && text.startsWith(lstrip)){
+        //     text = text.slice(lstrip.length);
+        // }
+        // if(rstrip && text.endsWith(rstrip)){
+        //     text = text.slice(0, -rstrip.length);
+        // }
+    
+        // if(strip){
+        //     if(text.startsWith(strip))
+        //     text = text.slice(strip.length);
+
+        //     if(text.endsWith(strip))
+        //     text = text.slice(0, -strip.length);
+        // }
+
+
+        if(toRet.length === 1) return toRet[0];
+        else if(toRet.length === 0) return undefined;
+        else return toRet;
     }    
 }, ["ech", "text"]);
 

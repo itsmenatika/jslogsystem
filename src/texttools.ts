@@ -1,5 +1,6 @@
 import { Writable } from "node:stream";
 import { streamWrapper, withWriteFunc } from "./ultrabasic";
+import { Blob } from "node:buffer";
 
 const ansiEscape = '\x1b';
 
@@ -289,8 +290,8 @@ function templateReplacer(from: string, varTable: varTableType = {}): string{
                     i++;
                 }
 
-                if(typeof cur === "object"){
-                    throw new ReferenceError("You can't reference anything else than strings, numbers or booleans");
+                if(typeof cur === "object" && !Buffer.isBuffer(cur)){
+                    throw new ReferenceError("You can't reference anything else than strings, buffers, numbers or booleans");
                 }
 
                 toRet.push(String(cur));
@@ -310,7 +311,12 @@ function templateReplacer(from: string, varTable: varTableType = {}): string{
 
                 const numChar = from[i];
                 if(!numChar){
-                     throw new SyntaxError("number is missing");
+                     throw new SyntaxError("a number is missing");
+                }
+                
+                if(numChar == "$"){
+                    toRet.push("§");
+                    break;
                 }
                 
                 if(!Object.hasOwn(varTable, numChar)){
@@ -415,7 +421,20 @@ function templateReplacer(from: string, varTable: varTableType = {}): string{
     return toRet.join("");
 }
 
+// function capitalize(text: string): string{
+//     const data: string[] = [];
 
+//     for(let i = 0; i < text.length; i++){
+//         if(i === 0 || text[i - 1] === " ") data.push(text[i].toUpperCase());
+//         else data.push(text[i]);
+//     }
+
+//     return data.join("");
+// }
+
+function capitalize(text: string): string{
+    return text.replace(/\b\w/g, c => c.toUpperCase());
+}
 
 export {
     multiLineConstructor,
@@ -437,5 +456,7 @@ export {
     cursorRel,
 
     minecraftColorPallete,
-    templateReplacer
+    templateReplacer,
+
+    capitalize
 }
