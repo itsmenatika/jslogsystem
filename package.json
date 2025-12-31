@@ -3,7 +3,7 @@
   "homepage": "https://github.com/itsmenatika/jslogsystem",
   "bugs": {
     "url": "https://github.com/itsmenatika/jslogsystem/issues",
-    "email": "patryklata11@gmail.com"
+    "email": "itsmenatika@gmail.com"
   },
   "funding": {
     "type": "individual",
@@ -13,7 +13,7 @@
     "type": "git",
     "url": "https://github.com/itsmenatika/jslogsystem.git"
   },
-  "version": "1.2.7",
+  "version": "1.3.0",
   "description": "interactive terminal and log system for node",
   "main": "dist/index.js",
   "scripts": {
@@ -41,7 +41,6 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.18.0",
-    "shx": "^0.4.0",
     "typescript": "^5.9.3"
   },
   "type": "module",
