@@ -18,6 +18,7 @@ changes:
   * powershell -> allows you to execute powershell commands
   * timer -> allows you to manage session timers
   * environment -> allows you manage session environment variables
+  * spacetoarguments -> allows you to create an array of arguments from string
 * commands were reintroduced:
   * info -> it has been mistakely removed from the preview versions
 * commands were rewritten:
