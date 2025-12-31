@@ -21,7 +21,9 @@ const commandTable = quickCmdWithAliases("eval", {
             " * $logNode -> it provides the base for log nodes",
             " * $cwd -> it provides current working directory",
             " * $provided -> it provides the provided argument array",
-            " * $passed -> it provides the passed argument array"
+            " * $passed -> it provides the passed argument array",
+            "",
+            " * $old -> provides the orginal variables listed there"
         ),
 
         hidden: false,
@@ -59,8 +61,10 @@ const commandTable = quickCmdWithAliases("eval", {
 
                 // globalThis.$newConsole = newConsole;
 
+                // create a newConsole
                 const newConsole = new consoleShortHand(this.sessionName);
 
+                // create a list of vars to swap
                 const varsToSwap = {
                     "newConsole": newConsole,
                     "con": newConsole,
@@ -75,6 +79,7 @@ const commandTable = quickCmdWithAliases("eval", {
                     "runAt": this.runAt
                 }
 
+                // swap them
                 const oldWholeObj: Object = {};
 
                 for(const name of Object.keys(varsToSwap)){
@@ -85,6 +90,7 @@ const commandTable = quickCmdWithAliases("eval", {
                     globalThis['$' + name] = varsToSwap[name];
                 }
 
+                // save the previous ones
                 // @ts-expect-error
                 globalThis['$old'] = {...oldWholeObj};
                 
@@ -124,6 +130,7 @@ const commandTable = quickCmdWithAliases("eval", {
                 // globalThis.$sessionName = this.sessionName;
 
 
+                // execute code
                 answer = globalEval(code);
 
                 // // @ts-ignore
@@ -143,6 +150,7 @@ const commandTable = quickCmdWithAliases("eval", {
                 // globalThis.$newConsole = prev;
                 // let formatedAnswer = inspect(answer, true, null, true);
 
+                // restore previous vars
                 for(const name of Object.keys(varsToSwap)){
                     // @ts-expect-error
                     globalThis['$' + name] = oldWholeObj['$' + name];
