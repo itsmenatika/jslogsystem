@@ -1,6 +1,6 @@
 import { relative } from "path";
 import { terminalSession } from "./programdata";
-import { clearEntireLineCODE, consoleColors, cursorRel, hideCursorCODE, showCursorCODE } from "./texttools.js";
+import { clearEntireLineCODE, consoleColors, cursorRel, hideCursorCODE, showCursorCODE, templateReplacer } from "./texttools.js";
 
 function formatPrintTextbox(text: string, ses: terminalSession){
     const ct = ses.config.styles.colors;
@@ -37,9 +37,19 @@ function formatPrintTextbox(text: string, ses: terminalSession){
     //         default:
     //             stylizedText += letter;
     //     }
-    // }
 
-    return `${consoleColors.Reset}${loc}${consoleColors.Reset}${ct.textboxin_prefixSep}:${consoleColors.Reset}${ct.textboxin_terminalName}${ses.sessionName}${consoleColors.Reset}${ct.textboxin_infoSep} >${consoleColors.Reset} ${ct.textboxin_common}${stylizedText}${consoleColors.Reset}`;
+    // }
+    const varTable: Record<string, string | object> = {
+        color: consoleColors,
+        colors: ct,
+        stylizedText,
+        cwd: loc,
+        sessionName: ses.sessionName
+    }
+
+    return templateReplacer(ses.config.styles.inputTextbox, varTable);
+
+    // return `${consoleColors.Reset}${loc}${consoleColors.Reset}${ct.textboxin_prefixSep}:${consoleColors.Reset}${ct.textboxin_terminalName}${ses.sessionName}${consoleColors.Reset}${ct.textboxin_infoSep} >${consoleColors.Reset} ${ct.textboxin_common}${stylizedText}${consoleColors.Reset}`;
 }
 
 function printTextBox(ses: terminalSession, end: string = showCursorCODE, start: string = hideCursorCODE){

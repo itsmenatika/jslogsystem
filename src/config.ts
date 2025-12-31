@@ -136,6 +136,9 @@ interface terminalStylesProvide{
     logWritten?: string,
 
 
+    inputTextbox?: string,
+
+
     colors?: colorTable
 
 }
@@ -373,6 +376,7 @@ const default_terminalStyles: terminalStyles = {
     lastLogGroupText: "░",
     logDisplayed: `{colors.date}{formattedDate}{color.Reset} {logTypeString} {colors.who}{who}{color.Reset}: {color.FgGray}{currentGroupString}{color.Reset}{logColor}{message}{color.Reset}\n`,
     logWritten: `{formattedDate} {logTypeString} {who}: {currentGroupString}{message}\n`,
+    inputTextbox: `{color.Reset}{cwd}{color.Reset}{colors.textboxin_prefixSep}:{color.Reset}{colors.textboxin_terminalName}{sessionName}{color.Reset}{colors.textboxin_infoSep} >{color.Reset} {colors.textboxin_common}{stylizedText}{color.Reset}`,
     colors: default_colorTable
 };
 
