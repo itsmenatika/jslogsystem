@@ -1,5 +1,5 @@
 import { connectedToSpecificTerminal, getTerminalOPJTYPE } from "../../programdata.js";
-import { terminalEnvVarDelete, terminalEnvVarExists, terminalEnvVarGet, terminalEnvVarRouteDelete, terminalEnvVarRouteDeleteBelow, terminalEnvVarRouteExists, terminalEnvVarRouteGet, terminalEnvVarRouteSet, terminalEnvVarSet } from "./envMiddle.js";
+import { terminalEnvClearWhole, terminalEnvGetWhole, terminalEnvVarDelete, terminalEnvVarExists, terminalEnvVarGet, terminalEnvVarRouteDelete, terminalEnvVarRouteDeleteBelow, terminalEnvVarRouteExists, terminalEnvVarRouteGet, terminalEnvVarRouteSet, terminalEnvVarSet } from "./envMiddle.js";
 
 /**
  * 
@@ -50,11 +50,16 @@ class envApi extends connectedToSpecificTerminal{
 
 
     getWholeEnvironment(): typeof this.session.env{
-        return this.session.env;
+        return terminalEnvGetWhole(this.session);
     }
 
     loadFromProcess(proc: typeof process = process){
         Object.assign(this.session.env, proc.env);
+    }
+
+
+    clearout(){
+        terminalEnvClearWhole(this.session);
     }
 }
 

@@ -77,7 +77,27 @@ const commandTable = quickCmdWithAliases("environment", {
 
                 return api.existsRoute(args.args[1]);
 
-    
+            case "clearout":
+                const exists = api.exists("ENVIRONMENT_CLEAROUT_LASTUSAGE");
+
+                if(!exists){
+                    api.set("ENVIRONMENT_CLEAROUT_LASTUSAGE", Date.now());
+                    return "YOU'RE ABOUT TO CLEAR THE WHOLE ENVIRONMENTAL VARIABLE TABLE. ARE YOU SURE? Write it again to confirm.";
+                }
+
+                const status = api.get("ENVIRONMENT_CLEAROUT_LASTUSAGE");
+                const cur = Date.now();
+
+                if(typeof status !== "number" || status + 5 * 1000 < cur){
+                    api.set("ENVIRONMENT_CLEAROUT_LASTUSAGE", Date.now());
+                    return "YOU'RE ABOUT TO CLEAR THE WHOLE ENVIRONMENTAL VARIABLE TABLE. ARE YOU SURE? Write it again to confirm.";
+                }
+
+
+                api.clearout();
+                
+                return true;
+
             case "all":
                 return api.getWholeEnvironment();
 

@@ -184,6 +184,20 @@ function terminalEnvVarRouteDeleteBelow(session: getTerminalOPJTYPE, route: stri
     delete cur[toTraverse[toTraverse.length - 1]];
 }
 
+function terminalEnvGetWhole(session: getTerminalOPJTYPE): Record<string | number | symbol, any>{
+    const ses = getTerminalOPJ(session);
+   
+    return ses.env;
+}
+
+function terminalEnvClearWhole(session: getTerminalOPJTYPE): void{
+    const ses = getTerminalOPJ(session);
+   
+    ses.env = {};
+}
+
+
+
 
 export {
     defaultSymbol,
@@ -199,5 +213,8 @@ export {
 
     terminalEnvVarDelete,
     terminalEnvVarRouteDelete,
-    terminalEnvVarRouteDeleteBelow
+    terminalEnvVarRouteDeleteBelow,
+
+    terminalEnvGetWhole,
+    terminalEnvClearWhole
 }
