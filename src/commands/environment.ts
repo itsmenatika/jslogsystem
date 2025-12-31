@@ -6,7 +6,7 @@ import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/comman
 import { actualCrash } from "../tools/exit.js";
 
 const commandTable = quickCmdWithAliases("environment", {
-    usageinfo: "environment <get|g|set|s|delete|del|d|remove|rem|r|exists|e|is|all> [<varName/route>] [<value>] [<-b>]",
+    usageinfo: "environment <get|g|set|s|delete|del|d|remove|rem|r|exists|e|is|all|clearout> [<varName/route>] [<value>] [<-b>]",
     desc: "allows you to edit environment variables",
     longdesc: multiLineConstructor(
         "allows you to edit environment variables",
@@ -21,6 +21,7 @@ const commandTable = quickCmdWithAliases("environment", {
         " * delete/del/d/remove/rem/r -> removes a variable by route",
         " *exists/e/is -> checks whether a variable exists by route",
         " *all -> gets the whole environment as an object",
+        " * clearout -> cleans the whole environment",
         "",
         "-b can be used with delete to also remove everything under/below, not only the exact path"
     ),
