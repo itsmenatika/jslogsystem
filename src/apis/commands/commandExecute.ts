@@ -289,6 +289,21 @@ function internalIsTrue(obj: any): boolean{
             return true;
 
         case "object":
+            if(obj === null) return false;
+            if(Array.isArray(obj)) return true;
+
+            const searchFor: Array<string | symbol> = ['valid', 'isValid', 'ok', 'isTrue', 'toBoolean', 'valueOf', Symbol.toPrimitive, 'toString'];
+
+            for(let i = 0; i < searchFor.length; i++){
+                if(searchFor[i] in obj) continue;
+
+                const toTest = obj[searchFor[i]];
+
+                if(typeof toTest === "boolean") return toTest;
+                if(typeof toTest === "function") return !!(toTest());
+            }
+
+
             return true;
         
         case "string":
@@ -299,7 +314,7 @@ function internalIsTrue(obj: any): boolean{
 
         case "undefined":
             return false;
-
+            
 
         default:
             return false;
