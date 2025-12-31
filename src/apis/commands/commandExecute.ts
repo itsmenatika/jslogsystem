@@ -8,7 +8,7 @@ import { commandExecParams, commandExecParamsProvide, commandPipe, getReadyParam
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join, relative } from "path";
 import { logSystemError } from "../../ultrabasic.js";
-import { formatError } from "../../texttools.js";
+import { consoleColors, formatError } from "../../texttools.js";
 import { cmdcallback, cmdCallbackAsync, cmdCallbackResponse, commandContext, commandDataAsync, commandDataRegular } from "./types.js";
 import { textboxVisibility } from "../terminal/textbox.js";
 import { printTextBox } from "../../formatingSessionDependent.js";
@@ -92,12 +92,12 @@ function tryToPrintResult(
     }
 }
 
-function divider(data: string): [string[], boolean]{
+function divider(data: string): [string[], number | null]{
     const toRet: string[] = [];
 
     let i: number = 0;
     let cur: string = "";
-    let closedQuotas: boolean = true;
+    let closedQuotas: number | null = null;
     while(i < data.length){
         // console.log('da', i, data.length, data[i]);
         switch(data[i]){
@@ -122,7 +122,7 @@ function divider(data: string): [string[], boolean]{
                 break;
             }
             case "\"": {
-                closedQuotas = false;
+                closedQuotas = i;
                 i++;
                 
                 while(
@@ -146,7 +146,7 @@ function divider(data: string): [string[], boolean]{
                         &&
                             data[i - 1] != "\\"
                     ){
-                        closedQuotas = true;
+                        closedQuotas = null;
                         break;
                     }
 
@@ -195,7 +195,7 @@ async function commandInternalExec(
     text: string, 
     options: commandExecParamsProvide
 ){
-    let quotasFin: boolean = false;
+    let quotasFin: null | number = null;
     const [op, session] = getReadyParams(options);
 
     // the information about the command execution
@@ -217,15 +217,15 @@ async function commandInternalExec(
 
         // console.log(pipeTree);
         // return; 
-        if(quotas)
+        if(quotas === null)
         [res, prints] = await pipeExecutor(pipeTree, options);
     }
     else{
         // const parts = text.split(" ");
         const [parts, quotas] = divider(text);
-        quotasFin = quotas;
+        quotasFin = quotas ? null : 2;
 
-        if(quotas){
+        if(quotas === null){
             let partsToUse;
             if(!session.config.legacy.specialArguments){
                 partsToUse = parts;
@@ -250,9 +250,9 @@ async function commandInternalExec(
         );   
     }
 
-    if(!quotasFin){
+    if(quotasFin !== null){
         if(op.silent !== true)
-        log(LogType.ERROR, "unclosed quotas", "console", session);
+        log(LogType.ERROR, `unclosed quotas: ${consoleColors.FgWhite}${text.slice(0, quotasFin)}${consoleColors.BgRed}${text.slice(quotasFin)}${consoleColors.Reset}`, "console", session);
     }
 
     if(!Object.hasOwn(session.flags, 'dontChangeTextboxVisiblity') && !op.onlyReturn){
@@ -444,10 +444,10 @@ Promise<[any, number]>{
                 const commandExec = pipe.val as string;
                 const [commandExecParts, quotas] = divider(commandExec);
 
-                if(!quotas){
+                if(quotas !== null){
                     pipeHaltCalled = true;
                     if(op.silent !== true)
-                    log(LogType.ERROR, "unclosed quotas", "pipeExec", session);
+                    log(LogType.ERROR, `unclosed quotas: ${consoleColors.FgWhite}${commandExec.slice(0, quotas)}${consoleColors.BgRed}${commandExec.slice(quotas)}${consoleColors.Reset}`, "console", session);
                     return [result, prints];
                 }
 

@@ -6,17 +6,18 @@ import { logTimeEnd } from "../console/timers.js";
 import { commandParsingStop, commandPipe, pipeType, specialChars } from "./common.js";
 
 
-function commandDividerInternal(text: string): [commandPipe[], boolean]{
-    if(text.length == 0) return [[] as commandPipe[], true];
+function commandDividerInternal(text: string): [commandPipe[], number | null]{
+    if(text.length === 0) return [[] as commandPipe[], null];
 
     let commandPipe: Array<commandPipe> = [];
     let i: number = 0;
-    let quotas: boolean = true;
+    let quotas: null | number = null;
     while(i < text.length){
         // console.log(text[i], ' wda');
         const [theNewI, commandData, quotasTemp] = pipeDividerInternal(text, i);
 
-        quotas &&= !quotasTemp;
+        if(quotasTemp !== null) return [[] as commandPipe[], quotasTemp];
+        
 
         commandPipe.push(...commandData);
         i = theNewI;
@@ -78,13 +79,13 @@ function commandDividerInternal(text: string): [commandPipe[], boolean]{
 }
 
 
-function pipeDividerInternal(text: string, startingPoint: number): [number, Array<commandPipe>, boolean]{
+function pipeDividerInternal(text: string, startingPoint: number): [number, Array<commandPipe>, null | number]{
     let toReturn: Array<commandPipe> = [];
 
     let cmd: string = "";
     let i: number = startingPoint;
 
-    let quotas = false;
+    let quotas: null | number  = null;
 
     for(; i < text.length; i++){
         //  console.log('nig ', i, text[i], cmd);
@@ -150,7 +151,7 @@ function pipeDividerInternal(text: string, startingPoint: number): [number, Arra
             &&
             text[i - 1] != "\\" 
         ){
-            quotas = true;
+            quotas = i;
             cmd += "\"";
             // i++;
             while(
@@ -178,7 +179,7 @@ function pipeDividerInternal(text: string, startingPoint: number): [number, Arra
                 else if(
                     text[i] == "\""
                 ){
-                    quotas = false;
+                    quotas = null;
                     break;
                 }
             }
