@@ -25,6 +25,7 @@ const commandTable = quickCmdWithAliases("powershell", {
         changeable: false,
         isAlias: false,
         async: true,
+        categories: ["launcher", "shell", "terminal", "system", "unsafe"],
         async callback(args: string[]){
             let toUse: string = "";
             for(const cur of args.slice(1)){

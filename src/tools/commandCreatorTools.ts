@@ -13,7 +13,8 @@ function quickCmdWithAliases(
             isAlias: true,
             aliasName: name,
             hidden: true,
-            changeable: false
+            changeable: false,
+            categories: data.categories
         };
 
         toRe[alias] = aliasData;

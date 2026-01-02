@@ -9,7 +9,8 @@ const commandTable = quickCmdWithAliases("argumentslength", {
     isAlias: false,
     callback(args: any[]): any{
         return args.length - 1;
-    }
+    },
+    categories: ["argument", "pipe", "length", "manipulation"]
 }, ["argslen"])
 
 

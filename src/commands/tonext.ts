@@ -9,6 +9,7 @@ const commandTable = quickCmdWithAliases("tonext", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["pipe", "argument"],
     callback(args: any[]): any{
         return args.slice(1);
     }

@@ -44,6 +44,7 @@ const commandTable = quickCmdWithAliases("internal", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["unsafe", "internal", "testing"],
     callback(preargs: any[]): any{
         const args = smartArgs(preargs, this);
 

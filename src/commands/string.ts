@@ -8,6 +8,7 @@ const commandTable = quickCmdWithAliases("string", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["parser", "generator", "text"],
     callback(preargs: any[]): any{
         const args = smartArgs(preargs, this);
         const toReturn: any[] = [];

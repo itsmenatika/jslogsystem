@@ -29,6 +29,7 @@ const commandTable = quickCmdWithAliases("eval", {
         hidden: false,
         changeable: false,
         isAlias: false,
+        categories: ["shell", "terminal", "environment", "system", "javascript", "unsafe"],
         callback(args: string[]): any{
             let toUse: string = "";
             const toExps: Record<string, any> = {};

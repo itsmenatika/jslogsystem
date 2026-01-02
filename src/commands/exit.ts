@@ -9,6 +9,7 @@ const commandTable = quickCmdWithAliases("exit", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["unsafe", "system", "process"],
     callback(args: string[]): boolean{
         let exitCode: any = args.slice(1).filter(s => {
             return s != "-§";

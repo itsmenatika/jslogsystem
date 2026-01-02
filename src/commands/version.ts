@@ -19,6 +19,7 @@ const commandTable = quickCmdWithAliases("version", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["terminal", "shell", "jslogsystem"],
     callback(preArgs: any[]): any {
         const args = smartArgs(preArgs, this);
 

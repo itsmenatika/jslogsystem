@@ -128,7 +128,7 @@ class terminalApi extends connectedToSpecificTerminal{
      * @returns that time
      */
     uptime(): Readonly<number>{
-        return this.session.currentUpTime;
+        return this.session.uptime;
     }
 
     /**

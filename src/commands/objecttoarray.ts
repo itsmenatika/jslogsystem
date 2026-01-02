@@ -38,6 +38,7 @@ const commandTable = quickCmdWithAliases("objecttoarray", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["pipes", "manipulation", "creator", "array", "object"],
     callback(preargs: any[]): any{
        const args = smartArgs(preargs, this);
 

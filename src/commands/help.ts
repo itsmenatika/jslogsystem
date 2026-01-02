@@ -2,35 +2,49 @@ import { inspect } from "util";
 import { askForCommandApi, commandtypes } from "../apis/commands/commandApis.js";
 import { onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
 import { consoleMultiWrite } from "../out.js";
-import { consoleColor, consoleColors } from "../texttools.js";
+import { combineColors, consoleColor, consoleColors, multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { multiDisplayer } from "../tools/multiDisplayer.js";
 
 const commandTable = quickCmdWithAliases("help", {
-        usageinfo: "help [<about>]",
+        usageinfo: "help ([<--category CATEGORYNAME>]|[<about>])",
         desc: "shows the list of commands or describes the command usage",
-        longdesc: "Provides the long description and command usage of provided command and if not specified shows the list of commands.",
+        longdesc: multiLineConstructor(
+            "shows the list of commands or describes the command usage",
+            "",
+            "use help <command/commandAlias> to get information about that specific command",
+            "use help [<--category NAME>] to list commands"
+        ),
         hidden: false,
         changeable: false,
+        categories: ["manual"],
         callback(preArgs: string[]){
             const args = smartArgs(preArgs, this);
+            const category = args.argsWithDoubleDash['category'];
             // return args;
+
+            const length = args.argsWithoutArguments.length;
 
             // if there was no arguments (the first is called command name)
             if(
-                args.length == 0
+                length == 0
             ){
                 const commandList = askForCommandApi(this);
 
                 let toDisplay: string[] = [];
                 let colors: consoleColor[] = [];
 
-
+                let i: number = 0;
                 for(let [commandName, commandData] of commandList){
                     if(commandData.hidden) continue;
 
+                    // checks for a category
+                    if(category && (!commandData.categories || !commandData.categories?.includes(category))){
+                        continue;
+                    }
 
+                    i++;
                     
                     toDisplay.push("* "); colors.push(consoleColors.FgYellow);
                     toDisplay.push(commandName); colors.push(consoleColors.FgWhite);
@@ -48,17 +62,23 @@ const commandTable = quickCmdWithAliases("help", {
                     }
                 }
 
+                // print the amount of those that were found
+                toDisplay.push("\n"); colors.push(consoleColors.FgWhite);
+                toDisplay.push(String(i)); colors.push(combineColors(consoleColors.BgCyan, consoleColors.FgRed));
+                toDisplay.push(` commands found`); colors.push(consoleColors.FgWhite);
+                toDisplay.push("\n"); colors.push(consoleColors.FgWhite);
+
                 if(args.isEnding)
                 consoleMultiWrite(toDisplay, colors, this.sessionName);
 
                 return onlyToRedirect(toDisplay.join(""));
             }
-            else if(args.length == 1){
+            else if(length == 1){
                 const commandList = askForCommandApi(this);
 
                 let forMulti = new multiDisplayer();
 
-                let cmdToCheck: string = args.args[0];
+                let cmdToCheck: string = args.argsWithoutArguments[0];
 
 
                 const commandD = commandList.getOrginal(cmdToCheck);
@@ -112,6 +132,9 @@ const commandTable = quickCmdWithAliases("help", {
 
                     forMulti.push("aliases: ", consoleColors.FgGray);
                     forMulti.push((toDisplayAl == "" ? "NOT FOUND" : toDisplayAl) + "\n", consoleColors.FgWhite);
+            
+                    forMulti.push("categories: ", consoleColors.FgGray);
+                    forMulti.push((data.categories ? data.categories.join(", ") : "") + "\n", consoleColors.FgWhite);
 
                     forMulti.push("hidden: ", consoleColors.FgGray);
                     forMulti.push(String(data.hidden) + "\n", consoleColors.FgWhite);

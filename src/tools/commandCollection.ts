@@ -82,6 +82,39 @@ class commandCollection{
         return new commandCollection(toCr, this.#options);
     }
 
+
+    category(category: string): commandCollection{
+         const toCr: cmdTable = {};
+
+        for(const name of Object.keys(this.#cmdTable)){
+            const ctgr = this.#cmdTable[name].categories || [];
+
+            if(ctgr.includes(category)) toCr[name] = this.#cmdTable[name];
+        }
+
+        return new commandCollection(toCr, this.#options);       
+    }
+    categories(...listOfThem: string[]): commandCollection{
+         const toCr: cmdTable = {};
+
+        for(const name of Object.keys(this.#cmdTable)){
+            const ctgr = this.#cmdTable[name].categories || [];
+
+            let letBe: boolean = false;
+
+            for(const one of listOfThem){
+                if(ctgr.includes(one)){
+                    letBe = true;
+                    break;
+                }
+            }
+
+            if(letBe) toCr[name] = this.#cmdTable[name];
+        }
+
+        return new commandCollection(toCr, this.#options);       
+    }
+
     get aliases(): commandCollection{
         const toRet: cmdTable = {};
 
@@ -233,7 +266,8 @@ class commandCollection{
                 callback: undefined,
                 async: undefined,
                 minver: data.minver,
-                maxver: data.maxver
+                maxver: data.maxver,
+                categories: data.categories || []
             }
 
             return this;
@@ -252,7 +286,8 @@ class commandCollection{
             callback: data.callback,
             async: typeof data.async === "boolean" ? data.async : false,
             minver: data.minver,
-            maxver: data.maxver
+            maxver: data.maxver,
+            categories: data.categories || []
         };
 
         return this;

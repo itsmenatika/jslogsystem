@@ -35,7 +35,7 @@ const commandTable = quickCmdWithAliases("terminal", {
         "",
         "available arguments:",
         "* terminal name -> it will print the current terminal name",
-        "* terminal uptime -> it will print the current terminal uptime (it's defacto an alias for 'uptime -l').",
+        "* terminal uptime [<sessionName>] -> it will print the current terminal uptime (it's defacto an alias for 'uptime -l').",
         "    ** using -o will cause to print the terminal start time (not how much time has passed, but the literal start time). It will not use 'uptime' command in that scenario",
         "    ** using -O will cause to print how much time has passed in miliseconds since the terminal start (it doesn't use 'uptime' command)",
         "* terminal list -> it will print list of current existing sessions",
@@ -66,13 +66,14 @@ const commandTable = quickCmdWithAliases("terminal", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["terminal", "shell", "session"],
     callback(preargs: any[]): any{
         // console.log(preargs);
         const args = smartArgs(preargs, this);
 
         let nameOfAnother: string = this.sessionName;
-        if(args.length > 1){
-            let toCheck = args.args[1];
+        if(args.argsWithoutArguments.length > 1){
+            let toCheck = args.argsWithoutArguments[1];
             if(toCheck != "this"){
                 nameOfAnother = toCheck;
             } 
@@ -112,7 +113,9 @@ const commandTable = quickCmdWithAliases("terminal", {
                     return Date.now() - ap.uptime();
                 }
 
-                return commandInternalExec(`uptime -l ${preargs.slice(2).join(" ")}`, 
+                // console.log(`uptime -l ${preargs.slice(3).join(" ")}`);
+
+                return commandInternalExec(`uptime -l --terminal ${nameOfAnother}`, 
                     {
                         silent: true, logNode: this.logNode, 
                         terminal: this.sessionName, onlyReturn: true

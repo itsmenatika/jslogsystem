@@ -20,6 +20,7 @@ const commandTable = quickCmdWithAliases("info", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["unsafe", "shell", "process", "terminal", "system"],
     callback(preArgs: any[]): any {
             const args = smartArgs(preArgs, this);
 

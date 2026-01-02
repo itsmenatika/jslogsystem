@@ -11,8 +11,8 @@ interface verD{
 function askForVersion(from: getTerminalOPJTYPE): verD{
     const term = getTerminalOPJ(from);
 
-    const intVer = Number(term.logSystemVer);
-    const strVer = String(term.logSystemVer);
+    const intVer = Number(term.config.logSystemVersion[0]);
+    const strVer = String(term.config.logSystemVersion[1]);
     const user = term.config.getVersionData()
 
     return {

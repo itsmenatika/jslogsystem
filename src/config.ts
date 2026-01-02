@@ -305,6 +305,12 @@ interface configDataProvide {
     legacy?: legacyData;
 
 
+    /**
+     * acting log system version
+     */
+    logSystemVersion?: [number, string]
+
+
 
     commandTable?: cmdTable | commandCollection
 }
@@ -480,7 +486,11 @@ const default_configData: configDataProvide | {
     tempLatest: "temp",
     legacy: constructLegacyData(),
 
+    logSystemVersion: [1.31, "1.31"],
+
     commandTable: {},
+
+
 
     [Symbol.toStringTag](): string{
         return `config()`;

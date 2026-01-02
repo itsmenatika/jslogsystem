@@ -11,6 +11,7 @@ const commandTable = quickCmdWithAliases("hide", {
         hidden: false,
         changeable: false,
         isAlias: false,
+        categories: ["shell", "terminal"],
         callback(preargs: string[]): onlyIfRedirected{
             let vis: boolean = true;
             let m: string = "The textbox was hidden. Start writting to make it appear again!\n";

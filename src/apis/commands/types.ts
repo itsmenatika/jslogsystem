@@ -50,7 +50,8 @@ interface commandData{
     "callback"?: cmdcallback | cmdCallbackAsync,
     "async"?: boolean,
     "minver"?: number,
-    "maxver"?: number
+    "maxver"?: number,
+    "categories"?: string[]
 }
 
 interface commandDataAsync extends commandData{
@@ -58,6 +59,7 @@ interface commandDataAsync extends commandData{
     aliasName?: undefined,
     "async": true,
     "callback": cmdCallbackAsync,
+    "categories"?: string[]
 }
 
 // interface commandDataAsyncInMemory extends Pick<commandDataAsync, "desc"
@@ -66,7 +68,8 @@ interface commandDataRegular extends commandData{
     isAlias?: false,
     aliasName?: undefined,
     "async"?: false,
-    "callback": cmdcallback
+    "callback": cmdcallback,
+    "categories"?: string[]
 }
 
 interface commandAlias extends commandData {
@@ -77,6 +80,7 @@ interface commandAlias extends commandData {
     async?: undefined,
     isAlias: true
     aliasName: string,
+    "categories"?: string[]
 }
 
 type unifiedCommandTypes = commandDataRegular | commandDataAsync | commandAlias;

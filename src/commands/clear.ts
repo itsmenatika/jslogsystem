@@ -18,6 +18,7 @@ const commandTable = quickCmdWithAliases("clear", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["tool", "screen"],
     callback(preargs: string[]): onlyIfRedirected{
         const args = smartArgs(preargs, this);
 

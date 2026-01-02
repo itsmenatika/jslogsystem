@@ -12,7 +12,7 @@ function welcome(terminal: getTerminalOPJTYPE){
     textboxVisibility(false);
     if(quick){
         consoleWrite("welcomne to LogSystem ", undefined, false, "", ses);
-        consoleWrite("v"+String(ses.logSystemVer), consoleColors.FgRed, false, "", ses);
+        consoleWrite("v"+String(ses.config.logSystemVersion[1]), consoleColors.FgRed, false, "", ses);
         consoleWrite(" by Naticzka", combineColors(consoleColors.Bright, consoleColors.Blink), false, "\n", ses);
     }
     else{
@@ -20,7 +20,7 @@ function welcome(terminal: getTerminalOPJTYPE){
         s.push("Log system has been properly loaded!\n", consoleColors.FgGreen);
         s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));
         s.push("\n\n");
-        s.push(`Welcome to the log system v${ses.logSystemVer} `, consoleColors.FgCyan);
+        s.push(`Welcome to the log system v${ses.config.logSystemVersion[1]} `, consoleColors.FgCyan);
         s.push("by Naticzka\n", combineColors(consoleColors.FgMagenta, consoleColors.Blink));
         s.push("\n")
         s.push("......................", combineColors(consoleColors.BgGray, consoleColors.FgGray));

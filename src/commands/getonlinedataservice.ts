@@ -24,6 +24,7 @@ const commandTable = quickCmdWithAliases("getonlinedataservice", {
     changeable: false,
     isAlias: false,
     async: true,
+    categories: ["networking"],
     async callback(preArgs: any[]): Promise<any>{
         const args = smartArgs(preArgs, this);
 

@@ -17,6 +17,7 @@ const commandTable = quickCmdWithAliases("reverse", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["manipulation", "argument", "pipe"],
     callback(args: any[]): any{
         return args.slice(1).toReversed();
     }

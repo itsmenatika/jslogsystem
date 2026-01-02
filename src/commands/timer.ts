@@ -30,6 +30,7 @@ const commandTable = quickCmdWithAliases("timer", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["terminal", "shell", "session", "testing"],
     callback(preargs: any[]): any{
         const args = smartArgs(preargs, this);
 

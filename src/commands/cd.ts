@@ -19,6 +19,7 @@ const commandTable = quickCmdWithAliases("cd", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["filesystem"],
     callback(preArgs: any[]): string | undefined{
         const args = smartArgs(preArgs, this);
 

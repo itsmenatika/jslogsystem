@@ -12,6 +12,7 @@ const commandTable = quickCmdWithAliases("meow", {
         hidden: false,
         changeable: false,
         isAlias: false,
+        categories: ["cute", "generator", "text"],
         callback(args: string[]): onlyIfRedirected{
             let g = new multiDisplayer();
 

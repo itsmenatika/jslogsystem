@@ -8,6 +8,7 @@ const commandTable = quickCmdWithAliases("write", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["text", "generator"],
     callback: (args: string[]): string => {
         let toPrint: string = "";
         for(const cur of args.slice(1)){

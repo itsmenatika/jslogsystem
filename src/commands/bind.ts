@@ -22,6 +22,7 @@ const commandTable = quickCmdWithAliases("bind", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["terminal", "shell", "bind", "commands", "command", "manager", "session"],
     callback(preargs: any[]): any{
         const args = smartArgs(preargs, this);
         const b = askForBindApi(this);

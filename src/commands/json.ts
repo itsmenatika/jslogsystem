@@ -17,6 +17,7 @@ const commandTable = quickCmdWithAliases("json", {
     changeable: false,
     isAlias: false,
     async: true,
+    categories: ["pipe", "generator", "manipulation", "parser", "text"],
     async callback(preArgs: any[]): Promise<any>{
         const args = smartArgs(preArgs, this);
 

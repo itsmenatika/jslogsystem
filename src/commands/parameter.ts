@@ -26,6 +26,7 @@ const commandTable = quickCmdWithAliases("parameter", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["argument", "pipe", "manipulation"],
     callback(preargs: any[]): any{
         const args = removeInternalArguments(preargs);
 

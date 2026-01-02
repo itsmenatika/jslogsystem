@@ -19,6 +19,7 @@ const commandTable = quickCmdWithAliases("exists", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["commands", "bind", "terminal", "session", "environment", "shell"],
     callback(preargs: any[]): any{
         const args = smartArgs(preargs, this);
 

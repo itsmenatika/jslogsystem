@@ -17,6 +17,7 @@ const commandTable = quickCmdWithAliases("spacetoarguments", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["argument", "pipe", "text", "generator", "manipulation"],
     callback(args: any[]): any{
         const toRet: Array<any> = [];
 

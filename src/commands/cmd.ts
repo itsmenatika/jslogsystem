@@ -12,6 +12,7 @@ const commandTable = quickCmdWithAliases("cmd", {
         hidden: false,
         changeable: false,
         isAlias: false,
+        categories: ["launcher", "shell", "terminal", "system", "unsafe"],
         callback(args: string[]){
             let toUse: string = "";
             for(const cur of args.slice(1)){

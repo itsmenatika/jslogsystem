@@ -1,4 +1,5 @@
 import { log, logNode, LogType } from "../log.js";
+import { getTerminal } from "../programdata.js";
 import { multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
@@ -19,14 +20,19 @@ const commandTable = quickCmdWithAliases("uptime", {
         "those are exclusive:",
         "use -l to use a linked terminal session uptime (default)",
         "use -p to use a linked process time (it is rounded up to seconds!)",
-        "use -g to use a global log system variable"
+        "use -g to use a global log system variable",
+        "",
+        "use --terminal sessionName to specify the terminal that is talked about"
     ),
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["terminal", "shell", "session", "testing", "process"],
     callback(preArgs: string[]): string | number | Record<string, number> | undefined{
         const args = smartArgs(preArgs, this);
         const dashCombined = args.dashCombined;
+
+        const sessionName = args.argsWithDoubleDash['terminal'] || this.sessionName;
 
         let exc = 0;
         if(dashCombined.includes("p")) exc++;
@@ -38,16 +44,27 @@ const commandTable = quickCmdWithAliases("uptime", {
         }
 
 
+
         let current: number = 0;
         if(args.dashCombined.includes("p")){
-            current = this._terminalSession.procLinked?.uptime() as number * 1000;
+            // current = this._terminalSession.procLinked?.uptime() as number * 1000;
+            const trm = getTerminal(sessionName);
+
+            if(!trm) return "unknown terminal";
+
+            current = trm.procLinked?.uptime() as number * 1000;
         }
         else if(args.dashCombined.includes("g")){
             current = Date.now() - uptimeVar;
         }
         else{
             // uptime = this._terminalSession.uptime;
-            current = Date.now() - this._terminalSession.uptime;
+            // current = Date.now() - this._terminalSession.uptime;
+            const trm = getTerminal(sessionName);
+
+            if(!trm) return "unknown terminal";
+
+            current = Date.now() - trm.uptime;
         }
 
    

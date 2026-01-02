@@ -9,7 +9,7 @@ import type { terminalApi } from "./apis/terminal/terminalApi.js";
 
 // let commandHistory: string[] = []; // user command history history
 // let indexCommandHistory: null | number = null; // the index of current selected
-const logSystemVer: string = "1.3"; // current version of the log system
+const logSystemVer: string = "1.31"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
 // let currentGroupString: string = ""; // the current string for groups to make it run faster (you can name it cache, i guess?)
 // let logGroups: string[] = []; // groups for console.group()
@@ -31,7 +31,7 @@ function getCurrentVersionOfLogSystem(as: "number", session: getTerminalOPJTYPE)
 function getCurrentVersionOfLogSystem(as: "number" | "string" = "string", session: getTerminalOPJTYPE = "main"): string | number {
     const s = getTerminalOPJ(session);
 
-    const v = s.logSystemVer ? s.logSystemVer : logSystemVer;
+    const v = s.config.logSystemVersion ? s.config.logSystemVersion : logSystemVer;
 
     if(as === "string") return String(v);
     else if(as === "number") return Number(v);
@@ -50,41 +50,129 @@ interface bindDetail{
 
 type bindData = Record<string, bindDetail>;
 
+/**
+ * a structure containing all session information
+ */
 interface terminalSession{
+    /**
+     * the name of the session that is used to recall the session
+     */
     sessionName: string,
+
+    /**
+     * a link to config data consisting of static config that was used to create specific session.
+     * 
+     * Config is not guranteed to be unique to a single session
+     */
     config: configData,
 
-    text: string,
-    commandHistory: string[],
-    indexCommandHistory: number | null,
-    relativeTextboxPos: number,
-
-    logSystemVer: string,
-    currentUpTime: number,
-    currentGroupString: string,
-    logGroups: string[],
-    timers: Record<string, number>,
-    out: streamWrapper<withWriteFunc | undefined>,
-    in: streamWrapper<typeof process.stdin | undefined>,
-    fileout: streamWrapper<withWriteFunc | undefined>,
-    viewTextbox: boolean,
-    logsReceive: logsReceiveType,
-    counterTable: Record<string, number>,
-    procLinked?: typeof process,
-
-    bindTable: bindData,
-
-    cwd: string,
-
+    /**
+     * a timestamp on which that session was started
+     */
     uptime: number,
 
+    /**
+     * text currently stored in inputbox
+     */
+    text: string,
+    
+    /**
+     * history of sent commands on the session
+     */
+    commandHistory: string[],
 
+    /**
+     * an index used to retrieving the specific entry in the command history
+     */
+    indexCommandHistory: number | null,
+
+    /**
+     * input writting offset
+     */
+    relativeTextboxPos: number,
+
+    /**
+     * whether the inputbox is expected to be rendered. It's recommended to use an api or a tool instead of changing it manually!
+     */
+    viewTextbox: boolean,
+
+
+    /**
+     * the current pre-calculated group string (a kind of cache)
+     */
+    currentGroupString: string,
+
+    /**
+     * list of log groups created
+     */
+    logGroups: string[],
+
+    /**
+     * internal session timers
+     */
+    timers: Record<string, number>,
+    /**
+     * internal session counters
+     */
+    counterTable: Record<string, number>,
+
+    /**
+     * a link to streamWrapper intented to serve as stdout
+     */
+    out: streamWrapper<withWriteFunc | undefined>,
+
+    /**
+     * a table of user binds
+     */
+    bindTable: bindData,
+
+    /**
+     * a link to streamWrapper intented to serve as stdin
+     */
+    in: streamWrapper<typeof process.stdin | undefined>,
+
+    /**
+     * a link to streamWrapper intented to serve as stdout::file
+     */
+    fileout: streamWrapper<withWriteFunc | undefined>,
+
+    /**
+     * DOESNT WORK PROPERLY YET. MAY BE REMOVED IN THE FUTURE
+     */
+    logsReceive: logsReceiveType,
+
+
+    /**
+     * process that is used as a main process of that session
+     */
+    procLinked?: typeof process,
+
+
+    /**
+     * current working directory
+     */
+    cwd: string,
+
+
+
+    /**
+     * an internal link to previous in function (don't relay on setting it manually there)
+     */
     inHandlerFuncPrev?: Function,
 
+    /**
+     * internal flags changing the behaviour of the terminal. Flags should not be a complicated objects and are mostly used internally. Use environment for more advanced stuff as it has a lot better api
+     */
     flags: Record<string, any>,
 
+    /**
+     * a cache of the terminal that is managed by itself. It should not been managed manually. You can use apis to add (-set) stuff to cache, but you should never remove something from it.
+     */
     cache: Record<string, any>,
 
+    /**
+     * environment serving the same role as a default system environment variable table
+     */
     env: Record<string | number | symbol, any>,
     
     [Symbol.toStringTag]: () => string;
@@ -93,10 +181,29 @@ interface terminalSession{
 }
 
 interface terminalCreateData{
+
+    /**
+     * stdout::file
+     */
     fileout?: Writable | streamWrapper<Writable | typeof process.stdout> | null,
+
+    /**
+     * stdout
+     */
     out?: Writable | streamWrapper<Writable | typeof process.stdout> | null,
+
+    /**
+     * stdin
+     */
     in?: typeof process.stdin | streamWrapper<typeof process.stdin> | null,
+
+    /**
+     * detailed config data
+     */
     config?: configDataProvide,
+    /**
+     * the main process of the session. Defaults to node js process
+     */
     process?: typeof process | null,
 
 
@@ -109,6 +216,9 @@ interface terminalCreateData{
      */
     chwdToSelectedCwd?: boolean,
 
+    /**
+     * whether the object should skip fixing the config and filling out gaps
+     */
     trustConfig?: boolean   
 }
 
@@ -131,9 +241,13 @@ function createNewTerminalData(
     name: string,
     data: terminalCreateData
 ): terminalSession{
+    // create config (or just get that config if you trust it :p)
     const config = data.trustConfig ? data.config as configData : constructConfig(data.config);
+
+    // determine what process will be the main one
     const procToUse = data.process ? data.process : process;
 
+    // get all wrappers
     let dout: void | streamWrapper<any> = void 0;
     let din: void | streamWrapper<any> = void 0;
     let dfileout: void | streamWrapper<any> = void 0;
@@ -203,9 +317,8 @@ function createNewTerminalData(
             data.in = new streamWrapper(procToUse.stdin);
         }
     }
-
-    // ensure the existence of cwd    
-
+  
+    // create data
     const d = {
         sessionName: name,
         config: config,

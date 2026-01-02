@@ -36,6 +36,7 @@ const commandTable = quickCmdWithAliases("inspect", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["generator", "inspect", "manipulation", "object"],
     callback(preargs: any[]): any{
         const args = smartArgs(preargs, this);
         const legacyApi = askForLegacy(this);

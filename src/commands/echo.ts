@@ -51,6 +51,7 @@ const commandTable = quickCmdWithAliases("echo", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["generator", "text", "creator", "manipulation"],
     callback(preArgs: string[]){
         let args = smartArgs(this.providedArgs, this);
         const legacy = askForLegacy(this);

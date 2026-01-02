@@ -29,6 +29,7 @@ const commandTable = quickCmdWithAliases("logs", {
     changeable: false,
     isAlias: false,
     async: true,
+    categories: ["terminal", "session", "history"],
     async callback(preArgs: string[]): Promise<any>{
         const args = smartArgs(preArgs, this);
         const g = new multiDisplayer();

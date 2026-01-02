@@ -361,7 +361,7 @@ Promise<[any, number]>{
             }
 
             case pipeType.fileFrom: {
-                let where = join(process.cwd(), pipe.val as string);
+                let where = join(session.cwd, pipe.val as string);
 
                 try {
                     await access(where, constants.R_OK);
@@ -393,7 +393,7 @@ Promise<[any, number]>{
                 }
 
 
-                const where = join(process.cwd(), pipe.val as string);
+                const where = join(session.cwd, pipe.val as string);
 
                 try {
                     await mkdir(dirname(where), {recursive: true});
@@ -424,7 +424,7 @@ Promise<[any, number]>{
                     m = Buffer.of(m);
                 }
 
-                const where = join(process.cwd(), pipe.val as string);
+                const where = join(session.cwd, pipe.val as string);
 
                 
                 
@@ -679,9 +679,9 @@ async function handleCommandInternal(
             if(
                 cmdData.minver !== undefined 
                 &&
-                Number(session.logSystemVer) < cmdData.minver
+                Number(session.config.logSystemVersion[0]) < cmdData.minver
             ){
-                log(LogType.ERROR, `'${parts[0]}' doesn't support versions below ${String(cmdData.minver)} and your version is ${String(session.logSystemVer)}`, op.logNode, session);
+                log(LogType.ERROR, `'${parts[0]}' doesn't support versions below ${String(cmdData.minver)} and your version is ${String(session.config.logSystemVersion[1])}`, op.logNode, session);
 
                 if(!conf.legacy.pipes) return undefined;
 
@@ -692,9 +692,9 @@ async function handleCommandInternal(
             if(
                 cmdData.maxver !== undefined 
                 &&
-                Number(session.logSystemVer) > cmdData.maxver
+                Number(session.config.logSystemVersion[0]) > cmdData.maxver
             ){
-                log(LogType.ERROR, `'${parts[0]}' doesn't support versions above ${String(cmdData.maxver)} and your version is ${String(session.logSystemVer)}`, op.logNode, session);
+                log(LogType.ERROR, `'${parts[0]}' doesn't support versions above ${String(cmdData.maxver)} and your version is ${String(session.config.logSystemVersion[1])}`, op.logNode, session);
 
                 if(!conf.legacy.pipes) return undefined;
 

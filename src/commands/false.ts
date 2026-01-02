@@ -7,6 +7,7 @@ const commandTable = quickCmdWithAliases("false", {
     hidden: false,
     changeable: false,
     isAlias: false,
+    categories: ["generator", "creator", "pipe"],
     callback(args: any[]): any{
         return false;
     }

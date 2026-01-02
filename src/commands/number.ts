@@ -7,6 +7,7 @@ const commandTable = quickCmdWithAliases("number", {
     longdesc: "creates a number from provided numbers. If multiple ones are provided, all of them are summed. It supports negative numbers with ! or - as prefix. ",
     hidden: false,
     changeable: false,
+    categories: ["generator", "creator", "pipe", "number"],
     callback(preArgs: string[]): any{
         const s = smartArgs(preArgs, this);
 
