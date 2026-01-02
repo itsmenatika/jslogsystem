@@ -2,6 +2,20 @@
 
 ## 1.3X
 
+### 1.3.1
+
+bugfixes:
+* terminal uptime now works properly
+
+added:
+* command categories
+
+changed:
+* some inworkings of commands
+
+removed:
+* session.currentUptime. Use import instead
+
 ### 1.3
 
 The whole system was rebuilt from the ground up
