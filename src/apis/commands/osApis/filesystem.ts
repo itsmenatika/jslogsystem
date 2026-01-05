@@ -1,5 +1,5 @@
 import { isAbsolute, join, relative } from "path";
-import { commandContext } from "../types";
+import { commandContext } from "../types.js";
 import { getTerminalOPJ, getTerminalOPJTYPE } from "../../../programdata.js";
 import { logSystemError } from "../../../ultrabasic.js";
 

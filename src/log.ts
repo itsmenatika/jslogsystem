@@ -1,6 +1,7 @@
-import { logsReceiveType, colorTable } from "./config.js";
+import { logsReceiveType } from "./config.js";
 import { printTextBox } from "./formatingSessionDependent.js";
 import { getTerminalOPJ, getTerminalOPJTYPE } from "./programdata.js";
+import { colorTable } from "./styles/common.js";
 import {clearEntireLineCODE, consoleColor, consoleColors, textBoxPrefix} from "./texttools.js";
 import { templateReplacer } from "./texttools.js";
 

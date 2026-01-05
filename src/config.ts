@@ -10,6 +10,8 @@ import type { commandCollection } from "./tools/commandCollection.js";
 import { InspectOptions, InspectOptionsStylized, inspect } from "util";
 import { createGzip } from "zlib";
 import { unlink } from "fs/promises";
+import { constructStyles } from "./styles/constructStyles.js";
+import { terminalStyles, terminalStylesProvide } from "./styles/common.js";
 
 
 enum logsReceiveType{}
@@ -75,75 +77,7 @@ enum logsReceiveType{
 }
 
 
-type acColors = consoleColor | consoleColors | consoleColorsMulti | consoleColorRGB | string;
-type colorTableProvide = Record<string, acColors>;
-
-interface colorTable extends colorTableProvide{
-    "info": acColors,
-    "warning": acColors,
-    "error": acColors,
-    "success": acColors,
-    "counter": acColors,
-    "init": acColors,
-    "crash": acColors,
-    "group": acColors,
-
-    "date": acColors,
-    "who": acColors,
-
-    "textboxin_infoSep": acColors,
-    "textboxin_common": acColors,
-    "textboxin_terminalName": acColors,
-    "textboxin_cwd": acColors,
-    "textboxin_prefixSep": acColors,
-
-    "textboxin_text_common": acColors,
-    "textboxin_text_first": acColors,
-    "textboxin_text_direct": acColors,
-    "textboxin_text_sep": acColors,
-    "textboxin_text_quotas": acColors
-}
-
-interface terminalStylesProvide{
-    /**
-     * the text that is added to every log group when displaying them
-     * 
-     * it defaults to: "┄┅"
-     */
-    singleLogGroupText?: string,
-
-    /**
-     * the text that is added to the last log group when displaying them
-     * 
-     * it is not added if there are not groups
-     * 
-     * it defaults to: "░"
-     */
-    lastLogGroupText?: string,
-
-    /**
-     * The template which is used to displayed the log
-     * 
-     * It defaults to: `{colors.date}{formattedDate}{color.Reset} {logTypeString} {colors.who}{who}{color.Reset}: {color.FgGray}{currentGroupString}{color.Reset}{logColor}{message}{color.Reset}\n`
-     */
-    logDisplayed?: string,
-
-    /**
-     * The template which is used to write the log
-     * 
-     * It defaults to: `{formattedDate} {logTypeString} {who}: {currentGroupString}{message}\n`
-     */
-    logWritten?: string,
-
-
-    inputTextbox?: string,
-
-
-    colors?: colorTable
-
-}
-
-type terminalStyles = Required<terminalStylesProvide>;
+// type acColors = consoleColor | consoleColors | consoleColorsMulti | consoleColorRGB | string;
 
 
 /**
@@ -343,68 +277,68 @@ interface configData extends Required<configDataProvide>{
     [inspect.custom](depth: number, options: InspectOptions, inspect: (value: any, opts?: InspectOptionsStylized) => string): string;
 }
 
-/**
- * quick lookup table for color groups
- */
-const default_colorTable: colorTable = {
+// /**
+//  * quick lookup table for color groups
+//  */
+// const default_colorTable: colorTable = {
 
-    "info": consoleColors.FgWhite,
-    "warning": consoleColors.FgYellow,
-    "error": consoleColors.FgRed,
-    "success": consoleColors.FgGreen,
-    "counter": consoleColors.FgCyan,
-    "init": consoleColors.FgWhite,
-    "crash": consoleColors.FgRed,
-    "group": consoleColors.FgGray,
+//     "info": consoleColors.FgWhite,
+//     "warning": consoleColors.FgYellow,
+//     "error": consoleColors.FgRed,
+//     "success": consoleColors.FgGreen,
+//     "counter": consoleColors.FgCyan,
+//     "init": consoleColors.FgWhite,
+//     "crash": consoleColors.FgRed,
+//     "group": consoleColors.FgGray,
 
-    "date": consoleColors.FgGray,
-    "who": consoleColors.FgMagenta,
+//     "date": consoleColors.FgGray,
+//     "who": consoleColors.FgMagenta,
 
-    "textboxin_infoSep": consoleColors.Bright,
-    "textboxin_common": consoleColors.FgYellow,
-    "textboxin_terminalName": consoleColors.Italic,
-    "textboxin_cwd": consoleColors.FgGray,
-    "textboxin_prefixSep": consoleColors.FgGray,
+//     "textboxin_infoSep": consoleColors.Bright,
+//     "textboxin_common": consoleColors.FgYellow,
+//     "textboxin_terminalName": consoleColors.Italic,
+//     "textboxin_cwd": consoleColors.FgGray,
+//     "textboxin_prefixSep": consoleColors.FgGray,
 
-    "textboxin_text_common": consoleColors.FgWhite,
-    "textboxin_text_first": combineColors(consoleColors.FgYellow, consoleColors.Underscore),
-    "textboxin_text_direct": consoleColors.FgGreen,
-    "textboxin_text_sep": consoleColors.FgGray,
-    "textboxin_text_quotas": consoleColors.FgGray
-}
+//     "textboxin_text_common": consoleColors.FgWhite,
+//     "textboxin_text_first": combineColors(consoleColors.FgYellow, consoleColors.Underscore),
+//     "textboxin_text_direct": consoleColors.FgGreen,
+//     "textboxin_text_sep": consoleColors.FgGray,
+//     "textboxin_text_quotas": consoleColors.FgGray
+// }
 
 
 //  const toWrite: string = `${formattedDate} ${logTypeString} ${who}: ${terminalData?.currentGroupString}${message}\n`;
 //     const toDisplay: string = `${ct.date}${formattedDate}${consoleColors.Reset} ${logTypeString} ${ct.who}${who}${consoleColors.Reset}: ${consoleColors.FgGray}${terminalData?.currentGroupString}${consoleColors.Reset}${logColor}${message}${consoleColors.Reset}\n`;
 
-const default_terminalStyles: terminalStyles = {
-    singleLogGroupText: "┄┅",
-    lastLogGroupText: "░",
-    logDisplayed: `{colors.date}{formattedDate}{color.Reset} {logTypeString} {colors.who}{who}{color.Reset}: {color.FgGray}{currentGroupString}{color.Reset}{logColor}{message}{color.Reset}\n`,
-    logWritten: `{formattedDate} {logTypeString} {who}: {currentGroupString}{message}\n`,
-    inputTextbox: `{color.Reset}{cwd}{color.Reset}{colors.textboxin_prefixSep}:{color.Reset}{colors.textboxin_terminalName}{sessionName}{color.Reset}{colors.textboxin_infoSep} >{color.Reset} {colors.textboxin_common}{stylizedText}{color.Reset}`,
-    colors: default_colorTable
-};
+// const default_terminalStyles: terminalStyles = {
+//     singleLogGroupText: "┄┅",
+//     lastLogGroupText: "░",
+//     logDisplayed: `{colors.date}{formattedDate}{color.Reset} {logTypeString} {colors.who}{who}{color.Reset}: {color.FgGray}{currentGroupString}{color.Reset}{logColor}{message}{color.Reset}\n`,
+//     logWritten: `{formattedDate} {logTypeString} {who}: {currentGroupString}{message}\n`,
+//     inputTextbox: `{color.Reset}{cwd}{color.Reset}{colors.textboxin_prefixSep}:{color.Reset}{colors.textboxin_terminalName}{sessionName}{color.Reset}{colors.textboxin_infoSep} >{color.Reset} {colors.textboxin_common}{stylizedText}{color.Reset}`,
+//     colors: default_colorTable
+// };
 
 
 
-/**
- * construct terminal styles
- * @param data selected settings to change
- * @returns the terminal styles obj
- */
-function constructStyles(data: terminalStylesProvide = {}): terminalStyles{
-    const newStyles = {...default_terminalStyles};
+// /**
+//  * construct terminal styles
+//  * @param data selected settings to change
+//  * @returns the terminal styles obj
+//  */
+// function constructStyles(data: terminalStylesProvide = {}): terminalStyles{
+//     const newStyles = {...default_terminalStyles};
 
-    Object.assign(newStyles, data);
-    newStyles.colors = {...default_colorTable};
+//     Object.assign(newStyles, data);
+//     newStyles.colors = {...default_colorTable};
 
-    if(data.colors){
-        Object.assign(newStyles.colors, data.colors);
-    }
+//     if(data.colors){
+//         Object.assign(newStyles.colors, data.colors);
+//     }
 
-    return Object.freeze(newStyles);
-}
+//     return Object.freeze(newStyles);
+// }
 
 
 interface legacyDataProvide{
@@ -640,8 +574,6 @@ export {
     getPreset,
     savePreset,
     logsReceiveType,
-    colorTable,
-    colorTableProvide,
 
     legacyData,
     legacyDataProvide

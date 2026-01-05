@@ -1,5 +1,5 @@
-import { logNode } from "../../log";
-import { terminalSession } from "../../programdata";
+import { logNode } from "../../log.js";
+import { terminalSession } from "../../programdata.js";
 
 interface commandContext {
     isCommandContext: true,

@@ -1,4 +1,4 @@
-import { cmdTable, commandAlias, commandCompoundTableType, commandDataAsync, commandDataRegular } from "../apis/commands/types";
+import { cmdTable, commandAlias, commandCompoundTableType, commandDataAsync, commandDataRegular } from "../apis/commands/types.js";
 
 function quickCmdWithAliases(
     name: string,

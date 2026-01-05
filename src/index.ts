@@ -7,8 +7,10 @@ import { LogType, logNode, log, assertConsole, info, error, init, warning, warn,
 } from "./log.js"
 import { allowedKeysToWrite, inHandler, setupInHandlerListener } from "./in.js"
 import { formatPrintTextbox, printTextBox } from "./formatingSessionDependent.js";
-import { constructConfig, constructStyles, terminalStyles, terminalStylesProvide, configData, configDataProvide, getPreset, savePreset,logsReceiveType, colorTable, colorTableProvide,
+import { constructConfig, constructStyles, configData, configDataProvide, getPreset, savePreset,logsReceiveType,
 legacyData, legacyDataProvide } from "./config.js";
+import {colorTable, colorTableProvide, terminalStyles, terminalStylesProvide, registerStyle} from "./styles/common.js";
+
 
 // const consolLog = console.log;
 
@@ -23,6 +25,8 @@ import { quickSetup } from "./tools/quickSetup.js";
 import { fileURLToPath } from "node:url";
 import { allGroup_collection } from "./commandGroups/allGroups.js";
 import { commandTable as commandTableInternal } from "./commands/internal.js";
+import { STYLE_MINECRAFT } from "./styles/minecraft.js";
+import { STYLE_DEFAULT } from "./styles/default.js";
 
 export {
     // *****
@@ -110,20 +114,23 @@ export {
     // config
     // *****
     constructConfig, // creating config
-    constructStyles, // creating styles
-    terminalStyles, // type for styles
-    terminalStylesProvide, // type for providing styles
     configData, // type for config
     configDataProvide, // type for providing config
     getPreset, // getting presets
     savePreset, // saving presets
     logsReceiveType, // current status of receiving
-    colorTable, // a table of colors to use
-    colorTableProvide, // providing a table of colors to use
 
     legacyData, // legacy data type
-    legacyDataProvide // legacy data providing type
+    legacyDataProvide, // legacy data providing type
+
+    // styles
+    colorTable, colorTableProvide,
+    terminalStyles, terminalStylesProvide,
+    constructStyles, registerStyle
+    
 }
+
+export * from "./styles/allStyles.js";
 
 // groups
 export * from "./commandGroups/allGroups.js";
@@ -144,7 +151,8 @@ if(
 ){
     await quickSetup({
         commandTable: allGroup_collection.copy().extend(commandTableInternal),
-        addProcessEnvToSessionEnv: true
+        addProcessEnvToSessionEnv: true,
+        styles: STYLE_MINECRAFT
     });
 
 

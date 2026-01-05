@@ -1,7 +1,7 @@
 import { connectedToSpecificTerminal, getTerminal, getTerminalOPJ, getTerminalOPJTYPE, terminalSession } from "../../programdata.js";
 import { commandCollection } from "../../tools/commandCollection.js";
 import { logSystemError } from "../../ultrabasic.js";
-import { cmdTable, commandCompoundTableType, commandCompoundType, commandContext, commandData, unifiedCommandTypes } from "./types";
+import { cmdTable, commandCompoundTableType, commandCompoundType, commandContext, commandData, unifiedCommandTypes } from "./types.js";
 
 type commandType = number;
 

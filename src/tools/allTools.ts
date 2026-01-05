@@ -1,7 +1,6 @@
 export * from "./argsManipulation.js";
 export * from "./clearConsole.js";
 export * from "./commandCollection.js";
-export * from "./commandConfigGenerator.js";
 export * from "./commandCreatorTools.js";
 export * from "./consoleShortHand.js";
 export * from "./eval.js";

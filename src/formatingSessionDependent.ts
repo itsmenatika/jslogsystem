@@ -1,5 +1,5 @@
 import { relative } from "path";
-import { terminalSession } from "./programdata";
+import { terminalSession } from "./programdata.js";
 import { clearEntireLineCODE, consoleColors, cursorRel, hideCursorCODE, showCursorCODE, templateReplacer } from "./texttools.js";
 
 function formatPrintTextbox(text: string, ses: terminalSession){

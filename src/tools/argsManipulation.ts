@@ -1,5 +1,5 @@
 import { inspect, InspectOptionsStylized, InspectOptions } from "util";
-import { terminalSession } from "../programdata";
+import { terminalSession } from "../programdata.js";
 import { commandContext, isCommandContext } from "../apis/commands/types.js";
 import { askForLegacy } from "../apis/allApis.js";
 

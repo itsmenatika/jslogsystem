@@ -1,4 +1,4 @@
-import { commandContext } from "../apis/commands/types";
+import { commandContext } from "../apis/commands/types.js";
 import { cd } from "../apis/commands/osApis/filesystem.js";
 import { log, LogType } from "../log.js";
 import { smartArgs } from "../tools/argsManipulation.js";

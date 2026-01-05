@@ -1,4 +1,4 @@
-import { terminalSession } from "../../programdata";
+import { terminalSession } from "../../programdata.js";
 
 function cache(ses: terminalSession, route: string, val?: any){
     if(val !== undefined){

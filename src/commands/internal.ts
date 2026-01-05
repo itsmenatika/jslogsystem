@@ -7,7 +7,6 @@ import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/comman
 import { consoleShortHand } from "../tools/consoleShortHand.js";
 import { consoleWrite } from "../out.js";
 import { uptimeVar } from "../ultrabasic.js";
-import { commandCompound } from "../tools/commandConfigGenerator.js";
 
 const commandTable = quickCmdWithAliases("internal", {
     usageinfo: "internal <function> [<...data>]",

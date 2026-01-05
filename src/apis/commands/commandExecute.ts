@@ -1,7 +1,7 @@
 import { inspect, stripVTControlCharacters } from "util";
 import { log, logNode, LogType } from "../../log.js";
 import { consoleUltraRawWrite, consoleWrite } from "../../out.js";
-import { getTerminalOPJ, getTerminalOPJTYPE, terminalSession } from "../../programdata";
+import { getTerminalOPJ, getTerminalOPJTYPE, terminalSession } from "../../programdata.js";
 import { commandDividerInternal } from "./commandParser.js";
 import { isControlType, isExplicitUndefined, isOnlyToRedirect, isPipeHalt, pipeHalt, specialTypes } from "./commandSpecialTypes.js";
 import { commandExecParams, commandExecParamsProvide, commandPipe, getReadyParams, pipeType } from "./common.js";

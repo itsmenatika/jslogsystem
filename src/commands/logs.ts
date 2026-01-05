@@ -1,7 +1,7 @@
 import { createReadStream, createWriteStream, existsSync, readdirSync, readFileSync, unlinkSync } from "fs";
 import { access, readdir, readFile, unlink } from "fs/promises";
 import { onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
-import { commandContext } from "../apis/commands/types";
+import { commandContext } from "../apis/commands/types.js";
 import { log, LogType } from "../log.js";
 import { combineColors, consoleColors, multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";

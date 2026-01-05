@@ -1,6 +1,6 @@
 import { Socket } from "node:net";
 import { Duplex, Writable } from "node:stream";
-import type { terminalSession } from "./programdata";
+import type { terminalSession } from "./programdata.js";
 
 
 const uptimeVar = Date.now();

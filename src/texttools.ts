@@ -1,5 +1,5 @@
 import { Writable } from "node:stream";
-import { streamWrapper, withWriteFunc } from "./ultrabasic";
+import { streamWrapper, withWriteFunc } from "./ultrabasic.js";
 import { Blob } from "node:buffer";
 
 const ansiEscape = '\x1b';
@@ -16,6 +16,8 @@ function multiLineConstructor(...data: string[]): string{
 type consoleColor = string;
 type consoleColorsMulti = string;
 type consoleColorRGB = string;
+
+type allColorType = consoleColor | consoleColors | consoleColorsMulti | consoleColorRGB;
 
 /**
  * generate a new ansi Color with rgb
@@ -438,7 +440,7 @@ function capitalize(text: string): string{
 
 export {
     multiLineConstructor,
-    consoleColor, consoleColorsMulti, consoleColorRGB,
+    consoleColor, consoleColorsMulti, consoleColorRGB, allColorType,
     generateAnsiColor,
     consoleColors,
     combineColors,

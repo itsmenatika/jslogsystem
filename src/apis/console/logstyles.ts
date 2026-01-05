@@ -1,4 +1,4 @@
-import { logNode } from "../../log";
+import { logNode } from "../../log.js";
 import { getTerminalOPJTYPE } from "../../programdata.js";
 
 // group settings

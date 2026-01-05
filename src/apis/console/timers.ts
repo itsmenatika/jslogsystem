@@ -1,7 +1,7 @@
 import { log, LogType } from "../../log.js";
 import { getTerminalOPJ, getTerminalOPJTYPE } from "../../programdata.js";
 import { logSystemError } from "../../ultrabasic.js";
-import { logSettings } from "./logstyles";
+import { logSettings } from "./logstyles.js";
 
 /**
  * creates a new timer with specified name

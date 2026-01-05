@@ -1,5 +1,5 @@
 import { onlyIfRedirected, onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
-import { cmdTable, commandAlias, commandCompoundTableType, commandDataRegular } from "../apis/commands/types";
+import { cmdTable, commandAlias, commandCompoundTableType, commandDataRegular } from "../apis/commands/types.js";
 import { multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { clearConsole } from "../tools/clearConsole.js";
