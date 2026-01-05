@@ -2,7 +2,7 @@ import { combineColors, consoleColors } from "../texttools.js";
 import { registerStyle } from "./common.js";
 
 const style = registerStyle(
-    "default",
+    "minecraft",
     {
         singleLogGroupText: "┄┅",
         lastLogGroupText: "░",
