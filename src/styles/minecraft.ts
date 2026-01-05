@@ -4,6 +4,7 @@ import { registerStyle } from "./common.js";
 const style = registerStyle(
     "minecraft",
     {
+        styleIdentity: "minecraft",
         singleLogGroupText: "┄┅",
         lastLogGroupText: "░",
         // 2013-03-11 19:15:33 [INFO] <[Owner]Mythcartoonist> Hello!

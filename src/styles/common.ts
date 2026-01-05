@@ -33,6 +33,11 @@ type colorTable = Required<colorTableProvide>;
 
 interface terminalStylesProvide extends Record<string, any>{
     /**
+     * the string that identifies a style
+     */
+    styleIdentity?: string,
+    
+    /**
      * the text that is added to every log group when displaying them
      * 
      * it defaults to: "┄┅"

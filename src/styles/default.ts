@@ -4,6 +4,7 @@ import { registerStyle } from "./common.js";
 const style = registerStyle(
     "default",
     {
+        styleIdentity: "default",
         singleLogGroupText: "┄┅",
         lastLogGroupText: "░",
         logDisplayed: `{colors.date}{formattedDate}{color.Reset} {logTypeString} {colors.who}{who}{color.Reset}: {colors.currentGroupString_color}{currentGroupString}{color.Reset}{logColor}{message}{color.Reset}\n`,

@@ -25,7 +25,7 @@ import { textboxVisibility } from "../apis/terminal/textbox.js";
 import { printTextBox } from "../formatingSessionDependent.js";
 
 const commandTable = quickCmdWithAliases("terminal", {
-    usageinfo: "terminal [<name|uptime|history|cmdhis|inspect|list|switch|fork|exists|new|remove|exec|write>] <...args>",
+    usageinfo: "terminal [<name|uptime|history|cmdhis|inspect|list|switch|fork|exists|new|remove|exec|write|styleName|sn>] <...args>",
     desc: "managing terminal sessions",
     longdesc: multiLineConstructor(
         "The purpose of this command is to expose the front-end of terminal sesssions to an average user",
@@ -391,6 +391,13 @@ const commandTable = quickCmdWithAliases("terminal", {
                 return true;
                 break;
             }
+
+            case "styleName":
+            case "stylename":
+            case "sn":
+                const api = askForTerminalApi(nameOfAnother);
+
+                return api.config.styles.styleIdentity;
 
             default:
                 return "UNKNOWN ARG: " + args.args[0];
