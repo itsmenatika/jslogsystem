@@ -2,25 +2,35 @@ import { combineColors, consoleColors } from "../texttools.js";
 import { registerStyle } from "./common.js";
 
 const style = registerStyle(
-    "minecraft",
+    "cleanSigns",
     {
-        styleIdentity: "minecraft",
+        styleIdentity: "cleanSigns",
         singleLogGroupText: "┄┅",
         lastLogGroupText: "░",
-        logDisplayed: `{colors.date}{formattedDate}{color.Reset} [{colors.who}{who}{color.Reset}/{logTypeString}]: {colors.currentGroupString_color}{currentGroupString}{color.Reset}{logColor}{message}{color.Reset}\n`,
-        logWritten: `{formattedDate} [{who}/{logTypeString}]: {currentGroupString}{message}\n`,
+        logDisplayed: `{colors.date}{formattedDate}{color.Reset} {colors.who}{who}{color.Reset} {logTypeString} {colors.currentGroupString_color}{currentGroupString}{color.Reset}{message}{color.Reset}\n`,
+        logWritten: `{formattedDate} {who} {logTypeString} {currentGroupString}{message}\n`,
         inputTextbox: `{color.Reset}{colors.textboxin_common}{stylizedText}{color.Reset}`,
+        
+        info: "💬",
+        warning: "🚨",
+        error: "❌",
+        success: "✅",
+        counter: "🖩",
+        init: "✴",
+        crash: "🚩",
+        group: "📁",
+        
         colors: {
-            "info": consoleColors.FgWhite,
-            "warning": consoleColors.FgYellow,
-            "error": consoleColors.FgRed,
-            "success": consoleColors.FgGreen,
-            "counter": consoleColors.FgCyan,
-            "init": consoleColors.FgWhite,
-            "crash": consoleColors.FgRed,
-            "group": consoleColors.FgGray,
+            "info": consoleColors.NoColor,
+            "warning": consoleColors.NoColor,
+            "error": consoleColors.NoColor,
+            "success": consoleColors.NoColor,
+            "counter": consoleColors.NoColor,
+            "init": consoleColors.NoColor,
+            "crash": consoleColors.NoColor,
+            "group": consoleColors.NoColor,
 
-            "date": consoleColors.FgGray,
+            "date": combineColors(consoleColors.BgGray, consoleColors.FgBlack),
             "who": consoleColors.FgMagenta,
             "currentGroupString_color": consoleColors.FgGray,
 
@@ -39,4 +49,4 @@ const style = registerStyle(
     } 
 );
 
-export {style as STYLE_MINECRAFT}
+export {style as STYLE_CLEANSIGNS}

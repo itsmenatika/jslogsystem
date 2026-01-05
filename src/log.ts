@@ -1,7 +1,7 @@
 import { logsReceiveType } from "./config.js";
 import { printTextBox } from "./formatingSessionDependent.js";
 import { getTerminalOPJ, getTerminalOPJTYPE } from "./programdata.js";
-import { colorTable } from "./styles/common.js";
+import { colorTable, terminalStyles } from "./styles/common.js";
 import {clearEntireLineCODE, consoleColor, consoleColors, textBoxPrefix} from "./texttools.js";
 import { templateReplacer } from "./texttools.js";
 
@@ -26,6 +26,20 @@ enum LogType {
     GROUP = 7,
     TIMER = 8,
     SIGNAL = 9
+}
+
+
+function resolveLogData(type: LogType, data: terminalStyles){
+    const name = resolveLogType(type);
+    const nameL = name.toLowerCase();
+
+    return{
+        name,
+        color: data.colors[nameL as keyof typeof data.colors],
+        colorSecondary: data.colors[(nameL + "_secondary") as keyof typeof data.colors],
+        displayed: data[nameL as keyof typeof data.colors],
+        displayedSecond:  data[(nameL + "_secondary") as keyof typeof data.colors]
+    }
 }
 
 /**
@@ -190,8 +204,11 @@ function log(
     const ct = terminalData.config.styles.colors;
 
     // get that log type info
-    const logTypeString: string = resolveLogType(type);
-    const logColor: consoleColor = resolveLogColor(type, ct);
+    // const logTypeString: string = resolveLogType(type);
+    // const logColor: consoleColor = resolveLogColor(type, ct);
+
+
+    const logD = resolveLogData(type, terminalData.config.styles);
     
     // create strings to write
     // const toWrite: string = `${formattedDate} ${logTypeString} ${who}: ${terminalData?.currentGroupString}${message}\n`;
@@ -201,9 +218,11 @@ function log(
         color: consoleColors,
         colors: terminalData.config.styles.colors,
         formattedDate,
-        logTypeString,
+        logTypeString: logD.displayed,
+        logTypeStringSecondary: logD.displayedSecond,
         who,
-        logColor,
+        logColor: logD.color,
+        logColor_secondary: logD.colorSecondary,
         currentGroupString: String(terminalData?.currentGroupString),
         message
     }

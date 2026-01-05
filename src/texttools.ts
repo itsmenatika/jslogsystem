@@ -35,6 +35,7 @@ function generateAnsiColor(red: number, green: number, blue: number): consoleCol
  */
 enum consoleColors{
     Reset = ansiEscape + "[0m",
+    NoColor = "",
     Bright = ansiEscape + "[1m",
     Dim = ansiEscape + "[2m",
     Italic = ansiEscape + "[3m",

@@ -11,6 +11,15 @@ interface colorTableProvide{
     "crash"?: allColorType,
     "group"?: allColorType,
 
+    "info_secondary"?: allColorType,
+    "warning_secondary"?: allColorType,
+    "error_secondary"?: allColorType,
+    "success_secondary"?: allColorType,
+    "counter_secondary"?: allColorType,
+    "init_secondary"?: allColorType,
+    "crash_secondary"?: allColorType,
+    "group_secondary"?: allColorType,
+
     "date"?: allColorType,
     "who"?: allColorType,
     "currentGroupString_color"?: allColorType,
@@ -36,7 +45,7 @@ interface terminalStylesProvide extends Record<string, any>{
      * the string that identifies a style
      */
     styleIdentity?: string,
-    
+
     /**
      * the text that is added to every log group when displaying them
      * 
@@ -70,6 +79,24 @@ interface terminalStylesProvide extends Record<string, any>{
 
     inputTextbox?: string,
 
+
+    info?: string,
+    warning?: string,
+    error?: string,
+    success?: string,
+    counter?: string,
+    init?: string,
+    crash?: string,
+    group?: string,
+
+    info_secondary?: string,
+    warning_secondary?: string,
+    erro_secondaryr?: string,
+    success_secondary?: string,
+    counter_secondary?: string,
+    init_secondary?: string,
+    crash_secondary?: string,
+    group_secondary?: string,
 
     colors?: colorTableProvide
 }

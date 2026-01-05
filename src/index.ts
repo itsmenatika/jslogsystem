@@ -27,6 +27,8 @@ import { allGroup_collection } from "./commandGroups/allGroups.js";
 import { commandTable as commandTableInternal } from "./commands/internal.js";
 import { STYLE_MINECRAFT } from "./styles/minecraft.js";
 import { STYLE_DEFAULT } from "./styles/default.js";
+import { STYLE_CLEAN } from "./styles/clean.js";
+import { STYLE_CLEANSIGNS } from "./styles/clean_signs.js";
 
 export {
     // *****
@@ -152,7 +154,7 @@ if(
     await quickSetup({
         commandTable: allGroup_collection.copy().extend(commandTableInternal),
         addProcessEnvToSessionEnv: true,
-        styles: STYLE_MINECRAFT
+        styles: STYLE_CLEANSIGNS
     });
 
 

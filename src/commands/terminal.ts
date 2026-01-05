@@ -61,7 +61,8 @@ const commandTable = quickCmdWithAliases("terminal", {
         "   ** NOTE: it's impossible to remove main and the session from which was that command executed",
         "* terminal inspect [<sessionName>] -> it will return the everything that the session currently stores (IT MAY BE REMOVED IN THE FUTURE! IT SHOULD BE ONLY USED FOR TESTING!)",
         "* terminal exec <this|sessionName> <command...> -> allows you to execute a command",
-        "* terminal write <this|sessionName> <data...> -> allows you to print on another terminal"
+        "* terminal write <this|sessionName> <data...> -> allows you to print on another terminal",
+        "* terminal styleName/sn -> get the name of the current style"
     ),
     hidden: false,
     changeable: false,
