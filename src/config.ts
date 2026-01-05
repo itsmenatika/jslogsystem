@@ -420,7 +420,7 @@ const default_configData: configDataProvide | {
     tempLatest: "temp",
     legacy: constructLegacyData(),
 
-    logSystemVersion: [1.31, "1.31"],
+    logSystemVersion: [1.32, "1.32"],
 
     commandTable: {},
 
