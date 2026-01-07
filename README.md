@@ -149,3 +149,7 @@ you can also provide one argument saying which session it belongs to as such:
     const shortHand = getNewConsole("cute");
 ```
 
+## Related
+
+* [chalk](https://www.npmjs.com/package/chalk) -> Terminal string styling done right. It allows you to easily format strings in a specified color. It supports nested colors. It may become a depedency in the future. It currently not required
+* [fahs-jslogsystem](https://www.npmjs.com/package/fahs-jslogsystem) -> an addon that adds an alternative to default 'inspect'
