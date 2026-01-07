@@ -444,8 +444,21 @@ class terminalApi extends connectedToSpecificTerminal{
             setupInHandlerListener(ses);
         }
 
+        const myself = new terminalApi(ses);
+
+        // add to global
+        if(data.config?.useAddToGlobalAs){
+            const objToSet: Record<string, terminalApi> = {};
+
+            for(const one of data.config.addToGlobalAs as string[]){
+                objToSet[one] = myself;
+            }
+
+            Object.assign(globalThis, objToSet);
+        }
+
         // return a terminalApi with that session
-        return new terminalApi(ses);
+        return myself;
     }
 
 

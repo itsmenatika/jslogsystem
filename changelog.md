@@ -2,6 +2,27 @@
 
 ## 1.3X
 
+### 1.3.2
+
+added:
+* more styling options
+* in-built styles:
+  * clean
+  * minecraft
+  * clean_signs
+* "default" styles was offically changed to a style
+* added NoColor
+* commands:
+  * sleep -> sleeps for a duration of time
+
+changes:
+  * terminal -> added styleName/sn option to print a style self-identificator
+  * it's now impossible to write a new input during an async execution
+
+bugfixes:
+* addGlobalAs and useAddGlobalAs now work properly
+* OnlyToRedirect now properly handles pipes. It used to not change the result at all and preserve it from the previous command.
+
 ### 1.3.1
 
 bugfixes:
@@ -9,6 +30,7 @@ bugfixes:
 
 added:
 * command categories
+* help command now shows the amount of command found
 
 changed:
 * some inworkings of commands

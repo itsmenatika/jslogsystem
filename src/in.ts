@@ -42,45 +42,18 @@ const allowedKeysToWrite: string = "abcdefghijklmnopqrstuxwvyz" + "abcdefghijklm
 async function inHandler(data: any, ses: terminalSession){
     //    console.log(data);
     if(data){
-        // control + X
-        if(data.includes("\u0018")){
-            if(ses.relativeTextboxPos !== 0){
-                // create a new text with that key
-                ses.text = ses.text.slice(0, ses.relativeTextboxPos) 
-                + '§' + ses.text.slice(ses.relativeTextboxPos);
-
-                
-                // hideCursor();
-                // process.stdout.write("\r");
-
-                // ses.out.write(hideCursorCODE);
-                // ses.out.write(
-                //     clearEntireLineCODE + "\r" +
-                //     formatPrintTextbox(ses.text, ses) +
-                //     cursorRel(ses.relativeTextboxPos, 0) +
-                //      showCursorCODE
-                // );
-                printTextBox(ses);
-
-                // ses.out.write(hideCursorCODE + clearEntireLineCODE + "\r");
-
-                // // printViewTextbox(ses.text, ses.out);
-
-                // ses.out.write(cursorRel(ses.relativeTextboxPos, 0) + showCursorCODE);
-
-                // process.stdout.moveCursor(relativePos, 0);
-                // showCursor();
-
-                return;
-            }
-
-            ses.text += '§';
-            // ses.out.write(data); 
-            printTextBox(ses);
-
-
-            // ses.text += "§";
-            // printTextBox(ses);
+        // escape ctrl + c key
+        if(data.includes('\u0003')){
+            // TODO interup Handler
+            // interupHandler("CTRL + C");
+            // ses.procLinked?.exit();
+            internalInterupHandlerSIGINT({
+                session: ses,
+                sessionName: ses.sessionName,
+                reason: interrupReasonType.ctrlc,
+                author: "core",
+                forceDefault: false
+            });
             return;
         }
 
@@ -130,18 +103,48 @@ async function inHandler(data: any, ses: terminalSession){
             return;
         }
 
-        // escape ctrl + c key
-        if(data.includes('\u0003')){
-            // TODO interup Handler
-            // interupHandler("CTRL + C");
-            // ses.procLinked?.exit();
-            internalInterupHandlerSIGINT({
-                session: ses,
-                sessionName: ses.sessionName,
-                reason: interrupReasonType.ctrlc,
-                author: "core",
-                forceDefault: false
-            });
+        if(ses.blockTextboxTyping) return;
+
+
+        // control + X
+        if(data.includes("\u0018")){
+            if(ses.relativeTextboxPos !== 0){
+                // create a new text with that key
+                ses.text = ses.text.slice(0, ses.relativeTextboxPos) 
+                + '§' + ses.text.slice(ses.relativeTextboxPos);
+
+                
+                // hideCursor();
+                // process.stdout.write("\r");
+
+                // ses.out.write(hideCursorCODE);
+                // ses.out.write(
+                //     clearEntireLineCODE + "\r" +
+                //     formatPrintTextbox(ses.text, ses) +
+                //     cursorRel(ses.relativeTextboxPos, 0) +
+                //      showCursorCODE
+                // );
+                printTextBox(ses);
+
+                // ses.out.write(hideCursorCODE + clearEntireLineCODE + "\r");
+
+                // // printViewTextbox(ses.text, ses.out);
+
+                // ses.out.write(cursorRel(ses.relativeTextboxPos, 0) + showCursorCODE);
+
+                // process.stdout.moveCursor(relativePos, 0);
+                // showCursor();
+
+                return;
+            }
+
+            ses.text += '§';
+            // ses.out.write(data); 
+            printTextBox(ses);
+
+
+            // ses.text += "§";
+            // printTextBox(ses);
             return;
         }
 

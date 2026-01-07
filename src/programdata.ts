@@ -96,6 +96,11 @@ interface terminalSession{
      */
     viewTextbox: boolean,
 
+    /**
+     * whether a textbox can currently be used
+     */
+    blockTextboxTyping: boolean,
+
 
     /**
      * the current pre-calculated group string (a kind of cache)
@@ -338,6 +343,7 @@ function createNewTerminalData(
         in: din as streamWrapper<typeof process.stdin | undefined>,
         fileout: dfileout as streamWrapper<withWriteFunc | undefined>,
         viewTextbox: config.viewTextBoxStart,
+        blockTextboxTyping: false,
         logsReceive: config.logsReceiveStart,
         counterTable: {},
         procLinked: procToUse,

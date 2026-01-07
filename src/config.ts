@@ -502,6 +502,9 @@ function constructConfig(data: configDataProvide = {}): configData{
         newConfig['commandTable'] = newConfig['commandTable'].get();
     }
 
+
+    newConfig.styles = constructStyles(newConfig.styles);
+
     // for(let [path, val] of Object.entries(toSet)){
     //     Object.defineProperty(newConfig, path, {
     //         value: val,

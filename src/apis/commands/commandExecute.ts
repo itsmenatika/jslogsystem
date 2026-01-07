@@ -198,6 +198,9 @@ async function commandInternalExec(
     let quotasFin: null | number = null;
     const [op, session] = getReadyParams(options);
 
+    // block input
+    session.blockTextboxTyping = true;
+
     // the information about the command execution
     if(!op.silent)
     log(LogType.INFO, `This command has been executed: '${text}'`, op.logNode, session);
@@ -262,6 +265,9 @@ async function commandInternalExec(
     else{
         delete session.flags['dontChangeTextboxVisiblity'];
     }
+
+    // unblock input
+    session.blockTextboxTyping = false;
 
     return res;
 }
@@ -561,17 +567,6 @@ Promise<[any, number]>{
                     // console.log(options.thereIsMore);
                     if(
                         isOnlyToRedirect(cmdRes)
-                        &&
-                        (
-                            options.thereIsMore
-                            || (
-                                i !== pipeTree.length - 1
-                                &&
-                                pipeTree[i + 1].type !== pipeType.dataTryWrite
-                            )
-                            ||
-                            op.onlyReturn
-                        )
                     // if(
                     //     isOnlyToRedirect(cmdRes) 
                     //     &&
@@ -584,7 +579,22 @@ Promise<[any, number]>{
                     //     ||
                     //     op.onlyReturn
                     ){
-                        result = cmdRes.val;
+                        if
+                        (
+                            options.thereIsMore
+                            || (
+                                i !== pipeTree.length - 1
+                                &&
+                                pipeTree[i + 1].type !== pipeType.dataTryWrite
+                            )
+                            ||
+                            op.onlyReturn
+                        ){
+                            result = cmdRes.val;
+                        }
+                        else{
+                            result = undefined;
+                        }
                     }
                     else if(isPipeHalt(cmdRes)){
                         pipeHaltCalled = true;
