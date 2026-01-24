@@ -137,10 +137,14 @@ interface smartArgsOptions{
  * @returns 
  */
 function smartArgs(
-    preargs: any[], 
+    preargs: ArrayLike<any>, 
     context?: terminalSession | commandContext,
     options: smartArgsOptions = {}
 ): smartArgumentList{
+
+    if(!Array.isArray(preargs)){
+        throw new TypeError("Only arrays are permitted");
+    }
     
     // whether to expect internal arguments like -§
     let usesInternalArgs = true;
@@ -251,8 +255,8 @@ function smartArgs(
 
     return {
         // orginal ones
-        array: preargs,
-        orginal: preargs,
+        array: [...preargs],
+        orginal: [...preargs],
         orginalLength: preargs.length,
 
         argsWithoutOne,

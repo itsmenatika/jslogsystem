@@ -3,7 +3,7 @@ import { log, logNode, LogType } from "../../log.js";
 import { consoleUltraRawWrite, consoleWrite } from "../../out.js";
 import { getTerminalOPJ, getTerminalOPJTYPE, terminalSession } from "../../programdata.js";
 import { commandDividerInternal } from "./commandParser.js";
-import { isControlType, isExplicitUndefined, isOnlyToRedirect, isPipeHalt, pipeHalt, specialTypes } from "./commandSpecialTypes.js";
+import { isControlType, isExpectedError, isExplicitUndefined, isOnlyToRedirect, isPipeHalt, pipeHalt, specialTypes } from "./commandSpecialTypes.js";
 import { commandExecParams, commandExecParamsProvide, commandPipe, getReadyParams, pipeType } from "./common.js";
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join, relative } from "path";
@@ -63,6 +63,14 @@ function tryToPrintResult(
             session.fileout
         );
         // consoleWrite("undefined", undefined, undefined, undefined, session);
+    }
+    else if(isExpectedError(result)){
+        consoleUltraRawWrite(
+            `${consoleColors.FgRed}${result.val}${consoleColors.Reset}`,
+            result.val,
+            session.out,
+            session.fileout
+        );
     }
     else if(result !== undefined){
         if(isOnlyToRedirect(result)) return;
@@ -602,6 +610,10 @@ Promise<[any, number]>{
                     else if(isExplicitUndefined(cmdRes)){
                         result = cmdRes;
                     }
+                    else if(isExpectedError(cmdRes)){
+                        pipeHaltCalled = true;
+                        result = cmdRes;
+                    }
                     // else return [undefined, prints];
                 }
                 else{
@@ -669,7 +681,10 @@ async function handleCommandInternal(
         _terminalSession: session,
         runAt: Date.now(),
         providedArgs: execPar[0] || [],
-        passedData: execPar[1] || []
+        passedData: execPar[1] || [],
+        styles: session.config.styles,
+        colors: session.config.styles.colors,
+        config: session.config,
     };
 
 

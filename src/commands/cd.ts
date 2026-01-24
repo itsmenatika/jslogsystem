@@ -4,6 +4,8 @@ import { log, LogType } from "../log.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { multiLineConstructor } from "../texttools.js";
+import { expectedError, expectedErrorType } from "../apis/allApis.js";
+import { join } from "path";
 
 const commandTable = quickCmdWithAliases("cd", {
     usageinfo: "cd [<directory>]",
@@ -20,7 +22,7 @@ const commandTable = quickCmdWithAliases("cd", {
     changeable: false,
     isAlias: false,
     categories: ["filesystem"],
-    callback(preArgs: any[]): string | undefined{
+    callback(preArgs: any[]): string | undefined | expectedErrorType{
         const args = smartArgs(preArgs, this);
 
         if(args.args.length === 0){
@@ -31,8 +33,8 @@ const commandTable = quickCmdWithAliases("cd", {
         try {
             loc = cd(this, args.args);
         } catch (error) {
-            log(LogType.ERROR, "couldn't enter the directory", this.logNode);
-            return undefined;
+            // log(LogType.ERROR, "couldn't enter the directory", this.logNode);
+            return expectedError(`It was not possible to enter the directory: ${join(this.cwd, ...args.args)}`);
         }
 
 

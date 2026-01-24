@@ -3,6 +3,7 @@ import { multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { askForLegacy } from "../apis/meta/legacyApi.js";
+import { expectedError } from "../apis/allApis.js";
 
 const commandTable = quickCmdWithAliases("inspect", {
     usageinfo: "inspect <...args> <...data>",
@@ -72,7 +73,7 @@ const commandTable = quickCmdWithAliases("inspect", {
         const ownedProperties = args.dashCombined.includes("w");
 
         if(getKeys && getValues){
-            return "-k and -v are exclusive";
+            return expectedError("-k and -v are exclusive");
         }
 
         // const toParse: any[] = args.argsWithoutArguments.map(

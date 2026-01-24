@@ -29,12 +29,15 @@ interface colorTableProvide{
     "textboxin_terminalName"?: allColorType,
     "textboxin_cwd"?: allColorType,
     "textboxin_prefixSep"?: allColorType,
+    "textboxin_selected"?: allColorType,
 
     "textboxin_text_common"?: allColorType,
     "textboxin_text_first"?: allColorType,
     "textboxin_text_direct"?: allColorType,
     "textboxin_text_sep"?: allColorType,
-    "textboxin_text_quotas"?: allColorType
+    "textboxin_text_quotas"?: allColorType,
+
+    "specialTypes_error_common"?: allColorType
 }
 
 type colorTable = Required<colorTableProvide>;
@@ -123,8 +126,92 @@ type terminalStyles = Required<terminalStylesProvide> & {colors: colorTable};
 // }
 
 
+const styleList: Record<string, terminalStylesProvide> = {};
+
+
+/**
+ * registers a new style
+ * 
+ * Throws a range error if that name is taken
+ * @param name the name to be registered on
+ * @param data the data of that style
+ * @returns that style
+ */
 function registerStyle(name: string, data: terminalStylesProvide = {}): terminalStyles{
+    if(Object.hasOwn(styleList, name)){
+        throw new RangeError("There's already a style with that registered name! (looking for: " + name + " )");
+    }
+
+    styleList[name] = data;
+
+
     return data as terminalStyles;
+}
+
+/**
+ * searches for names of style
+ * 
+ * ALTERNATIVES: getStyles, getExactStyle
+ * 
+ * @param like regEx of string to be searched on. String will be changed to a regex
+ * @returns the list of likely names
+ */
+function stylesNames(like?: RegExp | string): string[]{
+    const list: string[] = Object.keys(styleList);
+
+    if(typeof like === undefined) return list;
+
+    const toTest: RegExp = new RegExp(like as RegExp | string);
+
+    return list.filter(
+        (one) => {
+            return toTest.test(one);
+        }
+    )
+
+}
+
+/**
+ * gets the exact style object
+ * @param name the name of that style
+ * @returns undefined or that style
+ */
+function getExactStyle(name: string): undefined | terminalStylesProvide{
+    if(Object.hasOwn(styleList, name)) return styleList[name];
+    else return undefined;
+}
+
+/**
+ * checks whether that style exists
+ * @param name the name of the style
+ * @returns boolean
+ */
+function styleExists(name: string): boolean{
+    return Object.hasOwn(styleList, name);
+}
+
+
+/**
+ * checks whether that style exists (BUT WITH LIKE. IT'S A LOT SLOWER THAN EXACT)
+ * @param name the name of the style
+ * @returns boolean
+ */
+function styleLikeExists(like?: RegExp | string): boolean{
+    return stylesNames(like).length > 0;
+}
+
+/**
+ * searches for names of style. But returns objects
+ * 
+ * ALTERNATIVES: stylesNames, getExactStyle
+ * 
+ * @param like regEx of string to be searched on. String will be changed to a regex
+ * @returns the list of likely names
+ */
+function getStyles(like?: RegExp | string): [string, terminalStylesProvide][]{
+    const listOfStylesToGet = stylesNames(like);
+    
+    return listOfStylesToGet.map((name: string) => [name, styleList[name]]);
 }
 
 
@@ -132,5 +219,10 @@ export {
     colorTableProvide, colorTable,
     terminalStylesProvide, terminalStyles,
 
-    registerStyle
+    registerStyle,
+    stylesNames,
+    getExactStyle,
+    styleExists,
+    styleLikeExists,
+    getStyles
 }

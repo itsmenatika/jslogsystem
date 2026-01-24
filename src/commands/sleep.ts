@@ -1,7 +1,7 @@
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
-import { onlyToRedirect } from "../apis/allApis.js";
+import { expectedError, onlyToRedirect } from "../apis/allApis.js";
 
 const sleep = new Promise(
     (resolve) => {
@@ -35,14 +35,14 @@ const commandTable = quickCmdWithAliases("sleep", {
                     timeFin = parseInt(time);
                 }
                 else{
-                    return "INCORRECT NUMBER";
+                    return expectedError("INCORRECT NUMBER");
                 }
             }
             else if(typeof time === "number"){
                 timeFin = time;
             }
             else{
-                return "INCORRECT NUMBER";
+                return expectedError("INCORRECT NUMBER");
             }
 
             await new Promise((resolve) => setTimeout(resolve, timeFin));

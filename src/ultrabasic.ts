@@ -1,5 +1,5 @@
 import { Socket } from "node:net";
-import { Duplex, Writable } from "node:stream";
+import Stream, { Duplex, Writable } from "node:stream";
 import type { terminalSession } from "./programdata.js";
 
 
@@ -201,7 +201,17 @@ class streamWrapper<T extends (
     }
 }
 
+type TTYLike = withWriteFunc & {
+  isTTY: true
+  columns?: number
+};
+
+function isTty(stream: withWriteFunc): stream is TTYLike{
+    return !!stream && typeof stream === "object" && stream !== null &&
+    "isTTY" in stream &&
+    (stream as any).isTTY === true;
+}
 
 
-export {uptimeVar, logSystemError, pseudoStreamWriteAble, pseudoStreamWriteAbleListenable, streamWrapper}
+export {uptimeVar, logSystemError, pseudoStreamWriteAble, pseudoStreamWriteAbleListenable, streamWrapper, isTty}
 export type {withWriteFunc}

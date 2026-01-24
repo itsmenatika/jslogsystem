@@ -1,4 +1,4 @@
-import { pipeHalt } from "../apis/allApis.js";
+import { expectedError, pipeHalt } from "../apis/allApis.js";
 import { log, LogType } from "../log.js";
 import { multiLineConstructor } from "../texttools.js";
 import { removeInternalArguments } from "../tools/argsManipulation.js";
@@ -31,7 +31,7 @@ const commandTable = quickCmdWithAliases("parameter", {
         const args = removeInternalArguments(preargs);
 
         if(!(args.length > 1)){
-            return "USAGE: parameter <IDENTIFICATOR> <...data>";
+            return expectedError("USAGE: parameter <IDENTIFICATOR> <...data>");
         }
 
         const ident = String(args[1]).trim();
@@ -72,8 +72,7 @@ const commandTable = quickCmdWithAliases("parameter", {
                 toRet.push(...toUse.slice(end, start+1).toReversed());
             }
             else if(parts.length != 0){
-                log(LogType.ERROR, `It was not possible to parse range '${section}'!`);
-                return pipeHalt();
+                return expectedError(`It was not possible to parse range '${section}'!`);
             }    
         }
 

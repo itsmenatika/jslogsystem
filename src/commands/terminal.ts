@@ -1,6 +1,6 @@
 import { inspect } from "util";
 import { commandInternalExec } from "../apis/commands/commandExecute.js";
-import { onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
+import { expectedError, onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
 import { askForTerminalApi, terminalApi } from "../apis/terminal/terminalApi.js";
 import { getTerminal } from "../programdata.js";
 import { consoleColors, multiLineConstructor } from "../texttools.js";
@@ -23,6 +23,7 @@ import { commandTable as internalCmd } from "../commands/internal.js";
 import { cd } from "../apis/commands/osApis/filesystem.js";
 import { textboxVisibility } from "../apis/terminal/textbox.js";
 import { printTextBox } from "../formatingSessionDependent.js";
+import { getExactStyle, stylesNames, terminalStylesProvide } from "../styles/common.js";
 
 const commandTable = quickCmdWithAliases("terminal", {
     usageinfo: "terminal [<name|uptime|history|cmdhis|inspect|list|switch|fork|exists|new|remove|exec|write|styleName|sn>] <...args>",
@@ -57,12 +58,13 @@ const commandTable = quickCmdWithAliases("terminal", {
         "   ** -w -> web group (getonlinedataservice)",  
         "   ** -i -> internal commands (this is not a group) (internal)",
         "   IT's RECOMENDED TO HAVE -r, -T or -a. You won't be able to to go back from that session otherwise!",
+        "   ** --style STYLENAME -> links a registered style to a new terminal",
         "* terminal remove <sessionName> -> it will remove a terminal",
         "   ** NOTE: it's impossible to remove main and the session from which was that command executed",
         "* terminal inspect [<sessionName>] -> it will return the everything that the session currently stores (IT MAY BE REMOVED IN THE FUTURE! IT SHOULD BE ONLY USED FOR TESTING!)",
         "* terminal exec <this|sessionName> <command...> -> allows you to execute a command",
         "* terminal write <this|sessionName> <data...> -> allows you to print on another terminal",
-        "* terminal styleName/sn -> get the name of the current style"
+        "* terminal styleName/sn -> get the name of the current style",
     ),
     hidden: false,
     changeable: false,
@@ -299,17 +301,30 @@ const commandTable = quickCmdWithAliases("terminal", {
 
 
     
+                let styles: undefined | terminalStylesProvide = undefined;
+                const styleName = args.argsWithDoubleDash['style'] || args.argsWithDoubleDash['styles'];
+                if(styleName){
+                    styles = getExactStyle(styleName);
+                    if(!styles){
+                        const likelyNames: string[] = stylesNames(styleName);
 
-                // if(all || args.dashCombined.includes("t")){
-                //     Object.assign(tb, {
-                //         ...
-                //     });
-                // }
-            
+                        let toRet: string =  `NO STYLE ${styleName} found!`;
+
+                        if(likelyNames.length !== 0){
+                            toRet += "\ndid you mean?"
+                            for(let i = 0; i < likelyNames.length; i++){
+                                toRet += `\n\* ${likelyNames[i]}`;
+                            }
+                        }
+
+                        return expectedError(toRet);
+                    }
+                }
 
                 terminalApi.create(nameOfAnother, {
                     config: {
-                        commandTable: tb
+                        commandTable: tb,
+                        styles
                     }
                 });
 

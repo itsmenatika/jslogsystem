@@ -1,3 +1,4 @@
+import { expectedError } from "../apis/allApis.js";
 import { multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
@@ -31,7 +32,7 @@ const commandTable = quickCmdWithAliases("getonlinedataservice", {
         const url = args.argsWithoutArguments[0];
 
         if(!url){
-            return "USAGE: getonlinedataservice [<-j/-t/-s/-o/-r/-b>] <URL>";
+            return expectedError("USAGE: getonlinedataservice [<-j/-t/-s/-o/-r/-b>] <URL>");
         }
 
         const fetched = await fetch(url);

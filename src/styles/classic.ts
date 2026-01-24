@@ -2,14 +2,15 @@ import { combineColors, consoleColors } from "../texttools.js";
 import { registerStyle } from "./common.js";
 
 const style = registerStyle(
-    "default",
+    "classic",
     {
-        styleIdentity: "default",
+        styleIdentity: "classic",
         singleLogGroupText: "┄┅",
         lastLogGroupText: "░",
+        // 2013-03-11 19:15:33 [INFO] <[Owner]Mythcartoonist> Hello!
         logDisplayed: `{colors.date}{formattedDate}{color.Reset} {logTypeString} {colors.who}{who}{color.Reset}: {colors.currentGroupString_color}{currentGroupString}{color.Reset}{logColor}{message}{color.Reset}\n`,
         logWritten: `{formattedDate} {logTypeString} {who}: {currentGroupString}{message}\n`,
-        inputTextbox: `{color.Reset}{cwd}{color.Reset}{colors.textboxin_prefixSep}:{color.Reset}{colors.textboxin_terminalName}{sessionName}{color.Reset}{colors.textboxin_infoSep} >{color.Reset} {colors.textboxin_common}{beforeSelected}{color.Reverse}{selected}{color.Reset}{colors.textboxin_common}{afterSelected}{color.Reset}`,
+        inputTextbox: `{colors.textboxin_cwd}{cwd}{color.Reset}\\$ {color.Reset}{colors.textboxin_common}{beforeSelected}{colors.textboxin_selected}{selected}{color.Reset}{colors.textboxin_common}{afterSelected}{color.Reset}`,
         
         info: "INFO",
         warning: "WARNING",
@@ -19,16 +20,7 @@ const style = registerStyle(
         init: "INIT",
         crash: "CRASH",
         group: "GROUP",
-
-        info_secondary: "INFO",
-        warning_secondary: "WARNING",
-        error_secondary: "ERROR",
-        success_secondary: "SUCCESS",
-        counter_secondary: "COUNTER",
-        init_secondary: "INIT",
-        crash_secondary: "CRASH",
-        group_secondary: "GROUP",
-
+        
         colors: {
             "info": consoleColors.FgWhite,
             "warning": consoleColors.FgYellow,
@@ -53,7 +45,7 @@ const style = registerStyle(
             "currentGroupString_color": consoleColors.FgGray,
 
             "textboxin_infoSep": consoleColors.Bright,
-            "textboxin_common": consoleColors.FgYellow,
+            "textboxin_common": consoleColors.FgWhite,
             "textboxin_terminalName": consoleColors.Italic,
             "textboxin_cwd": consoleColors.FgGray,
             "textboxin_prefixSep": consoleColors.FgGray,
@@ -63,11 +55,9 @@ const style = registerStyle(
             "textboxin_text_first": combineColors(consoleColors.FgYellow, consoleColors.Underscore),
             "textboxin_text_direct": consoleColors.FgGreen,
             "textboxin_text_sep": consoleColors.FgGray,
-            "textboxin_text_quotas": consoleColors.FgGray,
-
-            "specialTypes_error_common": consoleColors.FgRed
+            "textboxin_text_quotas": consoleColors.FgGray
         }    
     } 
 );
 
-export {style as STYLE_DEFAULT}
+export {style as STYLE_CLASSIC}

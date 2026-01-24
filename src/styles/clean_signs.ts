@@ -9,7 +9,7 @@ const style = registerStyle(
         lastLogGroupText: "░",
         logDisplayed: `{colors.date}{formattedDate}{color.Reset} {colors.who}{who}{color.Reset} {logTypeString} {colors.currentGroupString_color}{currentGroupString}{color.Reset}{message}{color.Reset}\n`,
         logWritten: `{formattedDate} {who} {logTypeString} {currentGroupString}{message}\n`,
-        inputTextbox: `{color.Reset}{colors.textboxin_common}{stylizedText}{color.Reset}`,
+        inputTextbox: `{color.Reset}{colors.textboxin_common}{beforeSelected}{colors.textboxin_selected}{selected}{color.Reset}{colors.textboxin_common}{afterSelected}{color.Reset}`,
         
         info: "💬",
         warning: "🚨",

@@ -10,11 +10,14 @@ const commandTable = quickCmdWithAliases("version", {
     desc: "shows the version information",
     longdesc: multiLineConstructor("shows the version information",
         "",
-        "use -i to get int version",
-        "use -s to get string version",
-        "use -u to get user set version data",
+        "use -i to get an int version",
+        "use -s to get a string version",
+        "use -u to get a user set version data",
+        "use -e to get a edition",
         "",
-        "if piped it uses 'version -i' by default"
+        "use -a to get all information",
+        "",
+        "if piped, it uses 'version -i' by default"
         ),
     hidden: false,
     changeable: false,
@@ -27,16 +30,22 @@ const commandTable = quickCmdWithAliases("version", {
 
         const toReturn: Record<string, number | string> = {};
 
-        if(args.dashCombined.includes("i")){
+        const all = args.dashCombined.includes("a");
+
+        if(args.dashCombined.includes("i") || all){
             toReturn['int'] = verApi.number;
         }
 
-        if(args.dashCombined.includes("s")){
+        if(args.dashCombined.includes("s") || all){
             toReturn['str'] = verApi.string;
         }
 
-        if(args.dashCombined.includes("u")){
+        if(args.dashCombined.includes("u") || all){
             toReturn['user'] = verApi.user;
+        }
+
+        if(args.dashCombined.includes("e") || all){
+            toReturn['edition'] = "javascript";
         }
 
         let len = Object.keys(toReturn).length;
@@ -55,6 +64,7 @@ const commandTable = quickCmdWithAliases("version", {
             d.push("v" + verApi.string, consoleColors.FgRed);
             d.push(" by ");
             d.push("Naticzka", consoleColors.Blink);
+            d.push(` (JAVASCRIPT EDITION)`);
             d.push("\n");
             d.push("The description of that version:", consoleColors.Reverse);
             d.push("\n");

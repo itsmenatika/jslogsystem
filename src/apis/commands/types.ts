@@ -1,11 +1,13 @@
+import { configData, terminalStyles } from "../../config.js";
 import { logNode } from "../../log.js";
 import { terminalSession } from "../../programdata.js";
+import { colorTableProvide } from "../../styles/common.js";
 
 interface commandContext {
-    isCommandContext: true,
-    logNode: logNode | string | undefined,
-    sessionName: string,
-    cwd: string,
+    isCommandContext: Readonly<true>,
+    logNode: Readonly<logNode | string | undefined>,
+    sessionName: Readonly<string>,
+    cwd: Readonly<string>,
 
     /**
      * @internal @deprecated
@@ -17,12 +19,16 @@ interface commandContext {
      */
     _terminalSession: terminalSession,
 
-    executedAs: "BIND" | "ALIAS" | "ORGINAL" | "UNKOWN",
-    runAt: number,
+    executedAs: Readonly<"BIND" | "ALIAS" | "ORGINAL" | "UNKOWN">,
+    runAt: Readonly<number>,
 
 
-    passedData: any,
-    providedArgs: any[]
+    passedData: Readonly<any[]>,
+    providedArgs: Readonly<any[]>,
+
+    styles: Readonly<terminalStyles>,
+    config: Readonly<configData>,
+    colors: Readonly<Required<colorTableProvide>>
 };
 
 function isCommandContext(obj: any): obj is commandContext{

@@ -1,3 +1,4 @@
+import { expectedError, expectedErrorType } from "../apis/allApis.js";
 import { log, logNode, LogType } from "../log.js";
 import { getTerminal } from "../programdata.js";
 import { multiLineConstructor } from "../texttools.js";
@@ -28,7 +29,7 @@ const commandTable = quickCmdWithAliases("uptime", {
     changeable: false,
     isAlias: false,
     categories: ["terminal", "shell", "session", "testing", "process"],
-    callback(preArgs: string[]): string | number | Record<string, number> | undefined{
+    callback(preArgs: string[]): string | number | Record<string, number> | undefined | expectedErrorType{
         const args = smartArgs(preArgs, this);
         const dashCombined = args.dashCombined;
 
@@ -39,7 +40,8 @@ const commandTable = quickCmdWithAliases("uptime", {
         if(dashCombined.includes("g")) exc++;
         if(dashCombined.includes("l")) exc++;
         if(exc > 1){
-            log(LogType.ERROR, "Arguments: p, g and l are exclusive!", new logNode("uptime", this.logNode as logNode), this.sessionName);
+            return expectedError("Arguments: p, g and l are exclusive");
+            // log(LogType.ERROR, "Arguments: p, g and l are exclusive!", new logNode("uptime", this.logNode as logNode), this.sessionName);
             return undefined;
         }
 
@@ -50,7 +52,7 @@ const commandTable = quickCmdWithAliases("uptime", {
             // current = this._terminalSession.procLinked?.uptime() as number * 1000;
             const trm = getTerminal(sessionName);
 
-            if(!trm) return "unknown terminal";
+            if(!trm) return expectedError("unknown terminal");
 
             current = trm.procLinked?.uptime() as number * 1000;
         }
@@ -62,7 +64,7 @@ const commandTable = quickCmdWithAliases("uptime", {
             // current = Date.now() - this._terminalSession.uptime;
             const trm = getTerminal(sessionName);
 
-            if(!trm) return "unknown terminal";
+            if(!trm) return expectedError("unknown terminal");
 
             current = Date.now() - trm.uptime;
         }

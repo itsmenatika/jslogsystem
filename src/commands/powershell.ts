@@ -6,6 +6,7 @@ import { globalEval } from "../tools/eval.js";
 import { useWith, useWithAsync } from "../tools/useWith.js";
 import { promisify } from "util";
 import { multiLineConstructor } from "../texttools.js";
+import { expectedError } from "../apis/allApis.js";
 
 const execAsync = promisify(exec);
 
@@ -43,7 +44,7 @@ const commandTable = quickCmdWithAliases("powershell", {
             const isWindows = process.platform === "win32";
 
             if(!isWindows){
-                throw new Error("Not supported");
+                throw expectedError("Powershell is only supported on win32");
             }
 
             const {stdout, stderr} = await useWithAsync("Using powershell", async () => {

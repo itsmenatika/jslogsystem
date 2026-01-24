@@ -92,6 +92,11 @@ interface terminalSession{
     relativeTextboxPos: number,
 
     /**
+     * previous render of inputbox. Used for cleaning
+     */
+    previousInputRender: string,
+
+    /**
      * whether the inputbox is expected to be rendered. It's recommended to use an api or a tool instead of changing it manually!
      */
     viewTextbox: boolean,
@@ -324,7 +329,7 @@ function createNewTerminalData(
     }
   
     // create data
-    const d = {
+    const d: terminalSession = {
         sessionName: name,
         config: config,
 
@@ -332,10 +337,10 @@ function createNewTerminalData(
         commandHistory: [],
         indexCommandHistory: 0,
         relativeTextboxPos: 0,
+        previousInputRender: "",
 
 
-        logSystemVer,
-        currentUpTime,
+
         currentGroupString: "",
         logGroups: [],
         timers: {},

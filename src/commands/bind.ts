@@ -1,5 +1,5 @@
 import { askForBindApi } from "../apis/commands/bindApi.js";
-import { onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
+import { expectedError, onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
 import { error } from "../log.js";
 import { consoleColors, multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
@@ -76,7 +76,8 @@ const commandTable = quickCmdWithAliases("bind", {
                 const parts = toParse.split(":");
 
                 if(parts.length != 2){
-                    ermes = "invalid syntax";
+                    // ermes = "invalid syntax";
+                    return expectedError("invalid syntax");
                 }
 
                 // console.log(parts);
@@ -85,7 +86,8 @@ const commandTable = quickCmdWithAliases("bind", {
                     parts[0].at(0) != "`" || parts[1].at(0) != "`"
                     || parts[0].at(-1) != "`" || parts[1].at(-1) != "`"
                 ){
-                    ermes = "invalid syntax";                   
+                    // ermes = "invalid syntax";     
+                    return expectedError("invalid syntax");              
                 }
 
                 const command = parts[0].slice(1, -1).trim();

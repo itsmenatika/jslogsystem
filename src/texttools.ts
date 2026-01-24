@@ -134,6 +134,10 @@ function cursorAbs(x: number, y: number): string{
     return `${ansiEscape}[${y};${x}H`
 }
 
+function cursorAbsColumn(x: number): string{
+    return `${ansiEscape}[`;
+}
+
 function cursorRel(x: number, y: number): string{
     let s = "";
 

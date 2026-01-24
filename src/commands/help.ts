@@ -1,6 +1,6 @@
 import { inspect } from "util";
 import { askForCommandApi, commandtypes } from "../apis/commands/commandApis.js";
-import { onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
+import { expectedError, onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
 import { consoleMultiWrite } from "../out.js";
 import { combineColors, consoleColor, consoleColors, multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
@@ -84,9 +84,10 @@ const commandTable = quickCmdWithAliases("help", {
                 const commandD = commandList.getOrginal(cmdToCheck);
 
                 if(!commandD){
-                    forMulti.push("There's no reference to ", consoleColors.FgRed);
-                    forMulti.push(cmdToCheck, consoleColors.FgYellow);
-                    forMulti.push(" in any list!\n", consoleColors.FgRed);
+                    // forMulti.push("There's no reference to ", consoleColors.FgRed);
+                    // forMulti.push(cmdToCheck, consoleColors.FgYellow);
+                    // forMulti.push(" in any list!\n", consoleColors.FgRed);
+                    return expectedError(`There's no reference to: ${consoleColors.FgYellow}${cmdToCheck}${this.colors.specialTypes_error_common} in any list!`);
                 }
                 else{
                     // let cmd = commands[cmdToCheck];

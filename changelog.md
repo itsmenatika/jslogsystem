@@ -2,6 +2,19 @@
 
 ## 1.3X
 
+### 1.3.3
+
+added new styles:
+* classic
+added:
+* new command return type expectedError
+* new entries for styles
+fixed:
+* multiline commands are now properly supported as new typing system was introduced
+
+compatibility:
+* cursor is now hidden by a default
+
 ### 1.3.2
 
 added:

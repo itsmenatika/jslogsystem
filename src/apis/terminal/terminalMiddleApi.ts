@@ -7,6 +7,7 @@ import { cd } from "../allApis.js";
 import { constructConfig } from "../../config.js";
 import { access, mkdir, stat, writeFile, readFile } from "fs/promises";
 import { logSystemError } from "../../ultrabasic.js";
+import { hideCursorCODE } from "../../texttools.js";
 
 /**
  * 
@@ -58,6 +59,7 @@ async function createTerminalQuick(name: string, data: terminalCreateData): Prom
 
     if(!s) return false;
 
+    s.out.write(hideCursorCODE);
     welcome(s);
     setupInHandlerListener(s);
 

@@ -1,4 +1,5 @@
 import { InspectOptions, InspectOptionsStylized, inspect } from "util";
+import { consoleColors } from "../../texttools.js";
 
 /**
  * type of that special type
@@ -8,7 +9,8 @@ enum specialTypes{
     redirection, // only return if it's for a redirection to another medium
     unkownCmd, // that command doesnt exist
     pipeExecutorHalt, // stop that pipe line
-    explicitUndefined // display undefined. Don't treat it as non result
+    explicitUndefined, // display undefined. Don't treat it as non result
+    expectedError, // An error
 }
 
 /**
@@ -43,6 +45,14 @@ interface pipeExplicitUndefined extends controlTypes{
 } 
 
 /**
+ * SPECIAL COMMAND TYPE: it acts like an error but without a long ass traceback
+ */
+interface expectedErrorType extends controlTypes{
+    __$special: specialTypes.expectedError
+} 
+
+
+/**
  * checks whether a provided thing is a control command type
  * @param val thing
  * @returns result
@@ -67,7 +77,7 @@ function onlyToRedirect(val: any): onlyIfRedirected{
         __$special: specialTypes.redirection, 
         val,
         [inspect.custom](depth: number, options: InspectOptions, inspect: (value: any, opts?: InspectOptionsStylized) => string) {
-            return `onlyToRedirect((\`${inspect(val, options as InspectOptionsStylized)}\`)}`;
+            return `onlyToRedirect(\`${inspect(val, options as InspectOptionsStylized)}\`)`;
         }
     };
 }
@@ -119,12 +129,36 @@ function isExplicitUndefined(val: any): val is pipeExplicitUndefined{
 }
 
 
+function expectedError(message: string): expectedErrorType{
+    return {
+        __$special: specialTypes.expectedError,
+        val: message,
+        [inspect.custom](depth: number, options: InspectOptions, inspect: (value: any, opts?: InspectOptionsStylized) => string) {
+            if(options.colors){
+                return `${consoleColors.Reset}${consoleColors.FgRed}expectedError${consoleColors.Reset}(\`${message}\`${consoleColors.Reset})`
+            }
+
+            return `expectedError(\`${message}\`)`;
+        }        
+    }
+}
+
+function isExpectedError(val: any): val is expectedErrorType{
+    return typeof val === "object" && val && "__$special" in val &&
+    val.__$special === specialTypes.expectedError;    
+}
+
+
+
+
+
 export {
     specialTypes,
     controlTypes,
     onlyIfRedirected,
     pipeExecutorHalt,
     pipeExplicitUndefined,
+    expectedErrorType,
 
     isControlType,
 
@@ -135,5 +169,8 @@ export {
     isPipeHalt,
 
     explicitUndefined,
-    isExplicitUndefined
+    isExplicitUndefined,
+
+    expectedError,
+    isExpectedError
 }

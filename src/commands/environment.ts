@@ -1,4 +1,4 @@
-import { askForCommandApi, askForEnvApi } from "../apis/allApis.js";
+import { askForCommandApi, askForEnvApi, expectedError } from "../apis/allApis.js";
 import { textboxVisibility } from "../apis/terminal/textbox.js";
 import { multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
@@ -41,7 +41,7 @@ const commandTable = quickCmdWithAliases("environment", {
             case "g":
             case "get":
                 if(args.args.length < 2){
-                    return "invalid syntax";
+                    return expectedError("invalid syntax");
                 }
 
                 return api.getRoute(args.args[1]);
@@ -49,7 +49,7 @@ const commandTable = quickCmdWithAliases("environment", {
             case "s":
             case "set":
                 if(args.args.length < 3){
-                    return "invalid syntax";
+                    return expectedError("invalid syntax");
                 }
 
                 return api.setRoute(args.args[1], args.args[2]);
@@ -61,7 +61,7 @@ const commandTable = quickCmdWithAliases("environment", {
             case "rem":
             case "r":
                 if(args.args.length < 2){
-                    return "invalid syntax";
+                    return expectedError("invalid syntax");
                 }
 
                 if(args.dashCombined.includes("b")){
@@ -74,7 +74,7 @@ const commandTable = quickCmdWithAliases("environment", {
             case "e":
             case "is":
                 if(args.args.length < 2){
-                    return "invalid syntax";
+                    return expectedError("invalid syntax");
                 }
 
                 return api.existsRoute(args.args[1]);
@@ -104,7 +104,7 @@ const commandTable = quickCmdWithAliases("environment", {
                 return api.getWholeEnvironment();
 
             default:
-                return "invalid syntax";
+                return expectedError("invalid syntax");
         }
     }
 }, ["env"])

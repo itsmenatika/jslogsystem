@@ -3,10 +3,12 @@ import { emitKeypressEvents } from "readline";
 import { commandInternalExec } from "./apis/commands/commandExecute.js";
 import { formatPrintTextbox, printTextBox } from "./formatingSessionDependent.js";
 import { terminalSession, terminalSessionObjSaved } from "./programdata.js";
-import { clearEntireLineCODE, consoleColors, cursorRel, formatTaskError, hideCursorCODE, printViewTextbox, showCursorCODE } from "./texttools.js";
-import { streamWrapper } from "./ultrabasic.js";
+import { ansiEscape, clearEntireLineCODE, consoleColors, cursorAbs, cursorRel, formatTaskError, hideCursorCODE, printViewTextbox, showCursorCODE } from "./texttools.js";
+import { isTty, streamWrapper } from "./ultrabasic.js";
 import { terminalApi } from "./apis/terminal/terminalApi.js";
 import { internalInterupHandlerSIGINT, interrupReasonType } from "./interrup.js";
+import stringWidth from "string-width";
+import stripAnsi from "strip-ansi";
 
 const allowedKeysToWrite: string = "abcdefghijklmnopqrstuxwvyz" + "abcdefghijklmnopqrstuxwvyz".toUpperCase() + "1234567890" + "!@#$%^*()" + "`~-_+\\|'\";:,<.>?" + "[{}]" + " " + "!@#$%^&*=~`'/";
 
@@ -190,6 +192,7 @@ async function inHandler(data: any, ses: terminalSession){
                 //     showCursorCODE
                 // );
                 printTextBox(ses);
+                fromEndToRelative(ses);
 
                 // hideCursor();
                 // remove the current textbox
@@ -220,47 +223,8 @@ async function inHandler(data: any, ses: terminalSession){
         }
         // enter
         else if(data.includes("\r")){
-            // if there's no data
-            if(ses.text.trim() == "") return;
+            await userTerminalAction(ses, terminalUserActionType.enter);
 
-            // remove relative pos if there was one
-            ses.relativeTextboxPos = 0;
-
-            // remove selected index on the command history
-            ses.indexCommandHistory = null;
-
-            // save to command history
-            if(ses.commandHistory.length > 50) 
-                ses.commandHistory = ses.commandHistory.slice(
-                        ses.commandHistory.length - 50, ses.commandHistory.length);
-            ses.commandHistory.push(ses.text);
-
-
-            // save the written text and reset it
-            const text = ses.text;
-            ses.text = "";
-            
-            // write to file stream
-            ses.fileout.write("> " + text + "\n");
-
-            // go further
-            ses.out.write(consoleColors.Reset + hideCursorCODE + "\n");
-
-
-
-            // command exec
-            // commandInternalExec(text, ses);
-            await commandInternalExec(text, {
-                logNode: "console",
-                silent: false,
-                onlyReturn: false,
-                terminal: ses
-            });
-
-
-            // print a new line
-            if(ses.viewTextbox)
-            printTextBox(ses);
 
             
             // printTextBox(ses, undefined, hideCursorCODE + consoleColors.Reset + "\n");
@@ -347,20 +311,22 @@ async function inHandler(data: any, ses: terminalSession){
         }
         // left
         else if(data === '\u001B\u005B\u0044'){
-            if(ses.relativeTextboxPos * -1 >= ses.text.length) return;
+            // if(ses.relativeTextboxPos * -1 >= ses.text.length) return;
 
-            // process.stdout.moveCursor(-1, 0);
-            ses.out.write(cursorRel(-1, 0));
-            ses.relativeTextboxPos--;
+            // // process.stdout.moveCursor(-1, 0);
+            // ses.out.write(cursorRel(-1, 0));
+            // ses.relativeTextboxPos--;
+            await userTerminalAction(ses, terminalUserActionType.left);
         }
 
         // right
         else if(data === '\u001B\u005B\u0043'){
-            if(ses.relativeTextboxPos >= 0) return;
+            // if(ses.relativeTextboxPos >= 0) return;
 
-            // process.stdout.moveCursor(1, 0);
-            ses.out.write(cursorRel(1, 0));
-            ses.relativeTextboxPos++;
+            // // process.stdout.moveCursor(1, 0);
+            // ses.out.write(cursorRel(1, 0));
+            // ses.relativeTextboxPos++;
+            await userTerminalAction(ses, terminalUserActionType.right);
         }
         
         // adding keys
@@ -406,6 +372,217 @@ async function inHandler(data: any, ses: terminalSession){
         }
 }
 
+enum terminalUserActionType{
+    none,
+    right,
+    left,
+    enter
+}
+
+
+
+function fromEndToRelative(ses: terminalSession) {
+    return;
+    // const strm = ses.out.getStream();
+    // let columns = 80;
+    // if (isTty(strm) && strm.columns !== undefined) {
+    //     columns = strm.columns;
+    // }
+
+    // const text = ses.previousInputRender;
+    // const width = stringWidth(text);
+
+    // // clamp relativeTextboxPos
+    // let relPos = ses.relativeTextboxPos;
+    // if (relPos > 0) relPos = 0;
+    // if (-relPos > width) relPos = -width;
+
+    // const absPos = width + relPos;
+
+    // // split into visual lines
+    // let lines: { start: number; end: number }[] = [];
+    // let start = 0;
+    // while (start < width) {
+    //     const end = Math.min(start + columns, width);
+    //     lines.push({ start, end });
+    //     start = end;
+    // }
+
+    // // find target line and column
+    // let targetLine = 0;
+    // let targetCol = 1;
+    // for (let i = 0; i < lines.length; i++) {
+    //     if (absPos < lines[i].end) {
+    //         targetLine = i;
+    //         targetCol = absPos - lines[i].start + 1;
+    //         break;
+    //     }
+    //     if (i === lines.length - 1) {
+    //         targetLine = i;
+    //         targetCol = lines[i].end - lines[i].start;
+    //         targetCol = Math.max(1, targetCol); // clamp at least 1
+    //     }
+    // }
+
+    // // clamp targetCol to terminal width
+    // if (targetCol > columns) targetCol = columns;
+
+    // // move cursor up from bottom
+    // const totalLines = lines.length;
+    // const linesUp = totalLines - targetLine - 1;
+    // let seq: string[] = [];
+    // for (let i = 0; i < linesUp; i++) {
+    //     seq.push("\x1b[F");
+    // }
+
+    // // move to column
+    // seq.push(`\x1b[${targetCol}G`);
+
+    // ses.out.write(seq.join(""));
+}
+
+// function returnToStartFromEnd(ses: terminalSession): void{
+//     const strm = ses.out.getStream(); // gets the stream
+//     const isStreamTty = isTty(strm); // checks whether it is a tty
+//     let columns: number = 80;
+//     if(isStreamTty && strm.columns !== undefined) columns = strm.columns;
+
+//     let widthDisplay = stringWidth(ses.previousInputRender);
+//     let textDisplay = stringWidth(ses.text);
+
+
+//     let toSend: string[] = [];
+
+//     while(widthDisplay > 0){
+//         if(widthDisplay >= columns){
+//             toSend.push(ansiEscape + "[F");
+//             widthDisplay -= columns;
+//         }
+//         else{
+//             toSend.push(ansiEscape + "[" + (widthDisplay - textDisplay) + "C");
+//             break;
+//         }
+//     }
+
+//     ses.out.write(toSend.join(""));
+// }
+
+
+// function fromStartToRelative(ses: terminalSession): void{
+//     const strm = ses.out.getStream(); // gets the stream
+//     const isStreamTty = isTty(strm); // checks whether it is a tty
+//     let columns: number = 80;
+//     if(isStreamTty && strm.columns !== undefined) columns = strm.columns;
+
+//     const width = ses.text.length;
+//     const widthOfRender = ses.previousInputRender.length;
+//     const widthDiff = widthOfRender - width;
+    
+//     let toSend: string[] = [];
+//     let i = 0;
+//     while(i >= width){
+//         if((i + widthDiff) % columns === 0){
+//             toSend.push(ansiEscape + "[E");
+//         }
+//         else{
+//             toSend.push(ansiEscape + "[" + i + "C");
+//             break;
+//         }
+//     }
+
+//     ses.out.write(toSend.join(""));
+// }
+
+/**
+ * LOW API
+ * 
+ * Performs an user action associated with the main inputbox. 
+ * 
+ * @param ses the session on which it was performed
+ * @param action the action
+ * @returns 
+ */
+async function userTerminalAction(ses: terminalSession, action: terminalUserActionType): Promise<void>{
+    const strm = ses.out.getStream(); // gets the stream
+    const isStreamTty = isTty(strm); // checks whether it is a tty
+    // const widthOfText = stringWidth(ses.text); // 
+    // const widthDisplay = stringWidth(ses.previousInputRender);
+    const widthOfText = ses.text.length; // the length of currently used text
+    const widthDisplay =  stripAnsi(ses.previousInputRender).length; // the length of previous render
+
+    switch(action){
+        // right arrow
+        case terminalUserActionType.right:
+            // if there's no where to move, don't move!
+            if(ses.relativeTextboxPos >= 0) return;
+
+            // // perform only if a stream is tty
+            // if(isStreamTty){
+            //     const columns = strm.columns || 80;
+
+            //     let left = (widthDisplay + ses.relativeTextboxPos) % columns;
+
+            //     if(left === columns - 2){
+            //         left++;
+            //         ses.relativeTextboxPos++;
+            //     }
+
+            //     if(left === columns - 1){
+            //         ses.out.write(ansiEscape + "[E");
+            //     }
+            //     else{
+            //         ses.out.write(cursorRel(1, 0));
+            //     }
+
+            // }
+            // else{
+            //     ses.out.write(cursorRel(1, 0));
+            // }
+
+            ses.relativeTextboxPos++;
+            break;
+        case terminalUserActionType.left:
+            if(Math.abs(ses.relativeTextboxPos) >= widthOfText) return;
+
+            // if(isStreamTty){
+            //     const columns = strm.columns || 80;
+
+            //     const left = (widthDisplay + ses.relativeTextboxPos) % columns;
+
+            //     if(left == 0){
+            //         ses.out.write(ansiEscape + "[F" + ansiEscape + "[" + columns + "C");
+            //         ses.relativeTextboxPos--;
+            //     }
+            //     else{
+            //         ses.out.write(cursorRel(-1, 0));
+            //     }
+
+
+
+            // }
+            // else{
+            //     ses.out.write(cursorRel(-1, 0));
+            // }
+            
+
+            ses.relativeTextboxPos--;
+            break;
+
+        case terminalUserActionType.enter:
+            await handleEnter(ses);
+
+            
+            break;
+        default:
+            throw new SyntaxError("Undefined action");
+    }
+
+    if(ses.relativeTextboxPos > 0) ses.relativeTextboxPos = 0;
+    if(Math.abs(ses.relativeTextboxPos) > ses.text.length) ses.relativeTextboxPos = ses.text.length;
+
+    printTextBox(ses);
+
+}
 
 /**
  * configures the handlers for you
@@ -430,6 +607,64 @@ function setupInHandlerListener(ses: terminalSession, setupStream: boolean = tru
             await inHandler(chunk, ses);
         }
     );
+}
+
+
+async function handleEnter(ses: terminalSession){
+    // if there's no data
+    if(ses.text.trim() == "") return;
+    
+    // redraw inputbox without any selection
+    printTextBox(ses, {noCursor: true});
+    
+    // save to command history
+    if(ses.commandHistory.length > 50) 
+        ses.commandHistory = ses.commandHistory.slice(
+                ses.commandHistory.length - 50, ses.commandHistory.length);
+    ses.commandHistory.push(ses.text);
+
+
+
+    // clearing previous data \/
+
+    // remove relative pos if there was one
+    ses.relativeTextboxPos = 0;
+
+
+    // remove selected index on the command history
+    ses.indexCommandHistory = null;
+
+
+
+    // save the written text and reset it
+    const text = ses.text;
+    ses.text = "";
+
+
+
+    // prepare outs
+    
+    // write to file stream
+    ses.fileout.write(stripAnsi(ses.previousInputRender));
+
+    // go further
+    ses.out.write(consoleColors.Reset + hideCursorCODE + "\n");
+
+
+
+    // command exec
+    // commandInternalExec(text, ses);
+    await commandInternalExec(text, {
+        logNode: "console",
+        silent: false,
+        onlyReturn: false,
+        terminal: ses
+    });
+
+
+    // print a new line
+    if(ses.viewTextbox)
+    printTextBox(ses);
 }
 
 

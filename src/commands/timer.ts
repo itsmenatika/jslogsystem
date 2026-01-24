@@ -1,6 +1,6 @@
 import { logTimeEnd, logTimeExist, logTimeStamp, logTimeStart, timerList } from "../apis/allApis.js";
 import { askForBindApi } from "../apis/commands/bindApi.js";
-import { onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
+import { expectedError, onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
 import { error } from "../log.js";
 import { consoleColors, multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
@@ -72,14 +72,14 @@ const commandTable = quickCmdWithAliases("timer", {
             case "start":
             case "new":
                 if(!label){
-                    return "INVALID SYNTAX";
+                    return expectedError("INVALID SYNTAX");
                 }
 
                 return logTimeStart(label, {terminal: this, messageVisible: visible, messageWho: this.logNode});
             case "stop":
             case "end":
                 if(!label){
-                    return "INVALID SYNTAX";
+                    return expectedError("INVALID SYNTAX");
                 }
 
                 return logTimeEnd(label, {terminal: this, error: true, messageVisible: visible, messageWho: this.logNode});
@@ -87,7 +87,7 @@ const commandTable = quickCmdWithAliases("timer", {
             case "timestamp":
             case "stamp":
                 if(!label){
-                    return "INVALID SYNTAX";
+                    return expectedError("INVALID SYNTAX");
                 }
 
                 return logTimeStamp(label, {terminal: this, error: true, messageVisible: visible, messageWho: this.logNode});
@@ -100,7 +100,7 @@ const commandTable = quickCmdWithAliases("timer", {
             case "now":
                 return Date.now();
             default:
-                return "INVALID SYNTAX";
+                return expectedError("INVALID SYNTAX");
         }
 
     }
