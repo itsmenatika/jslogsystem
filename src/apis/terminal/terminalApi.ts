@@ -10,7 +10,8 @@ import { commandExecParamsProvide } from "../commands/common.js";
 import { printTextBox } from "../../formatingSessionDependent.js";
 import { consoleWrite } from "../../out.js";
 import { cache } from "./cache.js";
-import { configData } from "../../config.js";
+import { configData, constructStyles, terminalStyles } from "../../config.js";
+import { colorTable, colorTableProvide, terminalStylesProvide } from "../../styles/common.js";
 
 
 interface forkOptionsProvide{
@@ -559,6 +560,30 @@ class terminalApi extends connectedToSpecificTerminal{
         ses.config = Object.freeze(val);
 
     }
+
+    get styles(): Readonly<terminalStyles>{
+        const ses = this.session;
+        return ses.config.styles;
+    }
+
+    set styles(val: terminalStylesProvide){
+        if(
+            !val ||
+            typeof val !== "object"
+        ){
+            throw new TypeError("It is not a styles object");
+        }
+
+        const ses = this.session;
+        
+        ses.config.styles = constructStyles(val);
+    }
+
+    get colors(): Readonly<colorTable>{
+        const ses = this.session;
+        return ses.config.styles.colors;
+    }
+
 
 
     /**

@@ -6,9 +6,14 @@
 
 added new styles:
 * classic
+commands changed:
+* version command now has a branch, edition and isExperimental shown up
 added:
 * new command return type expectedError
 * new entries for styles
+* config, colors and styles were added to this in commands
+* terminalApi has now styles and colors getters
+* verApi has now a branch, edition and isExperimental
 fixed:
 * multiline commands are now properly supported as new typing system was introduced
 

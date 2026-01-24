@@ -1,19 +1,21 @@
 import { onlyToRedirect } from "../apis/commands/commandSpecialTypes.js";
 import { askForVersion } from "../apis/meta/version.js";
-import { consoleColors, multiLineConstructor } from "../texttools.js";
+import { combineColors, consoleColors, multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { multiDisplayer } from "../tools/multiDisplayer.js";
 
 const commandTable = quickCmdWithAliases("version", {
-    usageinfo: "version [-i] [-s] [-u]",
+    usageinfo: "version [-a] [-i] [-s] [-u] [-e] [-b] [-x]",
     desc: "shows the version information",
     longdesc: multiLineConstructor("shows the version information",
         "",
         "use -i to get an int version",
         "use -s to get a string version",
-        "use -u to get a user set version data",
-        "use -e to get a edition",
+        "use -u to get an user set version data",
+        "use -e to get an edition",
+        "use -b to get a branch",
+        "use -x to get a whether a version is experimental",
         "",
         "use -a to get all information",
         "",
@@ -28,7 +30,8 @@ const commandTable = quickCmdWithAliases("version", {
 
         const verApi = askForVersion(this);
 
-        const toReturn: Record<string, number | string> = {};
+
+        const toReturn: Record<string, number | string | boolean> = {};
 
         const all = args.dashCombined.includes("a");
 
@@ -45,7 +48,15 @@ const commandTable = quickCmdWithAliases("version", {
         }
 
         if(args.dashCombined.includes("e") || all){
-            toReturn['edition'] = "javascript";
+            toReturn['edition'] = verApi.edition;
+        }
+
+        if(args.dashCombined.includes("b") || all){
+            toReturn['branch'] = verApi.branch;
+        }
+
+        if(args.dashCombined.includes("x") || all){
+            toReturn['isExperimental'] = verApi.isExperimental;
         }
 
         let len = Object.keys(toReturn).length;
@@ -64,8 +75,21 @@ const commandTable = quickCmdWithAliases("version", {
             d.push("v" + verApi.string, consoleColors.FgRed);
             d.push(" by ");
             d.push("Naticzka", consoleColors.Blink);
-            d.push(` (JAVASCRIPT EDITION)`);
-            d.push("\n");
+            d.push(` (${verApi.edition} EDITION) `);
+
+            if(verApi.isExperimental || verApi.branch !== "main"){
+                d.push("\n");
+
+                if(verApi.isExperimental){
+                    d.push("EXPERIMENTAL", combineColors(consoleColors.Blink, consoleColors.FgRed, consoleColors.Bright));
+                }
+
+                if(verApi.branch !== "main"){
+                    d.push(`${verApi.branch} branch`);
+                }
+            }
+
+            d.push("\n\n");
             d.push("The description of that version:", consoleColors.Reverse);
             d.push("\n");
             d.push(verApi.user, consoleColors.FgRed);
