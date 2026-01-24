@@ -83,8 +83,8 @@ you can combine commands using pipes:
 * && <- execute the next command if the result of a previous command was positive and redirect that result
 * || <- execute the next command if the result of a previous command was negative and redirect that result
 * ; <- starts a new command chain independent of the previous chain
-* > <- save the result to a file
-* >> <- append the result to a file
+* \> <- save the result to a file
+* \>\> <- append the result to a file
 * < <- get the result from a file and pipe it to command before that
 
 If you want to just write that character and you don't want to use pipes use either quotas ("|") or a escape character (\|).
