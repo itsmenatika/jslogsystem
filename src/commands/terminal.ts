@@ -181,18 +181,19 @@ const commandTable = quickCmdWithAliases("terminal", {
 
             case "switch": {
                 if(args.length < 2){
-                    return "ARG 2 REQUIRED";
+                    return expectedError("ARG 2 REQUIRED");
                 }
                 if(this.sessionName === nameOfAnother){
-                    log(LogType.ERROR, `it is not safe to switch to itself!`, undefined, this.sessionName);
-                    return;
+                    // log(LogType.ERROR, `it is not safe to switch to itself!`, undefined, this.sessionName);
+                    return expectedError(`it is not safe to switch to itself!`);
                 }
 
                 const ap = askForTerminalApi(this);
                 if(!ap.valid) return;
                 const termData = askForTerminalApi(nameOfAnother);
                 if(!termData.valid){
-                    log(LogType.ERROR, `no such terminal as '${nameOfAnother}' exist!`, undefined, this.sessionName);
+                    // log(LogType.ERROR, `no such terminal as '${nameOfAnother}' exist!`, undefined, this.sessionName);
+                    return expectedError(`no such terminal as '${nameOfAnother}' exist!`);
                     return;
                 }
 
@@ -232,7 +233,7 @@ const commandTable = quickCmdWithAliases("terminal", {
 
             case "new": {
                 if(args.length < 2){
-                    return "NO ARG 2 SPECIFIED";
+                    return expectedError("NO ARG 2 SPECIFIED");
                 }
 
                 if(getTerminal(nameOfAnother)){
@@ -343,9 +344,12 @@ const commandTable = quickCmdWithAliases("terminal", {
             case "remove": {
                 // preventing safelock
                 if(nameOfAnother === "main"){
-                    log(LogType.ERROR, "The removal of the 'main' terminal was denied due to safety reasons. You can't remove the 'main' terminal. Older applications or poorly constructed code may relay on the 'main' terminal existing and it may cause unexpected behaviour or even crashes. Also prior to 1.3 update every code was always referring to the 'main' terminal because there was only one. Keep it as it is. You can always mody the 'main' terminal if you need to. But explicit removal is forbidden.",
-                        new logNode("terminal", this.logNode), this
-                    )
+                    // log(LogType.ERROR, "The removal of the 'main' terminal was denied due to safety reasons. You can't remove the 'main' terminal. Older applications or poorly constructed code may relay on the 'main' terminal existing and it may cause unexpected behaviour or even crashes. Also prior to 1.3 update every code was always referring to the 'main' terminal because there was only one. Keep it as it is. You can always mody the 'main' terminal if you need to. But explicit removal is forbidden.",
+                    //     new logNode("terminal", this.logNode), this
+                    // )
+                    return expectedError(
+                        "The removal of the 'main' terminal was denied due to safety reasons. You can't remove the 'main' terminal. Older applications or poorly constructed code may relay on the 'main' terminal existing and it may cause unexpected behaviour or even crashes. Also prior to 1.3 update every code was always referring to the 'main' terminal because there was only one. Keep it as it is. You can always mody the 'main' terminal if you need to. But explicit removal is forbidden."
+                    );
                 }
 
                 // dont allow to remove the main terminal and the active one
@@ -366,7 +370,7 @@ const commandTable = quickCmdWithAliases("terminal", {
 
             case "exec": {
                 if(!(args.length > 2)){
-                    return "NOT ENOUGH ARGS";
+                    return expectedError("NOT ENOUGH ARGS");
                 }
 
                 const api = askForTerminalApi(nameOfAnother);
@@ -387,7 +391,7 @@ const commandTable = quickCmdWithAliases("terminal", {
 
             case "write": {
                 if(!(args.length > 2)){
-                    return "NOT ENOUGH ARGS";
+                    return expectedError("NOT ENOUGH ARGS");
                 }
 
                 const api = askForTerminalApi(nameOfAnother);
@@ -416,7 +420,7 @@ const commandTable = quickCmdWithAliases("terminal", {
                 return api.config.styles.styleIdentity;
 
             default:
-                return "UNKNOWN ARG: " + args.args[0];
+                return expectedError("UNKNOWN ARG: " + args.args[0]);
 
         }
     }
