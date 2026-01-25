@@ -31,11 +31,11 @@ class commandApi extends connectedToSpecificTerminal{
     }
 
     getCommandNames(): Readonly<string[]>{
-        return Object.freeze(Object.keys(this.commandTable));
+        return Object.keys(this.commandTable);
     }
 
     getCommandTable(): Readonly<cmdTable>{
-        return Object.freeze(this.commandTable);
+        return this.commandTable;
     }
 
     *[Symbol.iterator](): Generator<[string, commandData]>{

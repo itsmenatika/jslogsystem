@@ -22,6 +22,10 @@ const commandCollectionOptionsReq_DEFAULT: commandCollectionOptionsReq = {
 
 class commandCollectionError extends logSystemError{};
 
+
+
+type filterCallback = ((obj: unifiedCommandTypes, name: string) => boolean) | ((obj: unifiedCommandTypes) => boolean);
+
 /**
  * a HIGH Level command Collection
  */
@@ -65,6 +69,29 @@ class commandCollection{
 
         this.#cmdTable = {};
         return this;
+    }
+
+    /**
+     * filters results using a designated function
+     * @param filterFunction a function that takes (name: string, obj: unifiedCommandTypes) and returns boolean
+     * @returns filtered collection
+     */
+    filter(
+        filterFunction: filterCallback
+    ): commandCollection{
+        const toCr: cmdTable = {};
+
+        for(const name of Object.keys(this.#cmdTable)){
+
+            const obj: unifiedCommandTypes = this.#cmdTable[name];
+            const result: boolean = filterFunction(obj, name);
+
+            if(result){
+                toCr[name] = obj;
+            }
+        }
+
+        return new commandCollection(toCr, this.#options);
     }
 
     /**

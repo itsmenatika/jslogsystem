@@ -645,7 +645,7 @@ async function handleEnter(ses: terminalSession){
     // prepare outs
     
     // write to file stream
-    ses.fileout.write(stripAnsi(ses.previousInputRender));
+    ses.fileout.write(stripAnsi(ses.previousInputRender) + "\n");
 
     // go further
     ses.out.write(consoleColors.Reset + hideCursorCODE + "\n");

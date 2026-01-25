@@ -8,20 +8,32 @@ import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/comman
 import { multiDisplayer } from "../tools/multiDisplayer.js";
 
 const commandTable = quickCmdWithAliases("help", {
-        usageinfo: "help ([<--category CATEGORYNAME>]|[<about>])",
+        usageinfo: "help ([<--category CATEGORYNAME> [<--regex REGEX>]] [-d]|[<about>])",
         desc: "shows the list of commands or describes the command usage",
         longdesc: multiLineConstructor(
             "shows the list of commands or describes the command usage",
             "",
             "use help <command/commandAlias> to get information about that specific command",
-            "use help [<--category NAME>] to list commands"
+            "use help [<--category NAME>] [<--regex REGEX>] [-d] to list commands",
+            "   * use --category name to limit search for specified category",
+            "   * use --regex to search for a phrase within a name and a short description",
+            "       * use -d to also search through categories and long descriptions"
         ),
         hidden: false,
         changeable: false,
         categories: ["manual"],
         callback(preArgs: string[]){
             const args = smartArgs(preArgs, this);
+
             const category = args.argsWithDoubleDash['category'];
+            const regex = args.argsWithDoubleDash['regex'];
+            const regexLong = args.dashCombined.includes("d");
+
+            let regexObj: undefined | RegExp = undefined;
+            if(regex){
+                regexObj = new RegExp(regex);
+            }
+
             // return args;
 
             const length = args.argsWithoutArguments.length;
@@ -42,6 +54,28 @@ const commandTable = quickCmdWithAliases("help", {
                     // checks for a category
                     if(category && (!commandData.categories || !commandData.categories?.includes(category))){
                         continue;
+                    }
+
+                    // regex
+                    if(regexObj){
+                        let found: boolean = false;
+                        
+                        found ||= regexObj.test(commandName);
+                        found ||= regexObj.test(commandData.desc || "");
+
+                        if(regexLong && !found){
+                            found ||= regexObj.test(commandData.longdesc || "");
+
+                            for(const one of commandData.categories || []){
+                                found ||= regexObj.test(one);
+                                if(found) break;
+                            }
+                        }
+
+                        
+
+
+                        if(!found) continue;
                     }
 
                     i++;
