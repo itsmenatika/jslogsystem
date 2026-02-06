@@ -5,20 +5,22 @@
 ### 1.3.3
 
 added new styles:
-* classic
+  * classic
 commands changed:
-* version command now has a branch, edition and isExperimental shown up
-* help now has --regex option
-added:
-* new command return type expectedError
-* new entries for styles
-* config, colors and styles were added to this in commands
-* terminalApi has now styles and colors getters
-* verApi has now a branch, edition and isExperimental
-* filter in command Collection
-fixed:
-* multiline commands are now properly supported as new typing system was introduced
-* wrongly written inputbox in logs
+  * version command now has a branch, edition and isExperimental shown up
+  * help now has --regex option
+  added:
+  * new command return type expectedError
+  * new entries for styles
+  * config, colors and styles were added to this in commands
+  * terminalApi has now styles and colors getters
+  * verApi has now a branch, edition and isExperimental
+  * filter in command Collection
+  fixed:
+  * multiline commands are now properly supported as new typing system was introduced
+  * wrongly written inputbox in logs
+added commands:
+  * base64 - decodes and encodes base64 data
 
 compatibility:
 * cursor is now hidden by a default

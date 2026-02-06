@@ -308,4 +308,24 @@ function smartArgs(
 
 }
 
+
+class descriptiveArgs{
+    constructor(){
+
+    }
+
+
+    addArgument(){
+
+    }
+
+    addOption(){
+
+    }
+
+    parse(){
+
+    }
+}
+
 export {smartArgs, removeInternalArguments}

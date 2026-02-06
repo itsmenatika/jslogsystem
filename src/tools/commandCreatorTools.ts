@@ -23,7 +23,7 @@ function quickCmdWithAliases(
     return toRe;
 }
 
-function cmdTableToCommandCompounts(data: cmdTable): commandCompoundTableType{
+function cmdTableToCommandCompounds(data: cmdTable): commandCompoundTableType{
     const toRe: commandCompoundTableType = [];
 
     for(const [name, cmdData] of Object.entries(data)){
@@ -45,4 +45,9 @@ function commandCompoundsToCmdTable(data: commandCompoundTableType): cmdTable{
 }
 
 
-export {quickCmdWithAliases, cmdTableToCommandCompounts, commandCompoundsToCmdTable}
+export {
+    quickCmdWithAliases, 
+    cmdTableToCommandCompounds as cmdTableToCommandCompounts, // compatibility with my old silly mistake
+    cmdTableToCommandCompounds,
+    commandCompoundsToCmdTable
+}
