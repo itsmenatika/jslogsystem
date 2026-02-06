@@ -1,5 +1,5 @@
 import { logsReceiveType } from "./config.js";
-import { printTextBox } from "./formatingSessionDependent.js";
+import { printClearMessage, printTextBox } from "./formatingSessionDependent.js";
 import { getTerminalOPJ, getTerminalOPJTYPE } from "./programdata.js";
 import { colorTable, terminalStyles } from "./styles/common.js";
 import {clearEntireLineCODE, consoleColor, consoleColors, textBoxPrefix} from "./texttools.js";
@@ -241,13 +241,7 @@ function log(
 
     // remove the view textbox if there was
     if(terminalData.viewTextbox){
-        // process.stdout.clearLine(0);
-        // process.stdout.write(consoleColors.Reset + "\r");
-        terminalData.out.write(
-            clearEntireLineCODE +
-            consoleColors.Reset + 
-            "\r"
-        );
+        printClearMessage(terminalData);
     }
 
     terminalData.out.write(toDisplay); // terminal

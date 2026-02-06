@@ -494,7 +494,7 @@ function fromEndToRelative(ses: terminalSession) {
 // }
 
 /**
- * LOW API
+ * LOW LEVEL API
  * 
  * Performs an user action associated with the main inputbox. 
  * 
@@ -580,8 +580,8 @@ async function userTerminalAction(ses: terminalSession, action: terminalUserActi
     if(ses.relativeTextboxPos > 0) ses.relativeTextboxPos = 0;
     if(Math.abs(ses.relativeTextboxPos) > ses.text.length) ses.relativeTextboxPos = ses.text.length;
 
+    if(ses.viewTextbox)
     printTextBox(ses);
-
 }
 
 /**
@@ -660,11 +660,6 @@ async function handleEnter(ses: terminalSession){
         onlyReturn: false,
         terminal: ses
     });
-
-
-    // print a new line
-    if(ses.viewTextbox)
-    printTextBox(ses);
 }
 
 

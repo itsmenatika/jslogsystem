@@ -9,16 +9,26 @@ const commandTable = quickCmdWithAliases("string", {
     changeable: false,
     isAlias: false,
     categories: ["parser", "generator", "text"],
-    callback(preargs: any[]): any{
+    async: true,
+    async callback(preargs: any[]): Promise<any>{
         const args = smartArgs(preargs, this);
         const toReturn: any[] = [];
 
 
         for(const obj of args){
-            if(obj instanceof Blob){
-                toReturn.push(obj.text());
-            } else
-            toReturn.push(String(obj));
+            await convertCurObj(obj, toReturn);
+            // if(typeof obj === "object"){
+            //     if(Array.isArray(obj)){
+            //         for(const one of obj){
+
+            //         }
+            //     }
+            // }
+
+            // if(obj instanceof Blob){
+            //     toReturn.push(obj.text());
+            // } else
+            // toReturn.push(String(obj));
         }
 
         // console.log(args.args, args.length, toReturn, PreArgs);
@@ -28,6 +38,36 @@ const commandTable = quickCmdWithAliases("string", {
     }
 }, ["str", "tostring", "tostr"])
 
+
+async function convertCurObj(obj: any, toReturn: string[]){
+    switch(typeof obj){
+        case "object": {
+            if(Array.isArray(obj)){
+                for(const one of obj){
+                    convertCurObj(one, toReturn);
+                }
+            }
+            else if(obj instanceof Blob){
+                toReturn.push(await obj.text());
+            }
+            else if(obj instanceof Buffer){
+                toReturn.push(obj.toString());
+            }
+
+            toReturn.push(String(obj));
+            break;
+        }
+
+        case "string":
+            toReturn.push(obj);
+            break;
+        
+        default:
+            toReturn.push(String(obj));
+
+        
+    }
+}
 
 const compounds = cmdTableToCommandCompounts(commandTable)
 

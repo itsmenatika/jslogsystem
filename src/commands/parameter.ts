@@ -84,7 +84,7 @@ function parseIdent(ident: string, toUse: any[], data: Record<string, any>){
     switch(ident.toLowerCase()){
         case "e":
         case "^":
-            return toUse.length;
+            return toUse.length - 1;
         case "s":
         case "$":
             return 1;

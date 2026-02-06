@@ -148,6 +148,11 @@ function getClearMessage(ses: terminalSession): string[]{
 }
 
 
+function printClearMessage(ses: terminalSession){
+    ses.out.write(getClearMessage(ses).join(""));
+    ses.previousInputRender = "";
+}
+
 
 function printTextBox(ses: terminalSession, ops: printOptions = {}){
     const toReturn: string[] = [];
@@ -224,4 +229,4 @@ function printTextBox(ses: terminalSession, ops: printOptions = {}){
 //     ses.previousInputRender = inputRender;
 // }
 
-export {formatPrintTextbox, printTextBox}
+export {formatPrintTextbox, printTextBox, printClearMessage, getClearMessage}

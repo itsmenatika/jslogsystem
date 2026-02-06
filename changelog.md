@@ -9,6 +9,7 @@ added new styles:
 commands changed:
   * version command now has a branch, edition and isExperimental shown up
   * help now has --regex option
+  * string command can now handle nested arrays
 added:
   * new command return type expectedError
   * new entries for styles
@@ -20,6 +21,8 @@ added:
 fixed:
   * multiline commands are now properly supported as new typing system was introduced
   * wrongly written inputbox in logs
+  * hide command now works properly
+  * logs no longer bug on multiline inputs
 added commands:
   * base64 - decodes and encodes base64 data
   * color -> colorizes data
@@ -30,6 +33,7 @@ new depedencies:
     "chalk": "^5.6.2",
     "string-width": "^8.1.0",
     "strip-ansi": "^7.1.2"
+    "leven": "^4.1.0",
 
 compatibility:
 * cursor is now hidden by a default
