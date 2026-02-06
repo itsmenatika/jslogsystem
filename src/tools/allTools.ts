@@ -10,3 +10,4 @@ export * from "./nodejsConsole.js";
 export * from "./quickSetup.js";
 export * from "./welcome.js";
 export * from "./legacy.js";
+export * from "./cleanReturner.js";

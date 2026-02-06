@@ -203,11 +203,11 @@ const commandTable = quickCmdWithAliases("echo", {
         // }
 
         
-        // if(args.dashCombined.includes("L")){
-        //     for(const [code, color] of Object.entries(minecraftColorPallete)){
-        //         text += `* ${code} -> ${color}TEXT${consoleColors.Reset}\n`
-        //     }
-        // }
+        if(args.dashCombined.includes("L")){
+            for(const [code, color] of Object.entries(minecraftColorPallete)){
+                text += `* ${code} -> ${color}TEXT${consoleColors.Reset}\n`
+            }
+        }
 
 
         // consoleWrite(theString + "\n", consoleColors.FgWhite);

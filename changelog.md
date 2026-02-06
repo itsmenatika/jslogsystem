@@ -9,21 +9,31 @@ added new styles:
 commands changed:
   * version command now has a branch, edition and isExperimental shown up
   * help now has --regex option
-  added:
+added:
   * new command return type expectedError
   * new entries for styles
   * config, colors and styles were added to this in commands
   * terminalApi has now styles and colors getters
   * verApi has now a branch, edition and isExperimental
   * filter in command Collection
-  fixed:
+  * cleanReturner -> allows to simply return the array if needed
+fixed:
   * multiline commands are now properly supported as new typing system was introduced
   * wrongly written inputbox in logs
 added commands:
   * base64 - decodes and encodes base64 data
+  * color -> colorizes data
+
+There's now a suggestion about commands that were not found
+
+new depedencies:
+    "chalk": "^5.6.2",
+    "string-width": "^8.1.0",
+    "strip-ansi": "^7.1.2"
 
 compatibility:
 * cursor is now hidden by a default
+* strikeThrough was renamed to StrikeThrough due to the lack of consistency in that manner
 
 ### 1.3.2
 

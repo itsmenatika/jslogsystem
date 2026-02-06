@@ -13,6 +13,7 @@ import { cmdcallback, cmdCallbackAsync, cmdCallbackResponse, commandContext, com
 import { textboxVisibility } from "../terminal/textbox.js";
 import { printTextBox } from "../../formatingSessionDependent.js";
 import { access, appendFile, constants, mkdir, readFile, writeFile } from "fs/promises";
+import { closestMatch } from "leven";
 
 // function commandExec(text: string, ses: terminalSession, silent: boolean = false){
 //     if(!silent){
@@ -790,7 +791,15 @@ async function handleCommandInternal(
     // catch unkown command
     else{
         // if(!op.silent)
-        log(LogType.ERROR, `unknown command '${parts[0]}'`, op.logNode, session);
+        const clos: undefined | string = closestMatch(parts[0], Object.keys(conf.commandTable), {maxDistance: 1});
+
+        if(clos){
+            log(LogType.ERROR, `unknown command '${parts[0]}'. Did you mean: '${clos}'?`, op.logNode, session);
+
+        }
+        else{
+            log(LogType.ERROR, `unknown command '${parts[0]}'.`, op.logNode, session);
+        }
 
         if(!conf.legacy.pipes) return undefined;
 

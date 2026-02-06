@@ -43,7 +43,7 @@ enum consoleColors{
     Blink = ansiEscape + "[5m",
     Reverse = ansiEscape + "[7m",
     Hidden = ansiEscape + "[8m",
-    strikeThrough = ansiEscape + "[9m",
+    StrikeThrough = ansiEscape + "[9m",
     
     FgBlack = ansiEscape + "[30m",
     FgRed = ansiEscape + "[31m",
@@ -227,7 +227,7 @@ const minecraftColorPallete: Record<string, consoleColor> = {
     "i": consoleColors.Italic,
     "v": consoleColors.Reverse,
     "u": consoleColors.Underscore,
-    "s": consoleColors.strikeThrough,
+    "s": consoleColors.StrikeThrough,
     "b": consoleColors.Blink,
 
     "f": consoleColors.FgWhite,

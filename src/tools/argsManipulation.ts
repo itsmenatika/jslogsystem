@@ -308,24 +308,106 @@ function smartArgs(
 
 }
 
+// enum argumentType{
+//     plain,
+//     argument
+// }
 
-class descriptiveArgs{
-    constructor(){
+// interface argumentData{
+//     name: string,
+//     type?: argumentType
+// }
 
-    }
+// type argumentDataFinal = Required<argumentData>;
+
+// interface descriptiveArgsResult{
+//     orginal: Readonly<any[]>,
+//     orginalStrings: Readonly<string[]>
+
+// }
+
+// /**
+//  * 
+//  */
+// class descriptiveArgs{
+
+//     $argumentList: Record<string, argumentDataFinal> = {};
+
+//     constructor(){
+
+//     }
 
 
-    addArgument(){
+//     addArgument(data: argumentData){
+        
 
-    }
+//         const objToSend: argumentDataFinal = {
+//             name: data.name,
+//             type: data.type === undefined ? argumentType.plain : data.type
+//         };
 
-    addOption(){
+//         this.$argumentList[objToSend.name] = objToSend;
+//     }
 
-    }
+//     parseFromArgs(...data: string[]){
+//         return this.parse([...data]);
+//     }
 
-    parse(){
+//     parse(data: any[]): descriptiveArgsResult{
 
-    }
-}
+//         const orginalStrings: string[] = [];
+//         const args: Record<string, string|null> = {};
+
+//         const argsPlain: string[] = [];
+
+//         for(let i = 0; i < data.length; i++){
+//             const obj = data[i];
+
+//             if(typeof obj !== "string") continue;
+
+//             orginalStrings.push(obj);
+
+//             if(obj.length < 1) continue;
+
+            
+//             if(this.$argumentList[obj]){
+//                 if(this.$argumentList[obj].type === argumentType.plain){
+//                     argsPlain.push(obj.slice(1));
+//                 }
+//                 else if(this.$argumentList[obj].type === argumentType.argument){
+
+//                 }
+//             }
+
+//             -sdagw --dda d
+
+
+//         }
+
+
+
+//         return {
+//             orginal: data,
+//             orginalStrings
+
+//         }
+
+//     }
+
+
+//     $parsePlain(obj: string){
+
+//     }
+// }
+
+// const g = new descriptiveArgs();
+// g.addArgument(
+//     {
+//         name: "s",
+//     }
+// );
+
+
+// g.parse(['s', 'g']).orginal
 
 export {smartArgs, removeInternalArguments}
