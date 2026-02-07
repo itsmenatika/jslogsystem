@@ -22,7 +22,7 @@ added:
 fixed:
   * multiline commands are now properly supported as new typing system was introduced
   * wrongly written inputbox in logs
-  * hide command now works properly
+  * 'hide' command works now properly
   * logs no longer bug on multiline inputs
 added commands:
   * base64 -> decodes and encodes base64 data
