@@ -1,4 +1,5 @@
 import { smartArgs } from "../tools/argsManipulation.js";
+import { cleanReturner } from "../tools/cleanReturner.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 
 const commandTable = quickCmdWithAliases("string", {
@@ -33,8 +34,7 @@ const commandTable = quickCmdWithAliases("string", {
 
         // console.log(args.args, args.length, toReturn, PreArgs);
 
-        if(toReturn.length === 0) return undefined;
-        return toReturn.length === 1 ? toReturn[0] : toReturn;
+        return cleanReturner(toReturn);
     }
 }, ["str", "tostring", "tostr"])
 
@@ -53,8 +53,10 @@ async function convertCurObj(obj: any, toReturn: string[]){
             else if(obj instanceof Buffer){
                 toReturn.push(obj.toString());
             }
+            else{
+                toReturn.push(String(obj));
+            }
 
-            toReturn.push(String(obj));
             break;
         }
 

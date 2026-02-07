@@ -24,6 +24,7 @@ import { cd } from "../apis/commands/osApis/filesystem.js";
 import { textboxVisibility } from "../apis/terminal/textbox.js";
 import { printTextBox } from "../formatingSessionDependent.js";
 import { getExactStyle, stylesNames, terminalStylesProvide } from "../styles/common.js";
+import path, { join } from "path";
 
 const commandTable = quickCmdWithAliases("terminal", {
     usageinfo: "terminal [<name|uptime|history|cmdhis|inspect|list|switch|fork|exists|new|remove|exec|write|styleName|sn>] <...args>",
@@ -92,13 +93,36 @@ const commandTable = quickCmdWithAliases("terminal", {
 
         let apNoEx = false; let anNoEx = false;
         switch(args.args[0]){
+            case "cd": {
+                const pathParts = args.args.slice(2);
+                const ap = askForTerminalApi(nameOfAnother);
+
+                if(!ap.valid){
+                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                }
+
+                if(pathParts.length > 2){
+                    const path = join(...pathParts);
+    
+                    const newPath = ap.cd(path);
+    
+                    return newPath;
+                }
+
+                return ap.cd();
+
+
+                break;
+            }
             case "name":
             case "nm":
                 return this.sessionName;
 
             case "cmdhis":{
                 const termApi = askForTerminalApi(nameOfAnother);
-                if(!termApi.valid) return;
+                if(!termApi.valid){
+                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                }
                 return termApi.commandHistory();
             }
 
@@ -106,7 +130,9 @@ const commandTable = quickCmdWithAliases("terminal", {
             case "uptime":
             case "time":{
                 const ap = askForTerminalApi(nameOfAnother);
-                if(!ap.valid) return;
+                if(!ap.valid){
+                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                }
 
                 if(args.dashCombined.includes("o")){
                     return ap.uptime();
@@ -129,7 +155,9 @@ const commandTable = quickCmdWithAliases("terminal", {
             case "his":
             case "history":{
                 const termData = askForTerminalApi(nameOfAnother);
-                if(!termData.valid) return;
+                if(!termData.valid){
+                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                }
                 return termData.outStreamHistory();
             }
                 // return ap.outStreamHistory();
@@ -163,14 +191,18 @@ const commandTable = quickCmdWithAliases("terminal", {
             case "ses":
             case "session": {
                 const termData = askForTerminalApi(nameOfAnother);
-                if(!termData.valid) return;
+                if(!termData.valid){
+                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                }
 
                 return termData.session;
             }
 
             case "inspect": {
                 const termData = askForTerminalApi(nameOfAnother);
-                if(!termData.valid) return;
+                if(!termData.valid){
+                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                }
 
                 return inspect(Object.freeze(
                     Object.fromEntries(
@@ -189,7 +221,9 @@ const commandTable = quickCmdWithAliases("terminal", {
                 }
 
                 const ap = askForTerminalApi(this);
-                if(!ap.valid) return;
+                if(!ap.valid){
+                    return expectedError(`It was not possible to get an access to the terminal '${this.sessionName}'`);
+                }
                 const termData = askForTerminalApi(nameOfAnother);
                 if(!termData.valid){
                     // log(LogType.ERROR, `no such terminal as '${nameOfAnother}' exist!`, undefined, this.sessionName);
@@ -215,7 +249,9 @@ const commandTable = quickCmdWithAliases("terminal", {
 
             case "fork": {
                 const ap = askForTerminalApi(this);
-                if(!ap.valid){return;}
+                if(!ap.valid){
+                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                }
 
                 if(getTerminal(nameOfAnother)){
                     return false;
@@ -360,7 +396,9 @@ const commandTable = quickCmdWithAliases("terminal", {
 
                 // get that terminal
                 const api = askForTerminalApi(nameOfAnother);
-                if(!api.valid) return false;
+                if(!api.valid){
+                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                }
 
                 // remove
                 const res = api.destroy(false);

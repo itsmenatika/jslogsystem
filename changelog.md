@@ -24,7 +24,7 @@ fixed:
   * hide command now works properly
   * logs no longer bug on multiline inputs
 added commands:
-  * base64 - decodes and encodes base64 data
+  * base64 -> decodes and encodes base64 data
   * color -> colorizes data
 
 There's now a suggestion about commands that were not found
@@ -32,8 +32,7 @@ There's now a suggestion about commands that were not found
 new depedencies:
     "chalk": "^5.6.2",
     "string-width": "^8.1.0",
-    "strip-ansi": "^7.1.2"
-    "leven": "^4.1.0",
+    "leven": "^4.1.0"
 
 compatibility:
 * cursor is now hidden by a default
