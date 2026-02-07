@@ -9,7 +9,7 @@ added new styles:
 commands changed:
   * version command has now a branch, edition and isExperimental shown up
   * help has now --regex option
-  * string command can now handle nested arrays
+  * 'string' command can now handle nested arrays
 added:
   * new command return type expectedError
   * new entries for styles
@@ -18,7 +18,7 @@ added:
   * verApi has now a branch, edition and isExperimental
   * filter and exclude are now in command Collection
   * cleanReturner -> allows to simply return the array if needed
-  * new pipe: '<<'    -> from a file append to current result
+  * new pipe: '<<'    -> from a file append to the current result
 fixed:
   * multiline commands are now properly supported as new typing system was introduced
   * wrongly written inputbox in logs
