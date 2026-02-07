@@ -7,8 +7,8 @@
 added new styles:
   * classic
 commands changed:
-  * version command now has a branch, edition and isExperimental shown up
-  * help now has --regex option
+  * version command has now a branch, edition and isExperimental shown up
+  * help has now --regex option
   * string command can now handle nested arrays
 added:
   * new command return type expectedError
