@@ -375,6 +375,36 @@ Promise<[any, number]>{
                 break;
             }
 
+            case pipeType.fileFromAppend: {
+                let where = join(session.cwd, pipe.val as string);
+
+                try {
+                    await access(where, constants.R_OK);
+                } catch (error) {
+                    result = undefined;
+
+                    const loc = relative(session.config.workingDirectory, where);
+
+                    log(LogType.ERROR, `It was not possible to access '${loc}'!`, "pipeExec", session);
+                    break;
+                }
+
+                let f = await readFile(where);
+
+
+                if(typeof result === "object" && Array.isArray(result)){
+                    result.push(f);
+                }
+                else if(result === undefined){
+                    result = f;
+                }
+                else{
+                    result = [result, f];
+                }
+                
+                break;
+            }
+
             case pipeType.fileFrom: {
                 let where = join(session.cwd, pipe.val as string);
 

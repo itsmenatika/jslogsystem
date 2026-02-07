@@ -54,6 +54,9 @@ class commandCollection{
         Object.assign(this.#options, options);
     }
 
+
+
+
     /**
      * copies the command list and returns it
      * @returns the copy
@@ -92,6 +95,47 @@ class commandCollection{
         }
 
         return new commandCollection(toCr, this.#options);
+    }
+
+
+    /**
+     * Excludes certain elements that also appears in another collection or table
+     * 
+     * It only checks by names!
+     * 
+     * NOTE: it does not return a new collection. It edites it!
+     * 
+     * @param that other thing to compare with
+     * @returns the edited collection
+     */
+    exclude(
+        that: commandCollection | cmdTable
+    ): commandCollection{
+        if(this.#options.readonly){
+            throw new commandCollectionError("That command collection is readonly!");
+        }
+
+
+        let useToCompare;
+        if(that instanceof commandCollection){
+            useToCompare = that.get();
+        }
+        else useToCompare = that;
+
+
+        const newObj: cmdTable = {};
+
+        for(const name of Object.keys(this.#cmdTable)){
+            if(
+                Object.hasOwn(useToCompare, name)
+            ) continue;
+
+            newObj[name] = this.#cmdTable[name]
+        }
+
+        this.#cmdTable = newObj;
+    
+        return this;
     }
 
     /**

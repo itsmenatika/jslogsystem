@@ -222,7 +222,10 @@ function pipeDividerInternal(text: string, startingPoint: number): [number, Arra
         let cmdDesc = "";
         i++;
         switch(text[i-1]){
-            case "<":
+            case "<":{
+                let isAppend = text[i] == "<";
+                if(isAppend) i++;
+                
                 // while(i < text.length && text[i] != " " && 
                 //     !specialChars.includes(text[i])){
                 //     cmdDesc += text[i];
@@ -232,11 +235,12 @@ function pipeDividerInternal(text: string, startingPoint: number): [number, Arra
                 [i, cmdDesc] = getFileDesc(i, text);
 
                 toReturn.push({
-                    type: pipeType.fileFrom,
+                    type: isAppend ? pipeType.fileFromAppend : pipeType.fileFrom,
                     val: cmdDesc
                 });
                 break;
-            case ">":
+            }
+            case ">":{
                 let isAppend = text[i] == ">";
                 if(isAppend) i++;
 
@@ -253,6 +257,7 @@ function pipeDividerInternal(text: string, startingPoint: number): [number, Arra
                     val: cmdDesc
                 });
                 break;
+            }
             default:
                 i--;
                 loopAllowed = false;

@@ -9,6 +9,7 @@ import { commandTable as term } from "../commands/terminal.js";
 import { commandTable as timer } from "../commands/timer.js";
 import { commandTable as envZ } from "../commands/environment.js";
 import { commandTable as sleep } from "../commands/sleep.js";
+import { commandTable as call } from "../commands/call.js";
 import { cmdTableToCommandCompounts } from "../tools/commandCreatorTools.js";
 import { commandCollection } from "../tools/commandCollection.js";
 
@@ -24,7 +25,8 @@ const commandTable = {
     ...versionZ,
     ...timer,
     ...envZ,
-    ...sleep
+    ...sleep,
+    ...call
 };
 
 const compounds = cmdTableToCommandCompounts(commandTable);

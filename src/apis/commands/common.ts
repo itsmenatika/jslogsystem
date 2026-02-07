@@ -7,6 +7,7 @@ import { getTerminalOPJ, getTerminalOPJTYPE, terminalSession } from "../../progr
 enum pipeType{
     unkown, // unkown
     fileFrom, // <
+    fileFromAppend, // <<
     command, // cmd
     fileSet, // >
     fileAppend, // >>
