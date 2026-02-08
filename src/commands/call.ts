@@ -29,19 +29,22 @@ const commandTable = quickCmdWithAliases("call", {
     async callback(preargs: any[]): Promise<any>{
         const args = removeInternalArguments(preargs);
 
+        // if there was no room for a function to be
         if(args.length < 1){
             return expectedError("Fuction expected");
         }
 
+        // check for being a function
         const funcCandidate = args.at(-1);
 
         if(!isFunction(funcCandidate)){
             return expectedError("The last argument should be a function to be called but it is not");
         }
 
-        
+        // prepare args
         const argsToBeUsed = args.slice(0, -1);
 
+        // execute
         let res: any = void 0;
         if(funcCandidate instanceof AsyncFunction){
             // IT DOES
