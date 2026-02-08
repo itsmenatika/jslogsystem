@@ -86,6 +86,7 @@ you can combine commands using pipes:
 * \> <- save the result to a file
 * \>\> <- append the result to a file
 * < <- get the result from a file and pipe it to command before that
+* << <- get the contents of a file and append it to the result (it behaves like an extra argument)
 
 If you want to just write that character and you don't want to use pipes use either quotas ("|") or a escape character (\|).
 Those things are parsed entirely by a command interpreter and will not be passed into commands
@@ -117,6 +118,9 @@ CLEAN
 
 ![CLEAN SIGNS STYLE](docs/cleanSignsStyle.png)
 CLEAN SIGNS
+
+![CLASSIC STYLE](docs/classicStyle.png)
+CLASSIC
 
 ### how to add them?
 
