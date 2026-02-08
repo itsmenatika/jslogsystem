@@ -2,6 +2,16 @@
 
 ## 1.3X
 
+### 1.3.4
+
+added:
+  * 'loggroup' command -> allows to manage current session log groups
+
+bugfixes:
+* timer colors and strings are now included in styles, so it doesn't error out
+* ending timer now properly uses TIMER and not GROUP
+* cwd is now properly displayed on the first try for the main session
+
 ### 1.3.3
 
 added new styles:

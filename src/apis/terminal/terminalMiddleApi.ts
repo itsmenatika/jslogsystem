@@ -8,6 +8,7 @@ import { constructConfig } from "../../config.js";
 import { access, mkdir, stat, writeFile, readFile } from "fs/promises";
 import { logSystemError } from "../../ultrabasic.js";
 import { hideCursorCODE } from "../../texttools.js";
+import { printTextBox } from "../../formatingSessionDependent.js";
 
 /**
  * 
@@ -78,7 +79,9 @@ async function createTerminalQuick(name: string, data: terminalCreateData): Prom
         if(!existsSync(s.cwd)){
             mkdirSync(s.cwd, {recursive: true});
         }
+
         s.procLinked?.chdir(s.cwd);
+        printTextBox(s);
     }
 
 

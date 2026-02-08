@@ -10,6 +10,7 @@ interface colorTableProvide{
     "init"?: allColorType,
     "crash"?: allColorType,
     "group"?: allColorType,
+    "timer"?: allColorType,
 
     "info_secondary"?: allColorType,
     "warning_secondary"?: allColorType,
@@ -19,6 +20,7 @@ interface colorTableProvide{
     "init_secondary"?: allColorType,
     "crash_secondary"?: allColorType,
     "group_secondary"?: allColorType,
+    "timer_secondary"?: allColorType,
 
     "date"?: allColorType,
     "who"?: allColorType,

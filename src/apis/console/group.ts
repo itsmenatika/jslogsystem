@@ -32,10 +32,10 @@ function logGroup(name: string, info: Omit<logSettings, "error" | "return"> = {}
  * leaves the group created with logGroup / group
  * @returns the new current group group string
  */
-function logGroupEnd(info: logSettings & {return: "group"}): string;
+function logGroupEnd(info?: logSettings & {return?: "group"}): string;
 function logGroupEnd(info: logSettings & {return: "logstring"}): string;
 function logGroupEnd(info: logSettings & {return: "both"}): [string, string];
-function logGroupEnd(info: logSettings): string | [string, string]
+function logGroupEnd(info: logSettings = {return: "group"}): string | [string, string]
  {
     // get that terminal
     const d = getTerminalOPJ(info.terminal || "main");

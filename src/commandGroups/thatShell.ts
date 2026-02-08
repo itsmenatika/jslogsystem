@@ -10,6 +10,7 @@ import { commandTable as timer } from "../commands/timer.js";
 import { commandTable as envZ } from "../commands/environment.js";
 import { commandTable as sleep } from "../commands/sleep.js";
 import { commandTable as call } from "../commands/call.js";
+import { commandTable as loggroup } from "../commands/loggroup.js";
 import { cmdTableToCommandCompounts } from "../tools/commandCreatorTools.js";
 import { commandCollection } from "../tools/commandCollection.js";
 
@@ -26,7 +27,8 @@ const commandTable = {
     ...timer,
     ...envZ,
     ...sleep,
-    ...call
+    ...call,
+    ...loggroup
 };
 
 const compounds = cmdTableToCommandCompounts(commandTable);

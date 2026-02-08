@@ -32,7 +32,7 @@ enum LogType {
 function resolveLogData(type: LogType, data: terminalStyles){
     const name = resolveLogType(type);
     const nameL = name.toLowerCase();
-
+    
     return{
         name,
         color: data.colors[nameL as keyof typeof data.colors],
@@ -65,6 +65,8 @@ function resolveLogType(type: LogType): string {
             return "CRASH";
         case LogType.GROUP:
             return "GROUP";
+        case LogType.TIMER:
+            return "TIMER";
         case LogType.SIGNAL:
             return "SIGNAL";
         default: return "UNKNOWN";
@@ -94,6 +96,8 @@ function resolveLogColor(type: LogType, table: colorTable): consoleColor {
             return table.crash;
         case LogType.GROUP:
             return table.group;
+        case LogType.TIMER:
+            return table.timer;
         default: return consoleColors.Reset;
     }
 }

@@ -13,7 +13,7 @@
     "type": "git",
     "url": "https://github.com/itsmenatika/jslogsystem.git"
   },
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "interactive terminal and log system for node",
   "main": "dist/index.js",
   "scripts": {

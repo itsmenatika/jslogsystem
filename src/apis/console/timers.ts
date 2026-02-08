@@ -59,7 +59,7 @@ function logTimeEnd(
             log(LogType.WARNING, `no timer named '${label}'`, whoS, d);
         }
         else{
-            log(LogType.GROUP, `timer '${label}' ended. ${elapsed}ms`, whoS, d);
+            log(LogType.TIMER, `timer '${label}' ended. ${elapsed}ms`, whoS, d);
         }
 
     }
