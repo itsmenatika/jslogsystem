@@ -18,7 +18,7 @@ function askForVersion(from: getTerminalOPJTYPE): verD{
     const user = term.config.getVersionData();
     const edition: "javascript" = "javascript";
     const branch: "main" = "main";
-    const isExperimental: boolean = true;
+    const isExperimental: boolean = false;
 
     return {
         number: intVer,

@@ -9,7 +9,7 @@ import type { terminalApi } from "./apis/terminal/terminalApi.js";
 
 // let commandHistory: string[] = []; // user command history history
 // let indexCommandHistory: null | number = null; // the index of current selected
-const logSystemVer: string = "1.31"; // current version of the log system
+const logSystemVer: string = "1.33"; // current version of the log system
 const currentUpTime = Date.now(); // uptime start date
 // let currentGroupString: string = ""; // the current string for groups to make it run faster (you can name it cache, i guess?)
 // let logGroups: string[] = []; // groups for console.group()
