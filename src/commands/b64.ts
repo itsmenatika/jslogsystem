@@ -2,6 +2,7 @@ import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { expectedError } from "../apis/allApis.js";
 import { multiLineConstructor } from "../texttools.js";
+import { cleanReturner } from "../tools/cleanReturner.js";
 
 const commandTable = quickCmdWithAliases("base64", {
         usageinfo: "base64 [<-e | -d>] <data...>",
@@ -18,15 +19,18 @@ const commandTable = quickCmdWithAliases("base64", {
         callback(preargs: string[]){
             const args = smartArgs(preargs, this);
 
+            // get options
             const isDecode = args.dashCombined.includes("d");
             const isEncode = args.dashCombined.includes("e");
 
+            // exclusivity
             if(isDecode && isEncode){
                 return expectedError("-b and -e are exclusive");
             }
 
             let toRet: string[] = [];
-
+            
+            // encode or decode :3
             for(const one of args.argsWithoutArguments){
                 if(typeof one !== "string") continue;
 
@@ -43,12 +47,7 @@ const commandTable = quickCmdWithAliases("base64", {
                 }
             }
             
-            
-
-            if(toRet.length === 0) return undefined;
-            else if(toRet.length === 1) return toRet[0];
-            return toRet;
-            // }
+            return cleanReturner(toRet);
     }                
 }, ["b64", "bs64"])
 
