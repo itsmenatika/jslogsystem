@@ -17,6 +17,11 @@ class commandApi extends connectedToSpecificTerminal{
         super(from);
     }
 
+
+    get listOfNames(){
+        return Object.keys(this.commandTable);
+    }
+
     /**
      * a collection created from provided commands
      * 

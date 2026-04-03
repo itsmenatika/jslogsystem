@@ -1,5 +1,5 @@
-import { log, logNode, LogType } from "../log.js";
-import { getTerminalOPJ, getTerminalOPJTYPE } from "../programdata.js";
+import { connectedToSpecificLogNode, log, logNode, LogType } from "../log.js";
+import { connectedToSpecificTerminal, getTerminalOPJ, getTerminalOPJTYPE } from "../programdata.js";
 import { formatTaskError } from "../texttools.js";
 
 /**
@@ -89,4 +89,57 @@ async function useWithAsync(
     }
 }
 
-export {useWith, useWithAsync}
+
+class useWithObj extends connectedToSpecificLogNode{
+    #silent: boolean | null | undefined = undefined;
+
+    constructor(from: getTerminalOPJTYPE = "main"){
+        super(from);
+    }
+    
+
+    silent(data: boolean | null | undefined): useWithObj{
+        this.#silent = data;
+        return this;
+    }
+
+    useWith(
+        message: string, func: CallableFunction, 
+        who?: string | logNode | undefined,
+        silent?: boolean | null
+    ): ReturnType<typeof useWith>{
+        const newWho = who === undefined ? this.who : who;
+        const newSilent = silent === undefined ? this.#silent : silent;
+
+
+        return useWith(message, func, newWho, newSilent, this.sessionName);
+    }
+
+    useWithAsync(
+        message: string, func: (...args: any) => Promise<any>, 
+        who?: string | logNode | undefined,
+        silent?: boolean | null
+    ): ReturnType<typeof useWithAsync>{
+        const newWho = who === undefined ? this.who : who;
+        const newSilent = silent === undefined ? this.#silent : silent;
+
+
+        return useWith(message, func, newWho, newSilent, this.sessionName);
+    }
+}
+
+function getCommonUseWith(from: getTerminalOPJTYPE = "main", who?: string | logNode, silent?: boolean | null): useWithObj{
+    const toRet = new useWithObj(from);
+
+    if(who !== undefined){
+        toRet.as(who);
+    }
+
+    if(silent !== undefined){
+        toRet.silent(silent);
+    }
+
+    return toRet;
+}
+
+export {useWith, useWithAsync, useWithObj, getCommonUseWith, getCommonUseWith as gcuw}

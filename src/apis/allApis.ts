@@ -25,3 +25,4 @@ export * from "./terminal/terminalMiddleApi.js";
 export * from "./terminal/textbox.js";
 export * from "./terminal/envMiddle.js";
 export * from "./terminal/envApi.js";
+export * from "./terminal/fullControl.js";

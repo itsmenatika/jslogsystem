@@ -20,6 +20,7 @@ const style = registerStyle(
         crash: "CRASH",
         group: "GROUP",
         timer: "TIMER",
+        debug: "DEBUG",
 
         info_secondary: "INFO",
         warning_secondary: "WARNING",
@@ -29,6 +30,7 @@ const style = registerStyle(
         init_secondary: "INIT",
         crash_secondary: "CRASH",
         group_secondary: "GROUP",
+        debug_secondary: "DEBUG",
 
         colors: {
             "info": consoleColors.FgWhite,
@@ -40,6 +42,7 @@ const style = registerStyle(
             "crash": consoleColors.FgRed,
             "group": consoleColors.FgGray,
             "timer": consoleColors.FgGray,
+            "debug": consoleColors.FgGray,
 
             "info_secondary": consoleColors.FgWhite,
             "warning_secondary": consoleColors.FgYellow,
@@ -50,6 +53,7 @@ const style = registerStyle(
             "crash_secondary": consoleColors.FgRed,
             "group_secondary": consoleColors.FgGray,
             "timer_secondary": consoleColors.FgGray,
+            "debug_secondary": consoleColors.FgGray,
 
             "date": consoleColors.FgGray,
             "who": consoleColors.FgMagenta,

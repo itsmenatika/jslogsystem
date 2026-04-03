@@ -92,6 +92,10 @@ const hideCursorCODE = ansiEscape + "[?25l";
 const showCursorCODE = ansiEscape + "[?25h";
 
 
+const alternateBufferCODE = ansiEscape + "[?1049h";
+const alternateBufferCODEExit = ansiEscape + "[?1049l";
+
+
 /**
  * returns unified formated error
  * @param taskName the name of the task
@@ -131,7 +135,7 @@ function printViewTextbox(text: string = "", stream: Writable | streamWrapper<wi
 
 
 function cursorAbs(x: number, y: number): string{
-    return `${ansiEscape}[${y};${x}H`
+    return `${ansiEscape}[${y};${x}H`;
 }
 
 function cursorAbsColumn(x: number): string{
@@ -244,7 +248,7 @@ type varTableType = Record<string, string | object>;
  * @param varTable variable list
  * @returns parsed string
  */
-function templateReplacer(from: string, varTable: varTableType = {}): string{
+async function templateReplacer(from: string, varTable: varTableType = {}): Promise<string>{
     let toRet: string[] = [];
 
     for(let i = 0; i < from.length; i++){
@@ -283,7 +287,15 @@ function templateReplacer(from: string, varTable: varTableType = {}): string{
                     if(from[i] === "." || from[i] === "}"){
                         const nameToTraverse: string = from.slice(startI, i).trim();
 
+                        if(nameToTraverse.length === 0){
+                            throw new ReferenceError("Was unable to traverse using empty string");
+                        }
+
                         startI = i + 1;
+
+                        if(typeof cur !== "object"){
+                            throw new ReferenceError("Unknown reference to " + nameToTraverse);
+                        }
 
                         cur = cur[nameToTraverse as keyof typeof cur];
 
@@ -318,11 +330,71 @@ function templateReplacer(from: string, varTable: varTableType = {}): string{
 
                 const numChar = from[i];
                 if(!numChar){
-                     throw new SyntaxError("a number is missing");
+                    throw new SyntaxError("$ requires next data to be passed");
                 }
                 
-                if(numChar == "$"){
+                if(numChar === "$"){
                     toRet.push("§");
+                    break;
+                }
+
+                if(numChar === "{"){
+                    i++;
+
+
+                    const temp: string[] = [];
+                    let g: number = i;
+                    while(
+                        i < from.length
+                    ){
+                        if(
+                            from[i] === "\\"
+                            &&
+                            i + 1 < from.length
+                            &&
+                            from[i + 1] === "}"
+                        ){
+                            if(g !== i){
+                                temp.push(
+                                    from.slice(g, i)
+                                );         
+                            }
+
+
+                            temp.push("}");
+                            i += 2;
+                            g = i;
+                        }
+
+                        if(from[i] == "}"){
+                            temp.push(
+                                from.slice(g, i)
+                            );
+                            break;
+                        }
+
+
+                        i++;
+                    }
+
+
+                    const toUse = temp.join("");
+
+                    if(!varTable.interpreter){
+                        throw new Error("no interpreter");
+                    }
+                    
+
+                    // @ts-ignore
+                    toRet.push(String(await varTable.interpreter(toUse)));
+
+
+
+                    if(from[i] !== "}"){
+                        throw new SyntaxError("} expected");
+                    }
+
+
                     break;
                 }
                 
@@ -465,5 +537,9 @@ export {
     minecraftColorPallete,
     templateReplacer,
 
-    capitalize
+    capitalize,
+
+
+    alternateBufferCODE,
+    alternateBufferCODEExit
 }

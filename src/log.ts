@@ -1,6 +1,6 @@
 import { logsReceiveType } from "./config.js";
 import { printClearMessage, printTextBox } from "./formatingSessionDependent.js";
-import { getTerminalOPJ, getTerminalOPJTYPE } from "./programdata.js";
+import { connectedToSpecificTerminal, getTerminalOPJ, getTerminalOPJTYPE } from "./programdata.js";
 import { colorTable, terminalStyles } from "./styles/common.js";
 import {clearEntireLineCODE, consoleColor, consoleColors, textBoxPrefix} from "./texttools.js";
 import { templateReplacer } from "./texttools.js";
@@ -25,7 +25,8 @@ enum LogType {
     COUNTER = 6,
     GROUP = 7,
     TIMER = 8,
-    SIGNAL = 9
+    SIGNAL = 9,
+    DEBUG = 10
 }
 
 
@@ -69,6 +70,8 @@ function resolveLogType(type: LogType): string {
             return "TIMER";
         case LogType.SIGNAL:
             return "SIGNAL";
+        case LogType.DEBUG:
+            return "DEBUG";
         default: return "UNKNOWN";
     }
 }
@@ -98,6 +101,8 @@ function resolveLogColor(type: LogType, table: colorTable): consoleColor {
             return table.group;
         case LogType.TIMER:
             return table.timer;
+        case LogType.DEBUG:
+            return table.debug;
         default: return consoleColors.Reset;
     }
 }
@@ -182,7 +187,7 @@ class logNode{
  * @param who the executioner (for the logs). Defaults to "core"
  * @param terminal the name of the terminal
  */
-function log(
+async function log(
     type: LogType, 
     message: string, 
     who: string | logNode = "core",
@@ -190,6 +195,9 @@ function log(
 ) {
     // get that terminal
     const terminalData = getTerminalOPJ(terminal);
+
+    if(terminalData.env.NOLOGS) return;
+    
     // const terminalData = typeof terminal === "string" ?
     // getLogSystemDataObj(terminal) as logSystemData : terminal;
 
@@ -231,12 +239,12 @@ function log(
         message
     }
 
-    const toDisplay = templateReplacer(
+    const toDisplay = await templateReplacer(
         terminalData.config.styles.logDisplayed,
         varTable
     );
 
-    const toWrite = templateReplacer(
+    const toWrite = await templateReplacer(
         terminalData.config.styles.logWritten,
         varTable
     );
@@ -248,7 +256,13 @@ function log(
         printClearMessage(terminalData);
     }
 
-    terminalData.out.write(toDisplay); // terminal
+    // terminal
+    if(terminalData.out.fastBufferStatusGet()){
+        terminalData.out.writeToHistory(toDisplay, false);
+    }
+    else{
+        terminalData.out.write(toDisplay); 
+    }
     
     terminalData.fileout.write(toWrite); // file
 
@@ -257,7 +271,7 @@ function log(
     // if there was a textbox, then get it back
     if(terminalData.viewTextbox){
         // terminalData.out.write(textBoxPrefix + terminalData.text);
-        printTextBox(terminalData);
+        await printTextBox(terminalData);
         // process.stdout.write("\r\x1b[0m> \x1b[35m"+text);
     }
 }
@@ -351,6 +365,111 @@ function timer(
 
 
 
+/**
+ * 
+ * allows you to get current debug state or set it
+ * 
+ * @param newState new state. If undefined it will not change
+ * @param terminal terminal session. Defaults to main
+ * @returns current debug state
+ */
+function debugState(newState?: boolean, terminal: getTerminalOPJTYPE = "main"): boolean{
+    const ses = getTerminalOPJ(terminal);
+
+    if(newState === true){
+        ses.env.DEBUG = true;
+    }
+    else if(newState === false){
+        ses.env.DEBUG = false;
+        delete ses.env.DEBUG;
+    }
+
+    return !!ses.env.DEBUG;
+}
+
+
+/**
+ * ensures that debug state is TRUE
+ * @param terminal terminal session. Defaults to main
+ * @returns if it was changed
+ */
+function ensureDebugOn(terminal: getTerminalOPJTYPE = "main"): boolean{
+    const ses = getTerminalOPJ(terminal);
+
+    const previousState = !ses.env.DEBUG;
+
+    ses.env.DEBUG = true;
+
+    return previousState;
+}
+
+/**
+ * ensures that debug state is FALSE
+ * @param terminal terminal session. Defaults to main
+ * @returns if it was changed
+ */
+function ensureDebugOff(terminal: getTerminalOPJTYPE = "main"): boolean{
+    const ses = getTerminalOPJ(terminal);
+
+    const previousState = !!ses.env.DEBUG;
+
+    ses.env.DEBUG = false;
+    delete ses.env.DEBUG;
+
+    return previousState;
+}
+
+/**
+ * 
+ * prints log DEBUG message only if DEBUG STATE is ON
+ * 
+ * @param message the message to print
+ * @param who the executioner (for the logs). Defaults to "core"
+ * @param terminal the name of the terminal
+ */
+function debug(
+    message: string, 
+    who: string | logNode = "core",
+    terminal: getTerminalOPJTYPE = "main"
+){
+    const ses = getTerminalOPJ(terminal);
+
+
+    if(ses.env.DEBUG)
+    log(LogType.DEBUG, message, who, terminal);
+}
+
+type whoType = logNode | string | undefined;
+class connectedToSpecificLogNode extends connectedToSpecificTerminal{
+    #who: whoType = undefined;
+
+    constructor(from: getTerminalOPJTYPE){
+        super(from);
+    }
+
+    
+    
+    public get who() : whoType {
+        return this.#who;
+    }
+
+    public set who(data: whoType){
+        this.#who = data;
+    }
+    
+
+
+    as(data: whoType): connectedToSpecificLogNode{
+        this.#who = data;
+
+        return this;
+    }
+
+    getAs(): whoType{
+        return this.#who;
+    }
+}
+
 
 export {
     LogType, logNode, log, 
@@ -358,6 +477,10 @@ export {
     assertConsole,
 
     info, error, init, warning, warning as warn,
-    timer, group, crash, success
+    timer, group, crash, success,
 
+
+    whoType, connectedToSpecificLogNode,
+
+    debug, debugState, ensureDebugOff, ensureDebugOn
 }

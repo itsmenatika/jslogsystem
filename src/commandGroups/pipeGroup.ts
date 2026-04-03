@@ -10,6 +10,7 @@ import { commandTable as parameter } from "../commands/parameter.js";
 import { commandTable as objtar } from "../commands/objecttoarray.js";
 import { commandTable as revr } from "../commands/reverse.js";
 import { commandTable as tonext } from "../commands/tonext.js";
+import { commandTable as cleanview } from "../commands/cleanview.js";
 import { commandTable as spacetoarguments } from "../commands/spacetoarguments.js";
 import { cmdTableToCommandCompounts } from "../tools/commandCreatorTools.js";
 import { commandCollection } from "../tools/commandCollection.js";
@@ -27,7 +28,8 @@ const commandTable = {
     ...objtar,
     ...revr,
     ...tonext,
-    ...spacetoarguments
+    ...spacetoarguments,
+    ...cleanview
 };
 
 const compounds = cmdTableToCommandCompounts(commandTable);

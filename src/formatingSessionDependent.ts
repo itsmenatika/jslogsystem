@@ -6,7 +6,8 @@ import stringWidth from 'string-width';
 
 
 interface printOptions{
-    noCursor?: boolean
+    noCursor?: boolean,
+    buffer?: null | boolean
 }
 
 /**
@@ -16,7 +17,7 @@ interface printOptions{
  * @param ses 
  * @returns 
  */
-function formatPrintTextbox(text: string | undefined, ses: terminalSession, ops: printOptions = {}){
+async function formatPrintTextbox(text: string | undefined, ses: terminalSession, ops: printOptions = {}){
     const ct = ses.config.styles.colors; // color table
     const loc = relative(ses.config.workingDirectory, ses.procLinked?.cwd() || ""); // get current cwd
 
@@ -113,7 +114,7 @@ function formatPrintTextbox(text: string | undefined, ses: terminalSession, ops:
     }
 
     // run template Replacer and return it
-    return templateReplacer(ses.config.styles.inputTextbox, varTable);
+    return await templateReplacer(ses.config.styles.inputTextbox, varTable);
     
     // return `${consoleColors.Reset}${loc}${consoleColors.Reset}${ct.textboxin_prefixSep}:${consoleColors.Reset}${ct.textboxin_terminalName}${ses.sessionName}${consoleColors.Reset}${ct.textboxin_infoSep} >${consoleColors.Reset} ${ct.textboxin_common}${stylizedText}${consoleColors.Reset}`;
 }
@@ -154,18 +155,18 @@ function printClearMessage(ses: terminalSession){
 }
 
 
-function printTextBox(ses: terminalSession, ops: printOptions = {}){
+async function printTextBox(ses: terminalSession, ops: printOptions = {}){
     const toReturn: string[] = [];
 
     toReturn.push(...getClearMessage(ses));
 
-    toReturn.push(formatPrintTextbox(ses.text, ses, ops));
+    toReturn.push(await formatPrintTextbox(ses.text, ses, ops));
     
     const finalText = toReturn.join("");
 
     ses.previousInputRender = finalText;
 
-    ses.out.write(finalText);
+    ses.out.write(finalText, undefined, false);
 }
 
 // /**

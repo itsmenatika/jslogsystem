@@ -11,3 +11,5 @@ export * from "./quickSetup.js";
 export * from "./welcome.js";
 export * from "./legacy.js";
 export * from "./cleanReturner.js";
+export * from "./useWith.js";
+export * from "./onlyIfDebug.js";

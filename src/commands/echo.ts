@@ -6,6 +6,7 @@ import { ansiEscape, capitalize, combineColors, consoleColor, consoleColors, min
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { multiDisplayer } from "../tools/multiDisplayer.js";
+import { commandInternalExec } from "../apis/commands/commandExecute.js";
 
 
 const commandTable = quickCmdWithAliases("echo", {
@@ -46,13 +47,20 @@ const commandTable = quickCmdWithAliases("echo", {
         "all passed arguments will have assigned a number starting from 0",
         "you can traverse using dot symbol",
         "The final product should be a string, boolean or number. Otherwise an error will be thrown",
-        "you can also access: sessionName, color, colors, mcolors, styles and specified enviromental variables"
+        "you can also access: sessionName, color, colors, mcolors, styles and specified enviromental variables",
+        "",
+        "${COMMAND} can be used to execute commands and directly extract the results",
+        "NOTE: commands with dashes may be interpreted by echo instead of an internal command, so it's recommended to use \"s!",
+        "NOTE: PIPE COMMANDS SHOULD BE PRECEDED by \\",
+        "",
+        "EXAMPELE: 'echo \"miliseconds: ${up -x | color}\"'"
     ),
     hidden: false,
     changeable: false,
     isAlias: false,
+    async: true,
     categories: ["generator", "text", "creator", "manipulation"],
-    callback(preArgs: string[]){
+    async callback(preArgs: string[]){
         let args = smartArgs(this.providedArgs, this);
         const legacy = askForLegacy(this);
 
@@ -96,6 +104,19 @@ const commandTable = quickCmdWithAliases("echo", {
             mcolors: minecraftColorPallete,
             colors: this._terminalSession.config.styles.colors,
             styles: {...this._terminalSession.config.styles, colors: undefined},
+            interpreter: async (data: string) => {
+                const res = await commandInternalExec(data, {
+                    logNode: this.logNode,
+                    silent: true,
+                    onlyReturn: true,
+                    terminal: this.sessionName
+                });
+
+
+                return String(res);
+
+
+            }
         };
 
         
@@ -106,7 +127,7 @@ const commandTable = quickCmdWithAliases("echo", {
 
         let text;
         try {
-            text = templateReplacer(
+            text = await templateReplacer(
                 toparse, varTable
             );
         } catch (error) {

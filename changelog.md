@@ -2,6 +2,38 @@
 
 ## 1.3X
 
+### 
+
+### 1.3.5
+
+bugfixes:
+* useWith now works properly
+
+core changes:
+  * new supported log type:
+    * DEBUG
+  * debugState function to change debug state
+
+new apis:
+  * fullControl -> api that allows to temporaily take full control of a javascript (including streams). It allows to use other scripts that for example require readline interface
+
+api changes:
+  * commandApi
+    * listOfNames -> ability to list all command names (including aliases)
+
+command changes:
+  * echo
+      * ${COMMAND} now allows you to execute commands
+          NOTE: it may be moved into the terminal in the future instead of being in command (compatibility will be ensured though)
+
+new commands:
+  * runtime -> shows runtime information
+  * debug -> switches debug mode
+  * cleanview -> allows you to display passed data in alternate buffer screen (using fullControl api)
+
+new tools:
+  * only ifDebug api
+
 ### 1.3.4
 
 added:

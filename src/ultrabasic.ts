@@ -1,6 +1,7 @@
 import { Socket } from "node:net";
 import Stream, { Duplex, Writable } from "node:stream";
 import type { terminalSession } from "./programdata.js";
+import { alternateBufferCODE, alternateBufferCODEExit } from "./texttools.js";
 
 
 const uptimeVar = Date.now();
@@ -95,6 +96,13 @@ type allRoutes = errRoute | outRoute | inRoute;
 type withWriteFunc = allRoutes | Writable | Duplex | Socket | undefined;
 
 
+type eventMapType<T> = keyof certainEvents<(
+    allRoutes
+)>;
+
+type listenerFunction<T> = (...args: eventArgsMap[certainEvents<T>]) => void;
+type listenerPair<T> = [certainEvents<T>, listenerFunction<T>];
+type listenersTable<T> = listenerPair<T>[];
 
 class streamWrapper<T extends (
     Writable | ReadableStream | allRoutes | Duplex | Socket | undefined
@@ -102,28 +110,122 @@ class streamWrapper<T extends (
     session?: terminalSession;
     private stream?: T;
     #history: any[] = [];
-    private listeners: [string, CallableFunction][] = [];
+    #historyAlt: any[] = [];
+    #buffer: boolean = false;
+    private listeners: listenersTable<T> = [];
 
 
     constructor(stream?: T){
         this.stream = stream;
     }
 
+
+    fastBufferStatusGet(): Readonly<boolean>{
+        return this.#buffer;
+    }
+
+
+    isHistoryEmpty(bufferType?: boolean | null): boolean{
+        if(bufferType === undefined) bufferType = this.#buffer; 
+
+        if(bufferType === null){
+            return this.#history.length === 0 && this.#historyAlt.length === 0
+        }
+
+        if(bufferType){
+            return this.#historyAlt.length === 0
+        }
+
+        return this.#history.length === 0;
+    }
+
+    writeToHistory(data: any, bufferType?: boolean): void{
+        if(bufferType === undefined) bufferType = this.#buffer; 
+
+        if(bufferType){
+            this.#historyAlt.push(data);
+        }
+        else{
+            this.#history.push(data);
+        }
+    }
+
+    clearHistory(bufferType?: boolean | null): void{
+        if(bufferType === undefined) bufferType = this.#buffer; 
+
+        else if(bufferType === null){
+            this.#historyAlt = [];
+            this.#history = [];
+            return;
+        }
+
+        if(bufferType){
+            this.#historyAlt = [];
+        }
+        else{
+            this.#history = [];
+        }
+    }    
+
+    alternateBuffer(this: streamWrapper<withWriteFunc>, status: undefined | boolean | null, callback?: any): Readonly<boolean>{
+        if(status === null){
+            status = !this.#buffer;
+        }
+
+
+        if(status !== undefined){
+            if(status === this.#buffer) return this.#buffer;
+            this.#buffer = status;
+
+            const codeTouse = this.#buffer ? alternateBufferCODE : alternateBufferCODEExit;
+            
+            if(this.stream) this.stream.write(codeTouse, callback);
+            else if(callback) callback();
+
+        }
+
+        return this.#buffer;
+    }
+
     write(
         this: streamWrapper<withWriteFunc>,
-        chunk: any, callback?: any
+        chunk: any, callback?: any, buffer?: boolean
     ){
- 
+        if(buffer === undefined) buffer = this.#buffer;
+
+        if(buffer !== this.#buffer){
+            if(buffer){
+                if(this.stream) this.stream.write(alternateBufferCODEExit);
+            }
+            else{
+                if(this.stream) this.stream.write(alternateBufferCODE);
+            }
+        }
+
 
         if(this.stream) this.stream.write(chunk, callback);
         else if(callback) callback();
-        this.#history.push(chunk);
+
+
+        if(buffer !== this.#buffer){
+            if(buffer){
+                if(this.stream) this.stream.write(alternateBufferCODE);
+            }
+            else{
+                if(this.stream) this.stream.write(alternateBufferCODEExit);
+            }
+        }
+
+        this.writeToHistory(chunk, buffer);
     }
 
     rewrite(
         this: streamWrapper<withWriteFunc>,
-        clean: boolean = false, expectStream: boolean = false
+        clean: boolean = false, expectStream: boolean = false, buffer?: boolean
     ){
+        if(buffer === undefined) buffer = this.#buffer;
+        if(buffer !== this.#buffer) return;
+
         if(expectStream && !this.stream){
             throw new logSystemError("no stream attached!");
         }
@@ -136,18 +238,26 @@ class streamWrapper<T extends (
             (this.stream as Writable).write(this.#history[i]);
         }
 
-        if(clean) this.#history = [];
+        if(clean){
+            this.clearHistory(this.#buffer);
+        }
     }
 
-    getHistory(asCopy: boolean = false): Readonly<any[]>{
+    getHistory(asCopy: boolean = false, bufferType: boolean = this.#buffer): Readonly<any[]>{
+
+
         if(asCopy){
-            return [...this.#history];
+            return bufferType ? [...this.#historyAlt] : [...this.#history];
         }
 
-        return this.#history;
+        return bufferType ? this.#historyAlt : this.#history;
     }
 
-    setHistory(data: any[] | Readonly<any[]> = []){
+    setHistory(data: any[] | Readonly<any[]> = [], bufferType: boolean = this.#buffer){
+        if(bufferType){
+            return this.#historyAlt = data as any[];
+        }
+
         return this.#history = data as any[];
     }
 
@@ -166,14 +276,51 @@ class streamWrapper<T extends (
         this.stream = stream;
     }
 
-    addListener<W extends certainEvents<T>>(
+    addListener(
         this: streamWrapper<Writable | allRoutes | undefined>,
-        event: W, listener: (...args: eventArgsMap[W]) => void
+        event: certainEvents<T>, listener: listenerFunction<T>
     ): void{
         if(this.stream){
             this.stream?.addListener(event, listener);
+
+            // typescript kill yourself
+
+            // @ts-expect-error
             this.listeners.push([event, listener]);
         }
+    }
+
+    setListenersFromSavedList(
+        this: streamWrapper<Writable | allRoutes>,
+        data: listenersTable<T> | Readonly<listenersTable<T>>
+    ): Readonly<listenersTable<T>>{
+        // remove previous listeners
+        this.removeAllListeners();
+
+        // typescript kill yourself
+
+        // @ts-expect-error
+        return this.addListenersFromSavedList(data) as Readonly<listenersTable<T>>;
+    }
+
+    addListenersFromSavedList(
+        this: streamWrapper<Writable | allRoutes>,
+        data: listenersTable<T> | Readonly<listenersTable<T>>
+    ): Readonly<listenersTable<T>>{
+        
+        for(const [eventName, func] of data){
+            // @ts-expect-error
+            this.addListener(eventName, func);
+        }
+
+        // typescript kill yourself
+
+        // @ts-expect-error
+        return this.listeners;
+    }
+
+    getAttachedListenersFromWrapper(): Readonly<listenersTable<T>>{
+        return this.listeners;
     }
 
     removeListener<W extends certainEvents<T>>(
@@ -198,6 +345,19 @@ class streamWrapper<T extends (
         this.stream?.removeAllListeners();
 
         this.listeners = [];
+        
+    }
+
+    rawMode(setTo?: boolean): boolean | undefined{
+        const stream = this.getStream();
+        if(!stream) return undefined;
+
+        if(setTo !== undefined){
+            (stream as typeof process.stdin).setRawMode(setTo);
+        }
+
+
+        return (stream as typeof process.stdin).isRaw;
     }
 }
 
@@ -213,5 +373,5 @@ function isTty(stream: withWriteFunc): stream is TTYLike{
 }
 
 
-export {uptimeVar, logSystemError, pseudoStreamWriteAble, pseudoStreamWriteAbleListenable, streamWrapper, isTty}
+export {uptimeVar, logSystemError, pseudoStreamWriteAble, pseudoStreamWriteAbleListenable, streamWrapper, isTty, listenersTable, listenerFunction, listenerPair}
 export type {withWriteFunc}

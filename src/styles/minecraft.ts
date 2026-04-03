@@ -20,6 +20,7 @@ const style = registerStyle(
             "crash": consoleColors.FgRed,
             "group": consoleColors.FgGray,
             "timer": consoleColors.FgGray,
+            "debug": consoleColors.FgGray,
 
             "date": consoleColors.FgGray,
             "who": consoleColors.FgMagenta,

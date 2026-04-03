@@ -24,7 +24,7 @@ function clearConsole(terminal: getTerminalOPJTYPE = "main", clearBuf: boolean =
     // process.stdout.cursorTo(0,0);
     // process.stdout.clearScreenDown();
 
-    if(terminalData?.viewTextbox){
+    if(terminalData?.viewTextbox && !terminalData.out.alternateBuffer(undefined)){
         printViewTextbox(terminalData.text);
     }
 }

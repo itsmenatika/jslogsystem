@@ -348,7 +348,7 @@ async function inHandler(data: any, ses: terminalSession){
                 //     cursorRel(ses.relativeTextboxPos, 0) +
                 //      showCursorCODE
                 // );
-                printTextBox(ses);
+                await printTextBox(ses);
 
                 // ses.out.write(hideCursorCODE + clearEntireLineCODE + "\r");
 
@@ -364,7 +364,7 @@ async function inHandler(data: any, ses: terminalSession){
 
             ses.text += data;
             // ses.out.write(data); 
-            printTextBox(ses);
+            await printTextBox(ses);
         }
 
 
@@ -581,7 +581,7 @@ async function userTerminalAction(ses: terminalSession, action: terminalUserActi
     if(Math.abs(ses.relativeTextboxPos) > ses.text.length) ses.relativeTextboxPos = ses.text.length;
 
     if(ses.viewTextbox)
-    printTextBox(ses);
+    await printTextBox(ses);
 }
 
 /**
@@ -595,16 +595,17 @@ function setupInHandlerListener(ses: terminalSession, setupStream: boolean = tru
 
         if(s){
             if(!s.isRaw) s?.setRawMode(true);
-            s.setDefaultEncoding("utf-8");
-            s.setEncoding("utf-8");
-            emitKeypressEvents(s);
+            // s.setDefaultEncoding("utf-8");
+            // s.setEncoding("utf-8");
+            // emitKeypressEvents(s);
         }
     }
 
     ses.in.addListener(
         "data",
-        async (chunk) => {
-            await inHandler(chunk, ses);
+        // @ts-expect-error
+        async (chunk: Buffer) => {
+            await inHandler(chunk.toString("utf-8"), ses);
         }
     );
 }
@@ -615,7 +616,7 @@ async function handleEnter(ses: terminalSession){
     if(ses.text.trim() == "") return;
     
     // redraw inputbox without any selection
-    printTextBox(ses, {noCursor: true});
+    await printTextBox(ses, {noCursor: true});
     
     // save to command history
     if(ses.commandHistory.length > 50) 

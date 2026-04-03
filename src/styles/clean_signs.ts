@@ -20,6 +20,7 @@ const style = registerStyle(
         crash: "🚩",
         group: "📁",
         timer: "🕑",
+        debug: "⚙️",
         
         colors: {
             "info": consoleColors.NoColor,
@@ -31,6 +32,7 @@ const style = registerStyle(
             "crash": consoleColors.NoColor,
             "group": consoleColors.NoColor,
             "timer": consoleColors.NoColor,
+            "debug": consoleColors.NoColor,
 
             "date": combineColors(consoleColors.BgGray, consoleColors.FgBlack),
             "who": consoleColors.FgMagenta,

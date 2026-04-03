@@ -56,6 +56,9 @@ class commandCollection{
 
 
 
+    keys(){
+        return Object.keys(this.#cmdTable);
+    }
 
     /**
      * copies the command list and returns it

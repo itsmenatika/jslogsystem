@@ -21,6 +21,7 @@ const style = registerStyle(
         crash: "CRASH",
         group: "GROUP",
         timer: "TIMER",
+        debug: "DEBUG",
         
         colors: {
             "info": combineColors(consoleColors.FgWhite),
@@ -32,6 +33,7 @@ const style = registerStyle(
             "crash": combineColors(consoleColors.BgRed, consoleColors.FgBlack),
             "group": combineColors(consoleColors.BgMagenta, consoleColors.FgBlack),
             "timer": combineColors(consoleColors.BgMagenta, consoleColors.FgBlack),
+            "debug": combineColors(consoleColors.BgMagenta, consoleColors.FgBlack),
 
             "date": combineColors(consoleColors.BgGray, consoleColors.FgBlack),
             "who": consoleColors.FgMagenta,

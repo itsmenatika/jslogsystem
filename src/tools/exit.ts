@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import { textboxVisibility } from "../apis/allApis.js";
-import { crash } from "../log.js";
+import { crash, logNode } from "../log.js";
 import { getTerminal, getTerminalOPJ, getTerminalOPJTYPE, terminalSessionObjSaved } from "../programdata.js";
 
 /**
@@ -11,7 +11,7 @@ import { getTerminal, getTerminalOPJ, getTerminalOPJTYPE, terminalSessionObjSave
  */
 function actualCrash(
     message: string, 
-    who?: string, 
+    who?: string | logNode, 
     exitCode?: any,
     terminal: getTerminalOPJTYPE = "main",
 ){

@@ -383,7 +383,7 @@ const default_configData: configDataProvide | {
     LogDirectory: "logs",
     latestLog: "latest.txt",
     getVersionData(): string {
-        return "That update was focused on terminal sessions and configuration\nHope you enjoy it!\n\nYou can change it by changing config.getVersionData() function";
+        return "IT'S NOT READY YET!";
     },
     logFileHeader(){
         const dateObj = new Date();
@@ -420,7 +420,7 @@ const default_configData: configDataProvide | {
     tempLatest: "temp",
     legacy: constructLegacyData(),
 
-    logSystemVersion: [1.33, "1.33"],
+    logSystemVersion: [1.35, "1.35"],
 
     commandTable: {},
 

@@ -3,6 +3,7 @@ import { commandTable as clearZ } from "../commands/clear.js";
 import { commandTable as bindZ } from "../commands/bind.js";
 import { commandTable as versionZ } from "../commands/version.js";
 import { commandTable as sleep } from "../commands/sleep.js";
+import { commandTable as debug } from "../commands/debug.js";
 import { cmdTableToCommandCompounts } from "../tools/commandCreatorTools.js";
 import { commandCollection } from "../tools/commandCollection.js";
 
@@ -12,7 +13,8 @@ const commandTable = {
     ...clearZ,
     ...bindZ,
     ...versionZ,
-    ...sleep
+    ...sleep,
+    ...debug
 };
 
 const compounds = cmdTableToCommandCompounts(commandTable);

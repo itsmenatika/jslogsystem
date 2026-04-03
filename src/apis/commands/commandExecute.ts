@@ -212,7 +212,7 @@ async function commandInternalExec(
 
     // the information about the command execution
     if(!op.silent)
-    log(LogType.INFO, `This command has been executed: '${text}'`, op.logNode, session);
+    await log(LogType.INFO, `This command has been executed: '${text}'`, op.logNode, session);
 
     const prev = textboxVisibility(undefined, session);
 

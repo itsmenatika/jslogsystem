@@ -11,6 +11,7 @@ interface colorTableProvide{
     "crash"?: allColorType,
     "group"?: allColorType,
     "timer"?: allColorType,
+    "debug"?: allColorType,
 
     "info_secondary"?: allColorType,
     "warning_secondary"?: allColorType,
@@ -21,6 +22,7 @@ interface colorTableProvide{
     "crash_secondary"?: allColorType,
     "group_secondary"?: allColorType,
     "timer_secondary"?: allColorType,
+    "debug_secondary"?: allColorType,
 
     "date"?: allColorType,
     "who"?: allColorType,
@@ -93,6 +95,7 @@ interface terminalStylesProvide extends Record<string, any>{
     init?: string,
     crash?: string,
     group?: string,
+    debug?: string,
 
     info_secondary?: string,
     warning_secondary?: string,
@@ -102,6 +105,7 @@ interface terminalStylesProvide extends Record<string, any>{
     init_secondary?: string,
     crash_secondary?: string,
     group_secondary?: string,
+    debug_secondary?: string,
 
     colors?: colorTableProvide
 }

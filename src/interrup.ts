@@ -1,5 +1,5 @@
 import { removeTerminalQuick, textboxVisibility } from "./apis/allApis.js";
-import { log, LogType } from "./log.js";
+import { log, logNode, LogType } from "./log.js";
 import { consoleWrite } from "./out.js";
 import { getTerminalOPJ, getTerminalOPJTYPE, removeTerminal, terminalSession, terminalSessionObjSaved } from "./programdata.js";
 import { consoleColors, formatError } from "./texttools.js";
@@ -19,7 +19,7 @@ interface InterupData{
     reason: interrupReasonType,
     session: terminalSession,
     sessionName: string,
-    author: string,
+    author: string | logNode,
     forceDefault: boolean
 }
 

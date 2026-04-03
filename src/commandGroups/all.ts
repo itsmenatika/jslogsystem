@@ -6,8 +6,8 @@ import { commandTable as streamsC } from "./streams.js";
 import { commandTable as thatShell } from "./thatShell.js";
 import { commandTable as thatShellUserFriendly } from "./thatShellUserFriendly.js";
 import { commandTable as webGroup } from "./webGroup.js";
+import { commandTable as funGroup } from "./funGroup.js";
 import { commandTable as uptime} from "../commands/uptime.js";
-import { commandTable as meow} from "../commands/meow.js";
 import { commandCollection } from "../tools/commandCollection.js";
 
 
@@ -19,8 +19,8 @@ const commandTable = {
     ...thatShell,
     ...thatShellUserFriendly,
     ...webGroup,
-    ...uptime,
-    ...meow
+    ...funGroup,
+    ...uptime
 };
 
 const compounds = cmdTableToCommandCompounts(commandTable)

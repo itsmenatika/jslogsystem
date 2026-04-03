@@ -1,12 +1,16 @@
 import { exit } from "process";
-import { askForBindApi, askForCommandApi, commandCompoundType, terminalApi } from "../apis/allApis.js";
+import { askForBindApi, askForCommandApi, commandCompoundType, expectedError, terminalApi } from "../apis/allApis.js";
 import { commandDividerInternal, pipeDividerInternal } from "../apis/commands/commandParser.js";
-import { multiLineConstructor } from "../texttools.js";
+import { consoleColors, multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { consoleShortHand } from "../tools/consoleShortHand.js";
 import { consoleWrite } from "../out.js";
 import { uptimeVar } from "../ultrabasic.js";
+import { askForFullControl } from "../apis/terminal/fullControl.js";
+import { setTimeout } from "timers/promises";
+import { createInterface } from "readline/promises";
+import { debug } from "../log.js";
 
 const commandTable = quickCmdWithAliases("internal", {
     usageinfo: "internal <function> [<...data>]",
@@ -38,13 +42,14 @@ const commandTable = quickCmdWithAliases("internal", {
         "bindapi",
         "cmdapi",
         "",
-        "those functions won't be documented"
+        "those functions won't be documented!!"
     ),
     hidden: false,
     changeable: false,
     isAlias: false,
+    async: true,
     categories: ["unsafe", "internal", "testing"],
-    callback(preargs: any[]): any{
+    async callback(preargs: any[]): Promise<any>{
         const args = smartArgs(preargs, this);
 
 
@@ -150,11 +155,72 @@ const commandTable = quickCmdWithAliases("internal", {
 
                 return "s";
             }
+
+
+            case "alt": {
+                const fulcon = askForFullControl(this);
+
+                await fulcon.codeAsyncAlt(async () => {
+                    consoleWrite("s", consoleColors.FgRed);
+                    
+                    await setTimeout(2000);
+                });
+
+                return 's';
+            }
+
+
+            case "fullcontroltest":
+            {
+                const fulcon = askForFullControl(this);
+
+                const m = await fulcon.codeAsync(
+                    async () => {
+                        
+                        const s = await createInterface(process.stdin, process.stdout);
+
+                        const w = await s.question("imie: ");
+
+                        
+
+                        s.close();
+
+                
+                        return w;
+
+
+
+                    }
+                );
+
+                return "hej " + m + " !!";
+
+
+                break;
+            }
+            case "debuglogtest": {
+                debug("meow!");
+                break;
+            }
+
+            default:{
+                return expectedError("internal function not found!");
+            }
         }
+
 
         return undefined;
     }
 });
+
+function getAllListeners(emitter: any) {
+  const result = {};
+  for (const event of emitter.eventNames()) {
+    // @ts-ignore
+    result[event] = emitter.listeners(event).slice(); // copy
+  }
+  return result;
+}
 
 
 const compounds = cmdTableToCommandCompounts(commandTable)

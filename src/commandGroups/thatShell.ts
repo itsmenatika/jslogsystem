@@ -11,6 +11,8 @@ import { commandTable as envZ } from "../commands/environment.js";
 import { commandTable as sleep } from "../commands/sleep.js";
 import { commandTable as call } from "../commands/call.js";
 import { commandTable as loggroup } from "../commands/loggroup.js";
+import { commandTable as runtime } from "../commands/runtime.js";
+import { commandTable as debug } from "../commands/debug.js";
 import { cmdTableToCommandCompounts } from "../tools/commandCreatorTools.js";
 import { commandCollection } from "../tools/commandCollection.js";
 
@@ -28,7 +30,9 @@ const commandTable = {
     ...envZ,
     ...sleep,
     ...call,
-    ...loggroup
+    ...loggroup,
+    ...runtime,
+    ...debug
 };
 
 const compounds = cmdTableToCommandCompounts(commandTable);
