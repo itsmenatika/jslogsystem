@@ -389,7 +389,7 @@ const default_configData: configDataProvide | {
     LogDirectory: "logs",
     latestLog: "latest.txt",
     getVersionData(): string {
-        return "IT'S NOT READY YET!";
+        return "The new beginning";
     },
     logFileHeader(){
         const dateObj = new Date();
