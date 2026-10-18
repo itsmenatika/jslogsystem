@@ -5,12 +5,15 @@ import { consoleColors, multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { consoleShortHand } from "../tools/consoleShortHand.js";
-import { consoleWrite } from "../out.js";
+import { consoleWrite, screenWrite } from "../out.js";
 import { uptimeVar } from "../ultrabasic.js";
 import { askForFullControl } from "../apis/terminal/fullControl.js";
 import { setTimeout } from "timers/promises";
 import { createInterface } from "readline/promises";
 import { debug } from "../log.js";
+import { askQuestion } from "../apis/terminal/asker.js";
+import { mouseEventReportingType, mouseReportingFormat } from "../programdata.js";
+import { inspect } from "util";
 
 const commandTable = quickCmdWithAliases("internal", {
     usageinfo: "internal <function> [<...data>]",
@@ -200,6 +203,69 @@ const commandTable = quickCmdWithAliases("internal", {
             }
             case "debuglogtest": {
                 debug("meow!");
+                break;
+            }
+
+            case "infulcon": {
+                const w = askForFullControl(this);
+
+                return w.codeAsync(async () => {
+                    const ns = createInterface({
+                        input: w.getNewListener_in_raw(),
+                        output:w.getNewListener_out_raw()
+                    });
+
+                    const hu = await ns.question("who are you: ");
+
+                    ns.close();
+
+                    return hu;
+
+                });
+
+                const ns = createInterface({
+                    input: w.getNewListener_in_raw(),
+                    output: w.session.out.getStream()
+                });
+
+                const hu = ns.question("who are you: ");
+
+                ns.close();
+
+                return hu;
+                break;
+            }
+
+            case "asktest": {
+                const d = await askQuestion(this.sessionName, "how are you?", {prompt: ">"});
+
+                // const w = askForFullControl(this);
+                // await w.codeAsync(async () => {
+                    
+                // })
+                break;
+            }
+
+            case "mousetest": {
+                const fulcon = askForFullControl(this);
+                fulcon.mouseSetEncoding(mouseReportingFormat.default);
+                fulcon.mouseSetReporting(mouseEventReportingType.mouseClickOnlyTracking);
+                await fulcon.codeAsyncAlt(async () => {
+                    const out = fulcon.getNewListener_in_raw();
+
+                    out.on("data", (buf) => {
+                        screenWrite(inspect(buf), fulcon.sessionName);
+                    });
+
+                    await fulcon.wait(2500);
+                });
+                break;
+            }
+            case "fulconer":{
+                const fulcon = askForFullControl(this);
+                await fulcon.codeAsyncAlt(async () => {
+                    throw new Error("test");
+                });
                 break;
             }
 

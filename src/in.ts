@@ -2,7 +2,7 @@
 import { emitKeypressEvents } from "readline";
 import { commandInternalExec } from "./apis/commands/commandExecute.js";
 import { formatPrintTextbox, printTextBox } from "./formatingSessionDependent.js";
-import { terminalSession, terminalSessionObjSaved } from "./programdata.js";
+import { sessionState, terminalSession, terminalSessionObjSaved } from "./programdata.js";
 import { ansiEscape, clearEntireLineCODE, consoleColors, cursorAbs, cursorRel, formatTaskError, hideCursorCODE, printViewTextbox, showCursorCODE } from "./texttools.js";
 import { isTty, streamWrapper } from "./ultrabasic.js";
 import { terminalApi } from "./apis/terminal/terminalApi.js";
@@ -40,6 +40,23 @@ const allowedKeysToWrite: string = "abcdefghijklmnopqrstuxwvyz" + "abcdefghijklm
 //     // handleCommandInternal(text, silent);
 //     // commandInternalExec(text);
 // }
+
+
+async function preInHandler(data: any, ses: terminalSession){
+    switch(ses.state){
+        case sessionState.delegate:{
+            if(data.includes('\u0003')){
+                ses.state = sessionState.default;
+                ses.inputRejectFunction("cancel", ses);
+                break;
+            }
+
+            return await ses.inputDelegateFunction(data, ses);
+        }
+        default:
+            return await inHandler(data.toString("utf-8"), ses);
+    }
+}
 
 async function inHandler(data: any, ses: terminalSession){
     //    console.log(data);
@@ -605,7 +622,7 @@ function setupInHandlerListener(ses: terminalSession, setupStream: boolean = tru
         "data",
         // @ts-expect-error
         async (chunk: Buffer) => {
-            await inHandler(chunk.toString("utf-8"), ses);
+            await preInHandler(chunk, ses);
         }
     );
 }

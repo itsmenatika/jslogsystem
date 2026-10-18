@@ -1,5 +1,5 @@
 import { commandContext } from "../apis/commands/types.js";
-import { cd } from "../apis/commands/osApis/filesystem.js";
+import { cd, getCwdToShow, getCwdToShowFromString } from "../apis/commands/osApis/filesystem.js";
 import { log, LogType } from "../log.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
@@ -21,12 +21,12 @@ const commandTable = quickCmdWithAliases("cd", {
     hidden: false,
     changeable: false,
     isAlias: false,
-    categories: ["filesystem"],
+    categories: ["filesystem", "directory"],
     callback(preArgs: any[]): string | undefined | expectedErrorType{
         const args = smartArgs(preArgs, this);
 
         if(args.args.length === 0){
-            return this.cwd;
+            return getCwdToShow(this);
         }
 
         let loc
@@ -34,11 +34,11 @@ const commandTable = quickCmdWithAliases("cd", {
             loc = cd(this, args.args);
         } catch (error) {
             // log(LogType.ERROR, "couldn't enter the directory", this.logNode);
-            return expectedError(`It was not possible to enter the directory: ${join(this.cwd, ...args.args)}`);
+            return expectedError(`It was not possible to enter the directory: ${getCwdToShowFromString(this, join(this.cwd, ...args.args))}`);
         }
 
 
-        return loc;
+        return getCwdToShow(this);
     }
 }, ["pwd", "cwd"])
 

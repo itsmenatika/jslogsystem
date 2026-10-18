@@ -12,6 +12,7 @@ import { commandTable as revr } from "../commands/reverse.js";
 import { commandTable as tonext } from "../commands/tonext.js";
 import { commandTable as cleanview } from "../commands/cleanview.js";
 import { commandTable as spacetoarguments } from "../commands/spacetoarguments.js";
+import { commandTable as isRedacted } from "../commands/isredacted.js";
 import { cmdTableToCommandCompounts } from "../tools/commandCreatorTools.js";
 import { commandCollection } from "../tools/commandCollection.js";
 
@@ -29,7 +30,8 @@ const commandTable = {
     ...revr,
     ...tonext,
     ...spacetoarguments,
-    ...cleanview
+    ...cleanview,
+    ...isRedacted
 };
 
 const compounds = cmdTableToCommandCompounts(commandTable);

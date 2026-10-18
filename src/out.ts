@@ -5,9 +5,65 @@ import { logSystemError, streamWrapper, withWriteFunc } from "./ultrabasic.js";
 import { getTerminal, getTerminalOPJ, getTerminalOPJTYPE, terminalSession } from "./programdata.js";
 import { printTextBox } from "./formatingSessionDependent.js";
 
+
+/**
+ * @lowlevel
+ * 
+ * writes a simple text to the screen
+ * 
+ * 
+ * @param data data to write
+ * @param terminal terminal like. It defaults to "main"
+ */
+function screenWrite(
+    data: any,
+    terminal: getTerminalOPJTYPE = "main"
+){
+    const d = getTerminalOPJ(terminal) as terminalSession;
+    d.out.write(data);
+}
+
+/**
+ * @lowlevel
+ * 
+ * writes a simple text to the file
+ * 
+ * 
+ * @param data data to write
+ * @param terminal terminal like. It defaults to "main"
+ */
+function fileWrite(
+    data: any,
+    terminal: getTerminalOPJTYPE = "main"
+){
+    const d = getTerminalOPJ(terminal) as terminalSession;
+    d.fileout.write(data);
+}
+
+
+/**
+ * @lowlevel
+ * 
+ * writes a simple text to the file
+ * 
+ * 
+ * @param data data to write
+ * @param terminal terminal like. It defaults to "main"
+ */
+function fileAndScreenWrite(
+    data: any,
+    terminal: getTerminalOPJTYPE = "main"
+){
+    const d = getTerminalOPJ(terminal) as terminalSession;
+    d.out.write(data);
+    d.fileout.write(data);
+}
+
 /**
  * IT'S A VERY LOW LEVEL. CONSIDER USING consoleWrite instead 
  * (or consoleMultiWrite or multiDisplayer if you want to have more abstraction)
+ * 
+ * screenWrite() is also a better choice
  * 
  * it just prints (or also writes to a file) as it says.
  * it will not care about displayed anything. It won't check for anything.
@@ -237,5 +293,9 @@ export {
     consolePairWrite,
     consoleMultiWrite,
     hideCursor,
-    showCursor
+    showCursor,
+
+    screenWrite,
+    fileWrite,
+    fileAndScreenWrite
 }

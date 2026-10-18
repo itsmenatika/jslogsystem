@@ -16,7 +16,7 @@ function constructStyles(data: terminalStylesProvide = {}): terminalStyles{
         Object.assign(newStyles.colors, data.colors);
     }
 
-    return Object.freeze(newStyles);
+    return newStyles;
 }
 
 

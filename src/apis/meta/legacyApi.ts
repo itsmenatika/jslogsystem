@@ -1,8 +1,11 @@
 import { legacyData } from "../../config.js";
+import { getTerminalOPJ, getTerminalOPJTYPE } from "../../programdata.js";
 import { commandContext } from "../commands/types.js";
 
-function askForLegacy(from: commandContext): Readonly<legacyData>{
-    return Object.freeze(from._terminalSession.config.legacy);
+function askForLegacy(from: getTerminalOPJTYPE): Readonly<legacyData>{
+    const ses = getTerminalOPJ(from);
+
+    return ses.config.legacy;
 }
 
 

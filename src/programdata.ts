@@ -1,11 +1,12 @@
 import { createWriteStream, existsSync, writeFileSync } from "fs";
-import { Writable } from "stream";
+import Stream, { Writable } from "stream";
 import { logSystemError, pseudoStreamWriteAble, streamWrapper, withWriteFunc } from "./ultrabasic.js";
 import { configData, configDataProvide, constructConfig, logsReceiveType } from "./config.js";
 import { inspect, InspectOptions, InspectOptionsStylized } from "util";
 import { consoleColors } from "./texttools.js";
 import type { commandContext } from "./apis/commands/types.js";
 import type { terminalApi } from "./apis/terminal/terminalApi.js";
+import type { LogType, logNode } from "./log.js";
 
 // let commandHistory: string[] = []; // user command history history
 // let indexCommandHistory: null | number = null; // the index of current selected
@@ -49,6 +50,51 @@ interface bindDetail{
 
 
 type bindData = Record<string, bindDetail>;
+
+
+enum sessionState{
+    default,
+    delegate
+}
+
+
+type inputDelegatefunction = (data: any, session: terminalSession) => Promise<void>;
+type inputRejectFunction = (reason: any, session: terminalSession) => Promise<void>;
+
+
+interface streamData{
+    stream: Stream
+}
+
+const globalStreamTable: Record<string, streamData> = {};
+
+enum mouseEventReportingType{
+    noEvents,
+    mouseClickOnlyTracking,
+    mouseDownUpTracking,
+    mouseHighlightMode,
+    mouseClickAndDraggingTracking,
+    mouseTrackingWithMovement
+}
+
+enum mouseReportingFormat{
+    default,
+    mouseReportFormatMultibyte,
+    mouseReportingFormatDigits,
+    mouseReportingFormatDigitsPixels,
+    mouseReportingFormatUrxvt
+}
+
+interface mouseStackEntry{
+    encoding: mouseReportingFormat,
+    mouseEventReporting: mouseEventReportingType
+}
+
+interface logDelayedEntry{
+    type: LogType, 
+    message: string, 
+    who: string | logNode
+}
 
 /**
  * a structure containing all session information
@@ -147,7 +193,9 @@ interface terminalSession{
     fileout: streamWrapper<withWriteFunc | undefined>,
 
     /**
-     * DOESNT WORK PROPERLY YET. MAY BE REMOVED IN THE FUTURE
+     * The way of receiving logs
+     * 
+     * It can be normal, block or wait
      */
     logsReceive: logsReceiveType,
 
@@ -184,6 +232,40 @@ interface terminalSession{
      * environment serving the same role as a default system environment variable table
      */
     env: Record<string | number | symbol, any>,
+
+    /**
+     * state of a session
+     */
+    state: sessionState,
+
+
+    /**
+     * the title of the window specific to that session
+     */
+    specificWindowTitle: void | string,
+
+    /**
+     * delegate function that is used to delegate data from input buffers if a proper session state is set
+     */
+    inputDelegateFunction: inputDelegatefunction,
+
+    /**
+     * delegate function that is used to rejectan  interaction from input buffers if a proper session state is set
+     */
+    inputRejectFunction: inputRejectFunction,
+
+
+    /**
+     * streams
+     */
+    streams: Record<string, streamData>,
+
+    /**
+     * information of enable status of user's mouse
+     */
+    mouseStack: mouseStackEntry[],
+
+    logsDelayed: Array<logDelayedEntry>,
     
     [Symbol.toStringTag]: () => string;
     [inspect.custom](depth: number, options: InspectOptions, inspect: (value: any, opts?: InspectOptionsStylized) => string): string;
@@ -367,6 +449,24 @@ function createNewTerminalData(
 
         cache: {},
 
+        state: sessionState.default,
+        specificWindowTitle: void 0,
+
+        inputDelegateFunction: (
+            async (data: any, session: terminalSession) => {}
+        ),
+        inputRejectFunction: (
+            async (reason: any, session: terminalSession) => {}
+        ),
+
+        streams: {},
+
+        mouseStack: [],
+
+
+        logsDelayed: [],
+
+
         [Symbol.toStringTag](){
             return this.sessionName;
         },
@@ -434,6 +534,19 @@ function saveterminalSessionObj(name: string, data: terminalSession){
  */
 function getTerminal(name: string): terminalSession | undefined{
     return terminalSessionObjSaved[name];
+}
+
+/**
+ * LOW LEVEL API
+ * 
+ * IT IS SAFE TO USE THAT LOW LEVEL API THO!
+ * 
+ * tries to get a session from the name
+ * @param name the name
+ * @returns session of undefined
+ */
+function terminalWithThatNameExists(name: string): boolean{
+    return Object.hasOwn(terminalSessionObjSaved, name);
 }
 
 type getTerminalOPJTYPE = string | terminalSession | commandContext | terminalApi;
@@ -630,5 +743,5 @@ class connectedToSpecificTerminal{
 }
 
 
-export {getTerminal, saveterminalSessionObj, createNewTerminal, removeTerminal, getTerminalOPJ, terminalSessionObjSaved, connectedToSpecificTerminal, getCurrentVersionOfLogSystem}
+export {mouseReportingFormat, mouseStackEntry, mouseEventReportingType, terminalWithThatNameExists, getTerminal, saveterminalSessionObj, createNewTerminal, removeTerminal, getTerminalOPJ, terminalSessionObjSaved, connectedToSpecificTerminal, getCurrentVersionOfLogSystem, sessionState, globalStreamTable}
 export type {terminalSession, getTerminalOPJTYPE, bindData, terminalCreateData}

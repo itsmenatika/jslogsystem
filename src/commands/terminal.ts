@@ -25,9 +25,11 @@ import { textboxVisibility } from "../apis/terminal/textbox.js";
 import { printTextBox } from "../formatingSessionDependent.js";
 import { getExactStyle, stylesNames, terminalStylesProvide } from "../styles/common.js";
 import path, { join } from "path";
+import { terminalTitleSetIfinIsStdin } from "../apis/allApis.js";
+import { logsReceiveType } from "../config.js";
 
 const commandTable = quickCmdWithAliases("terminal", {
-    usageinfo: "terminal [<name|uptime|history|cmdhis|inspect|list|switch|fork|exists|new|remove|exec|write|styleName|sn>] <...args>",
+    usageinfo: "terminal [<name|uptime|history|cmdhis|inspect|list|switch|fork|exists|new|remove|exec|write|styleName|sn|lgrc|logsreceive>] <...args>",
     desc: "managing terminal sessions",
     longdesc: multiLineConstructor(
         "The purpose of this command is to expose the front-end of terminal sesssions to an average user",
@@ -65,13 +67,18 @@ const commandTable = quickCmdWithAliases("terminal", {
         "* terminal inspect [<sessionName>] -> it will return the everything that the session currently stores (IT MAY BE REMOVED IN THE FUTURE! IT SHOULD BE ONLY USED FOR TESTING!)",
         "* terminal exec <this|sessionName> <command...> -> allows you to execute a command",
         "* terminal write <this|sessionName> <data...> -> allows you to print on another terminal",
-        "* terminal styleName/sn -> get the name of the current style",
+        "* terminal styleName/sn [<this|sessionName>] -> get the name of the current style",
+        "* terminal lgrc/logsreceive <this|sessionName> normal/block/wait -> it changes the way of receiving logs",
+        "   * normal -> normal way",
+        "   * block -> block all logs",
+        "   * wait -> delay all lgos"
     ),
     hidden: false,
     changeable: false,
     isAlias: false,
     categories: ["terminal", "shell", "session"],
-    callback(preargs: any[]): any{
+    async: true,
+    async callback(preargs: any[]): Promise<any>{
         // console.log(preargs);
         const args = smartArgs(preargs, this);
 
@@ -92,13 +99,35 @@ const commandTable = quickCmdWithAliases("terminal", {
         }
 
         let apNoEx = false; let anNoEx = false;
-        switch(args.args[0]){
+        switch(String(args.args[0]).toLowerCase()){
+            case "logsreceive":
+            case "lgrc":
+                {
+                    const termApi = askForTerminalApi(nameOfAnother);
+                    const value = args.args.slice(2).join(" ");
+
+                    if(!termApi.valid){
+                        return expectedError(`It was not possible to get access to the terminal '${nameOfAnother}'`);
+                    }
+
+                    const values = ['block', 'normal', 'wait'];
+
+                    if(!values.includes(value)){
+                        return expectedError("block, normal and wait are only possible types");
+                    }
+                      
+                    const toRet = await termApi.logsReceive();
+                    await termApi.logsReceive(logsReceiveType[value as keyof typeof logsReceiveType]);
+                    return toRet;
+                }   
+                break;
+
             case "cd": {
                 const pathParts = args.args.slice(2);
                 const ap = askForTerminalApi(nameOfAnother);
 
                 if(!ap.valid){
-                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                    return expectedError(`It was not possible to get access to the terminal '${nameOfAnother}'`);
                 }
 
                 if(pathParts.length > 2){
@@ -121,7 +150,7 @@ const commandTable = quickCmdWithAliases("terminal", {
             case "cmdhis":{
                 const termApi = askForTerminalApi(nameOfAnother);
                 if(!termApi.valid){
-                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                    return expectedError(`It was not possible to get access to the terminal '${nameOfAnother}'`);
                 }
                 return termApi.commandHistory();
             }
@@ -131,7 +160,7 @@ const commandTable = quickCmdWithAliases("terminal", {
             case "time":{
                 const ap = askForTerminalApi(nameOfAnother);
                 if(!ap.valid){
-                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                    return expectedError(`It was not possible to get access to the terminal '${nameOfAnother}'`);
                 }
 
                 if(args.dashCombined.includes("o")){
@@ -156,7 +185,7 @@ const commandTable = quickCmdWithAliases("terminal", {
             case "history":{
                 const termData = askForTerminalApi(nameOfAnother);
                 if(!termData.valid){
-                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                    return expectedError(`It was not possible to get access to the terminal '${nameOfAnother}'`);
                 }
                 return termData.outStreamHistory();
             }
@@ -192,7 +221,7 @@ const commandTable = quickCmdWithAliases("terminal", {
             case "session": {
                 const termData = askForTerminalApi(nameOfAnother);
                 if(!termData.valid){
-                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                    return expectedError(`It was not possible to get access to the terminal '${nameOfAnother}'`);
                 }
 
                 return termData.session;
@@ -201,7 +230,7 @@ const commandTable = quickCmdWithAliases("terminal", {
             case "inspect": {
                 const termData = askForTerminalApi(nameOfAnother);
                 if(!termData.valid){
-                    return expectedError(`It was not possible to get an access to the terminal '${nameOfAnother}'`);
+                    return expectedError(`It was not possible to get access to the terminal '${nameOfAnother}'`);
                 }
 
                 return inspect(Object.freeze(
@@ -222,7 +251,7 @@ const commandTable = quickCmdWithAliases("terminal", {
 
                 const ap = askForTerminalApi(this);
                 if(!ap.valid){
-                    return expectedError(`It was not possible to get an access to the terminal '${this.sessionName}'`);
+                    return expectedError(`It was not possible to get access to the terminal '${this.sessionName}'`);
                 }
                 const termData = askForTerminalApi(nameOfAnother);
                 if(!termData.valid){
@@ -233,6 +262,7 @@ const commandTable = quickCmdWithAliases("terminal", {
 
                 ap.switchStreamsWith(termData);
                 termData.cd(undefined, true);
+                terminalTitleSetIfinIsStdin(termData);
 
                 // termData.getSession().procLinked?.chdir(termData.getSession().cwd);
                 // printTextBox(termData.getSession());

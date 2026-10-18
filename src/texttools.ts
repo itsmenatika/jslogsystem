@@ -83,8 +83,10 @@ enum consoleColors{
 
 //     "date": consoleColors.FgGray,
 //     "who": consoleColors.FgMagenta
-// }
+// }  
 
+const clearEntireLineCODECursorEnd = ansiEscape + "[0K";
+const clearEntireLineCODEStartCursor = ansiEscape + "[1K";
 const clearEntireLineCODE = ansiEscape + "[2K";
 const clearScrenDownCODE = ansiEscape + "[0J";
 const clearEntireBuffer = ansiEscape + "[3J";
@@ -126,7 +128,6 @@ const textBoxPrefix: string = `${consoleColors.Reset}> ${consoleColors.FgYellow}
  */
 function printViewTextbox(text: string = "", stream: Writable | streamWrapper<withWriteFunc> = process.stdout){
     // i know that it's safe. i wont write a guard closure only to find out the function on writable and streamWrapper is identical!
-    // @ts-expect-error
     stream.write(textBoxPrefix + text);
 }
 
@@ -527,6 +528,8 @@ export {
     textBoxPrefix,
     ansiEscape,
     clearEntireLineCODE,
+    clearEntireLineCODECursorEnd,
+    clearEntireLineCODEStartCursor,
     clearScrenDownCODE,
     clearEntireBuffer,
     hideCursorCODE,

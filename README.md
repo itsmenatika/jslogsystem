@@ -153,6 +153,52 @@ you can also provide one argument saying which session it belongs to as such:
     const shortHand = getNewConsole("cute");
 ```
 
+
+## how to use with other libraries?
+
+
+Some libraries require you to give them control over streams, to give it to them, you have to use fullcontroler.
+
+Fullcontroler temporaily removes all jslogsystem listeners from streams and restarts them just for you.
+
+> [!NOTE]
+> all your listeners will be removed after code is completed!
+> [!NOTE]
+> this -> use something that can give a session context. it can be almost everything. If you don't have any, just write name of your current session (the first session is always "main").
+> [!NOTE]
+> fulcon currently doesn't properly support creating new streams for session.out and that's why you should provide the orginal one
+
+Why is it needed?
+It's needed because a lot of libraries use readline interface and readline interface completely breaks stdin state, making it impossible to use without readline interface anymore.
+Moreover, jslogsystem has its own listeners attached to stdin and stdout and they may interfere with readline, fullcontroller temporaily removes them.
+
+examples:
+
+### readline
+
+```javascript
+
+
+const fulcon = askForFullControl(this);
+
+fulcon.code(() => {
+    const inps = fulcon.getNewListener_in_raw();
+    const intr = createInterface({
+        input: inps,
+        output: fulcon.session.out.getStream(),
+    });
+
+    // YOUR CODE WITH READLINE
+
+    intr.close();
+    fulcon.removeNewListener_in_raw(inps);
+
+
+});
+
+
+```
+
 ## Related
 
 * [chalk](https://www.npmjs.com/package/chalk) -> Terminal string styling done right. It allows you to easily format strings in a specified color. It supports nested colors. It may become a depedency in the future. It currently not required

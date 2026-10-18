@@ -1,5 +1,6 @@
 import { askForBindApi } from "../apis/commands/bindApi.js";
 import { askForCommandApi, commandtypes } from "../apis/commands/commandApis.js";
+import { getStyles, stylesNames } from "../styles/common.js";
 import { multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
@@ -14,7 +15,8 @@ const commandTable = quickCmdWithAliases("exists", {
         "-a to check for aliases",
         "-o to check for orginal commands (not aliases)",
         "-c to check for any command (it's -a and -o combined)",
-        "-b to check for binds"
+        "-b to check for binds",
+        "-s to check for styles"
     ),
     hidden: false,
     changeable: false,
@@ -25,6 +27,7 @@ const commandTable = quickCmdWithAliases("exists", {
 
         const cmdApi = askForCommandApi(this);
         const bindApi = askForBindApi(this);
+        const styles = stylesNames();
         const anyExists = args.dashCombined.includes("x");
 
         let toRet: boolean = false;
@@ -51,6 +54,14 @@ const commandTable = quickCmdWithAliases("exists", {
         if(args.dashCombined.includes("b") || anyExists){
             for(const cmd of args.args){
                 toRet ||= bindApi.exits(cmd);
+            }
+        }
+
+        if(args.dashCombined.includes("s") || anyExists){
+            for(const cmd of args.args){
+                for(const style of styles){
+                    toRet ||= cmd === style
+                }
             }
         }
 

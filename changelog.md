@@ -8,14 +8,26 @@
 
 bugfixes:
 * useWith now works properly
+* grammar mistakes
+* crash now properly displays information every time
 
 core changes:
   * new supported log type:
     * DEBUG
   * debugState function to change debug state
+  * logs can now be delayed
+
 
 new apis:
   * fullControl -> api that allows to temporaily take full control of a javascript (including streams). It allows to use other scripts that for example require readline interface
+  * screenWrite, fileWrite and fileAndScreenWrite -> new low level apis to better interact with sessions
+  * screen buffer
+  * asker api (askQuestion)
+  * title api
+  * terminal state api
+  * file system apis (isAccessPossibleSync, isAccessPossible, cdDummy, getCwdToShow, getCwdToShowFromString)
+  * clipboard api
+  * logReceive api
 
 api changes:
   * commandApi
@@ -29,10 +41,37 @@ command changes:
 new commands:
   * runtime -> shows runtime information
   * debug -> switches debug mode
+  * debugstate -> debug state
   * cleanview -> allows you to display passed data in alternate buffer screen (using fullControl api)
+  * restart -> allows to restart the program
+  * title -> allows you to change the title of the program
+  * simplesnake -> a simple snake demo
+  * question -> allows to ask a question
+  * dir -> lists all files and directories in a specified directory
+  * remove -> removes a file or a directory
+  * cat -> concatenates stuff
+  * clipboard -> copy or/and pastes things into the system clipboard
+  * open -> opens a file using a default system program
+  * ascmd -> runs input as a command
+  * wc -> counts things
+  * random -> generates a random number
+  * randomfloat -> generates a random float number
+  * log -> allows to log from within the console
+  * styles -> allows you to manage terminal styles
 
 new tools:
   * only ifDebug api
+
+new depedencies:
+  * byte-size
+  * stat-mode
+  * table
+  * clipboardy
+
+config changes:
+  * new options: 
+    * useIsolatedCwd -> hides outside directory names
+
 
 ### 1.3.4
 
@@ -177,7 +216,7 @@ changes:
 * legacy system was rewritten
 * it is now possible to run jslogsystem standalone without importing it
 * async commands now work properly instead of just returning true
-* -§ is now sent instead of -§ to the last command
+* -§ is now sent instead of -t to the last command
 * command context was added (as this)
 * command binds can now take parameters properly
 * a lot of bugs with binds was fixed

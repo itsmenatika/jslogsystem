@@ -14,7 +14,7 @@ enum LogType {
     ERROR = 1,
     ERR = 1,
     WARNING = 2,
-    WAR = 2,
+    WARN = 2,
     SUCCESS = 3,
     SUCC = 3,
     SUC = 3,
@@ -203,6 +203,11 @@ async function log(
 
     // if it's blocking logs, then just return
     if(terminalData.logsReceive === logsReceiveType.block) return;
+    if(terminalData.logsReceive === logsReceiveType.wait){
+        terminalData.logsDelayed.push({type, message, who});
+
+        return;
+    }
 
     // if that's the parentNode, then get its string
     if(typeof who === "object") who = who.toString();
@@ -285,82 +290,82 @@ async function log(
  * @param terminal the name of the terminal
  * @returns True if not met, false if met
  */
-function assertConsole(
+async function assertConsole(
     condition: boolean, 
     message: string, 
     who: string | logNode = "core.assert",
     terminal: getTerminalOPJTYPE = "main"
 ){
     if(!condition){
-        log(LogType.ERROR, message, who, terminal);
+        await log(LogType.ERROR, message, who, terminal);
         return true;
     }
     else return false;
 }
 
-function info(
+async function info(
     message: string, 
     who: string | logNode = "core",
     terminal: getTerminalOPJTYPE = "main"
 ){
-    log(LogType.INFO, message, who, terminal);
+    await log(LogType.INFO, message, who, terminal);
 }
 
-function error(
+async function error(
     message: string, 
     who: string | logNode = "core",
     terminal: getTerminalOPJTYPE = "main"
 ){
-    log(LogType.ERROR, message, who, terminal);
+    await log(LogType.ERROR, message, who, terminal);
 }
 
-function init(
+async function init(
     message: string, 
     who: string | logNode = "core",
     terminal: getTerminalOPJTYPE = "main"
 ){
-    log(LogType.INIT, message, who, terminal);
+    await log(LogType.INIT, message, who, terminal);
 }
 
-function warning(
+async function warning(
     message: string, 
     who: string | logNode = "core",
     terminal: getTerminalOPJTYPE = "main"
 ){
-    log(LogType.WARNING, message, who, terminal);
+    await log(LogType.WARNING, message, who, terminal);
 }
 
 
-function success(
+async function success(
     message: string, 
     who: string | logNode = "core",
     terminal: getTerminalOPJTYPE = "main"
 ){
-    log(LogType.SUCCESS, message, who, terminal);
+    await log(LogType.SUCCESS, message, who, terminal);
 }
 
-function group(
+async function group(
     message: string, 
     who: string | logNode = "core",
     terminal: getTerminalOPJTYPE = "main"
 ){
-    log(LogType.GROUP, message, who, terminal);
+    await log(LogType.GROUP, message, who, terminal);
 }
 
-function crash(
+async function crash(
     message: string, 
     who: string | logNode = "core",
     terminal: getTerminalOPJTYPE = "main"
 ){
-    log(LogType.CRASH, message, who, terminal);
+    await log(LogType.CRASH, message, who, terminal);
 }
 
-function timer(
+async function timer(
     message: string, 
     who: string | logNode = "core",
     terminal: getTerminalOPJTYPE = "main"
 ){
-    log(LogType.TIMER, message, who, terminal);
+    await log(LogType.TIMER, message, who, terminal);
 }
 
 
@@ -387,6 +392,17 @@ function debugState(newState?: boolean, terminal: getTerminalOPJTYPE = "main"): 
     return !!ses.env.DEBUG;
 }
 
+
+/**
+ * checks for current debug state
+ * @param terminal terminal session. Defaults to main
+ * @returns current debug state
+ */
+function isDebug(terminal: getTerminalOPJTYPE = "main"): boolean{
+    const ses = getTerminalOPJ(terminal);
+
+    return !!ses.env.DEBUG;
+}
 
 /**
  * ensures that debug state is TRUE
@@ -427,7 +443,7 @@ function ensureDebugOff(terminal: getTerminalOPJTYPE = "main"): boolean{
  * @param who the executioner (for the logs). Defaults to "core"
  * @param terminal the name of the terminal
  */
-function debug(
+async function debug(
     message: string, 
     who: string | logNode = "core",
     terminal: getTerminalOPJTYPE = "main"
@@ -436,7 +452,7 @@ function debug(
 
 
     if(ses.env.DEBUG)
-    log(LogType.DEBUG, message, who, terminal);
+    await log(LogType.DEBUG, message, who, terminal);
 }
 
 type whoType = logNode | string | undefined;
@@ -470,6 +486,45 @@ class connectedToSpecificLogNode extends connectedToSpecificTerminal{
     }
 }
 
+/**
+ * 
+ * @param terminal the name of the terminal
+ * @param to (optional) to what
+ * @returns the previous state before the change
+ */
+async function logsReceive(terminal: getTerminalOPJTYPE = "main", to?: logsReceiveType): Promise<logsReceiveType>{
+    const ses = getTerminalOPJ(terminal);
+
+    const prev = ses.logsReceive;
+
+    if(to !== undefined)
+    ses.logsReceive = to;
+
+    
+    if(to !== undefined && prev === logsReceiveType.wait && to !== logsReceiveType.wait){
+        await sendDelayedLogs(ses);
+    }
+
+
+    return ses.logsReceive;
+}
+
+/**
+ * tries to resend the delayed logs
+ * @param terminal the name of the terminal
+ */
+
+async function sendDelayedLogs(terminal: getTerminalOPJTYPE = "main"){
+    const ses = getTerminalOPJ(terminal);
+
+    if(ses.logsDelayed.length !== 0){
+        for(const logData of ses.logsDelayed){
+            await log(logData.type, logData.message, logData.who, ses);
+        }
+
+        ses.logsDelayed.length = 0;
+    }
+}
 
 export {
     LogType, logNode, log, 
@@ -482,5 +537,8 @@ export {
 
     whoType, connectedToSpecificLogNode,
 
-    debug, debugState, ensureDebugOff, ensureDebugOn
+    debug, debugState, ensureDebugOff, ensureDebugOn, isDebug,
+
+
+    logsReceive, sendDelayedLogs
 }

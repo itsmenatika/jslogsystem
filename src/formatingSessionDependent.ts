@@ -166,7 +166,7 @@ async function printTextBox(ses: terminalSession, ops: printOptions = {}){
 
     ses.previousInputRender = finalText;
 
-    ses.out.write(finalText, undefined, false);
+    ses.out.write(finalText);
 }
 
 // /**

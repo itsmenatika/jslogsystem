@@ -9,7 +9,7 @@ function welcome(terminal: getTerminalOPJTYPE){
     const quick = ses.config.quickHello;
     
     const prev = textboxVisibility(undefined, ses);
-    textboxVisibility(false);
+    textboxVisibility(false, ses);
     if(quick){
         consoleWrite("welcomne to LogSystem ", undefined, false, "", ses);
         consoleWrite("v"+String(ses.config.logSystemVersion[1]), consoleColors.FgRed, false, "", ses);

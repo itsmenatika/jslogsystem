@@ -230,23 +230,29 @@ interface configDataProvide {
      * 
      * defaults to: "temp"
      */
-    tempLatest?: string;
+    tempLatest?: string,
 
 
     /**
      * legacy information
      */
-    legacy?: legacyData;
+    legacy?: legacyData,
 
 
     /**
      * acting log system version
      */
-    logSystemVersion?: [number, string]
+    logSystemVersion?: [number, string],
 
 
 
-    commandTable?: cmdTable | commandCollection
+    commandTable?: cmdTable | commandCollection,
+
+
+    /**
+     * if it should use cwd without outside names exposed
+     */
+    useIsolatedCwd?: boolean
 }
 
 interface configData extends Required<configDataProvide>{
@@ -424,6 +430,7 @@ const default_configData: configDataProvide | {
 
     commandTable: {},
 
+    useIsolatedCwd: false,
 
 
     [Symbol.toStringTag](): string{
@@ -503,7 +510,7 @@ function constructConfig(data: configDataProvide = {}): configData{
     }
 
 
-    newConfig.styles = constructStyles(newConfig.styles);
+    newConfig.styles = newConfig.styles;
 
     // for(let [path, val] of Object.entries(toSet)){
     //     Object.defineProperty(newConfig, path, {

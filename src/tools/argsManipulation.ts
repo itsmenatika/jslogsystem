@@ -1,7 +1,8 @@
 import { inspect, InspectOptionsStylized, InspectOptions } from "util";
-import { terminalSession } from "../programdata.js";
+import { getTerminalOPJ, getTerminalOPJTYPE, terminalSession } from "../programdata.js";
 import { commandContext, isCommandContext } from "../apis/commands/types.js";
 import { askForLegacy } from "../apis/allApis.js";
+import { ensureArray } from "./arrayTools.js";
 
 function removeInternalArguments(ar: any[]): any[]{
     return ar.filter(
@@ -125,7 +126,9 @@ interface smartArgsOptions{
      * usesInternalArgs = askForLegacy(context).specialArguments;
      * 
      */
-    bypass?: boolean
+    bypass?: boolean,
+
+    firstIsNotName?: boolean
 }
 
 /**
@@ -137,33 +140,39 @@ interface smartArgsOptions{
  * @returns 
  */
 function smartArgs(
-    preargs: ArrayLike<any>, 
+    preargst: ArrayLike<any> | any, 
     context?: terminalSession | commandContext,
     options: smartArgsOptions = {}
 ): smartArgumentList{
 
-    if(!Array.isArray(preargs)){
-        throw new TypeError("Only arrays are permitted");
-    }
+    const preargs = ensureArray(preargst);
     
-    // whether to expect internal arguments like -§
+    // whether to expect internal arguments like -§ (pipes)
     let usesInternalArgs = true;
     if(isCommandContext(context)){
         if(options.bypass !== false){
             // use a bypass of _terminalSession to speedup it
-            usesInternalArgs = context._terminalSession.config.legacy.specialArguments;
+            usesInternalArgs = context._terminalSession.config.legacy.pipes;
         }
         else
 
         // VERSION WITHOUT BYPASS
-        usesInternalArgs = askForLegacy(context).specialArguments;
+        usesInternalArgs = askForLegacy(context).pipes;
     }
     else if(context !== undefined){
-        usesInternalArgs = context.config.legacy.specialArguments;
+        usesInternalArgs = context.config.legacy.pipes;
     }
     
     const commandName = preargs[0]; // the name that executed that
-    const argsWithoutOne = preargs.slice(1); // arguments without that name
+
+    let argsWithoutOne;
+    if(options.firstIsNotName){
+        argsWithoutOne = preargs;
+    }
+    else{
+        argsWithoutOne = preargs.slice(1);
+    }
+    // const argsWithoutOne = preargs.slice(1); // arguments without that name
     
     const argsFiltered: any[] = []; // arguments without internal ones
     const argsWithDash: string[] = []; // arguments that were proceeded by - and not by --
@@ -407,7 +416,35 @@ function smartArgs(
 //     }
 // );
 
+function isEndingCommand(args: any[], context: getTerminalOPJTYPE, options: {bypass: boolean} = {bypass: false}){
+    let usesInternalArgs: boolean = true;
+
+
+    let leg;
+    if(options.bypass){
+        leg = askForLegacy(context);
+    }
+    else{
+        const ses = getTerminalOPJ(context);
+        leg = ses.config.legacy;
+    }
+
+    if(!leg.pipes) return true;
+    if(!leg.specialArguments) return false;
+
+    
+    for(let i = 0; i < args.length; i++){
+        const one = args[i];
+
+        if(typeof one === "string" && one == "-§"){
+            return true;
+        }
+    }
+
+    return false;
+}
+
 
 // g.parse(['s', 'g']).orginal
 
-export {smartArgs, removeInternalArguments}
+export {smartArgs, removeInternalArguments, smartArgumentList, isEndingCommand}

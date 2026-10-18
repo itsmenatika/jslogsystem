@@ -13,6 +13,12 @@ import { commandTable as call } from "../commands/call.js";
 import { commandTable as loggroup } from "../commands/loggroup.js";
 import { commandTable as runtime } from "../commands/runtime.js";
 import { commandTable as debug } from "../commands/debug.js";
+import { commandTable as debugstate } from "../commands/debugstate.js";
+import { commandTable as restart } from "../commands/restart.js";
+import { commandTable as title } from "../commands/title.js";
+import { commandTable as ascmd } from "../commands/ascmd.js";
+import { commandTable as log } from "../commands/log.js";
+import { commandTable as styles } from "../commands/styles.js";
 import { cmdTableToCommandCompounts } from "../tools/commandCreatorTools.js";
 import { commandCollection } from "../tools/commandCollection.js";
 
@@ -32,7 +38,13 @@ const commandTable = {
     ...call,
     ...loggroup,
     ...runtime,
-    ...debug
+    ...debug,
+    ...debugstate,
+    ...restart,
+    ...title,
+    ...ascmd,
+    ...log,
+    ...styles
 };
 
 const compounds = cmdTableToCommandCompounts(commandTable);

@@ -28,12 +28,12 @@ function useWith(
     const terminalData = getTerminalOPJ(terminal);
 
     // print info
-    if(silent === true)
+    if(silent === false)
     log(LogType.INFO, message, who, terminalData);
     try {
         let funcRes = func();
 
-        if(silent === true)
+        if(silent === false)
         log(LogType.SUCCESS, message, who, terminalData);
 
         return funcRes;

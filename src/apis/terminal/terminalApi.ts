@@ -1,6 +1,6 @@
 import { join } from "path";
 import { inHandler, setupInHandlerListener } from "../../in.js";
-import { log, LogType } from "../../log.js";
+import { log, logsReceive, LogType, sendDelayedLogs } from "../../log.js";
 import { connectedToSpecificTerminal, createNewTerminal, getTerminal, getTerminalOPJ, getTerminalOPJTYPE, removeTerminal, terminalCreateData, terminalSession, terminalSessionObjSaved } from "../../programdata.js";
 import { clearEntireBuffer, clearScrenDownCODE, cursorAbs } from "../../texttools.js";
 import { welcome } from "../../tools/welcome.js";
@@ -10,7 +10,7 @@ import { commandExecParamsProvide } from "../commands/common.js";
 import { printTextBox } from "../../formatingSessionDependent.js";
 import { consoleWrite } from "../../out.js";
 import { cache } from "./cache.js";
-import { configData, constructStyles, terminalStyles } from "../../config.js";
+import { configData, constructStyles, logsReceiveType, terminalStyles } from "../../config.js";
 import { colorTable, colorTableProvide, terminalStylesProvide } from "../../styles/common.js";
 
 
@@ -599,6 +599,15 @@ class terminalApi extends connectedToSpecificTerminal{
         // @ts-ignore        
         ses.in.removeAllListeners();
         setupInHandlerListener(ses);
+    }
+
+
+    async logsReceive(to?: logsReceiveType): Promise<logsReceiveType>{
+        return await logsReceive(this.sessionName, to);
+    }
+
+    async sendDelayedLogs(){
+        return await sendDelayedLogs(this.sessionName);
     }
 
 }

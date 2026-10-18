@@ -7,6 +7,7 @@ import { commandTable as thatShell } from "./thatShell.js";
 import { commandTable as thatShellUserFriendly } from "./thatShellUserFriendly.js";
 import { commandTable as webGroup } from "./webGroup.js";
 import { commandTable as funGroup } from "./funGroup.js";
+import { commandTable as filesystemGroup } from "./filesystemGroup.js";
 import { commandTable as uptime} from "../commands/uptime.js";
 import { commandCollection } from "../tools/commandCollection.js";
 
@@ -20,7 +21,8 @@ const commandTable = {
     ...thatShellUserFriendly,
     ...webGroup,
     ...funGroup,
-    ...uptime
+    ...uptime,
+    ...filesystemGroup
 };
 
 const compounds = cmdTableToCommandCompounts(commandTable)

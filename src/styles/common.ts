@@ -221,11 +221,26 @@ function getStyles(like?: RegExp | string): [string, terminalStylesProvide][]{
 }
 
 
+/**
+ * removes style
+ * 
+ * @param name name
+ */
+function deregisterStyle(name: string){
+    if(!Object.hasOwn(styleList, name)){
+        throw new RangeError("There's no style with that registered name! (looking for: " + name + " )");
+    }   
+
+    delete styleList[name];
+}
+
+
 export {
     colorTableProvide, colorTable,
     terminalStylesProvide, terminalStyles,
 
     registerStyle,
+    deregisterStyle,
     stylesNames,
     getExactStyle,
     styleExists,

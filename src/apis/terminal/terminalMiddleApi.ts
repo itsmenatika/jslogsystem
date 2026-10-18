@@ -1,7 +1,7 @@
 import { exists, existsSync, mkdirSync} from "fs";
 import { setupInHandlerListener } from "../../in.js";
 import { setUpInterrupsForProcess } from "../../interrup.js";
-import { createNewTerminal, getTerminal, getTerminalOPJ, getTerminalOPJTYPE, removeTerminal, terminalCreateData } from "../../programdata.js"
+import { createNewTerminal, getTerminal, getTerminalOPJ, getTerminalOPJTYPE, removeTerminal, sessionState, terminalCreateData } from "../../programdata.js"
 import { welcome } from "../../tools/welcome.js";
 import { cd } from "../allApis.js";
 import { constructConfig } from "../../config.js";
@@ -11,6 +11,7 @@ import { hideCursorCODE } from "../../texttools.js";
 import { printTextBox } from "../../formatingSessionDependent.js";
 
 /**
+ * @middleapi
  * 
  * middle level api for creating a terminal without using high level api
  * 
@@ -84,6 +85,11 @@ async function createTerminalQuick(name: string, data: terminalCreateData): Prom
         printTextBox(s);
     }
 
+    // hide cursor
+    if(s.out.isTty){
+        s.out.write(hideCursorCODE);
+    }
+
 
 
     return true;
@@ -94,6 +100,9 @@ interface rmOptions{
 }
 
 /**
+ * 
+ * @middleapi
+ * 
  * MIDDLE LEVEL API
  * 
  * removes the terminal with specified name
@@ -127,4 +136,53 @@ async function removeTerminalQuick(name: string, removeOptions: rmOptions = {}):
     return removeTerminal(name, removeOptions.errorIfDoesntExist);
 }
 
-export {createTerminalQuick, removeTerminalQuick}
+/**
+ * 
+ * @midleapi
+ * 
+ * allows to set a title of a session
+ * @param terminal terminal like
+ * @param name new name
+ * @returns current name
+ */
+function terminalTitle(terminal: getTerminalOPJTYPE, name?: string): string | void{
+    const trm = getTerminalOPJ(terminal);
+
+    if(name !== undefined){
+        trm.specificWindowTitle = name;
+    }
+
+    terminalTitleSetIfinIsStdin(trm);
+
+    return trm.specificWindowTitle;
+}
+
+/**
+ * @middleapi
+ * 
+ * sets process.title of a linked process of terminal to a sesssion specific title
+ * @param terminal terminal like
+ * @param forced Defaults to false. It makes it always change it, even if a session instream is not procLinked.stdin
+ */
+function terminalTitleSetIfinIsStdin(terminal: getTerminalOPJTYPE, forced: boolean = false){
+    const trm = getTerminalOPJ(terminal);
+
+    const strm = trm.in.getStream();
+    if(strm && trm.procLinked && (strm === trm.procLinked.stdin || forced) && trm.specificWindowTitle){
+        trm.procLinked.title = trm.specificWindowTitle;
+    }
+}
+
+
+function terminalState(terminal: getTerminalOPJTYPE, state?: sessionState): sessionState{
+    const trm = getTerminalOPJ(terminal);
+
+    if(state !== undefined){
+        trm.state = state;
+    }
+
+    return trm.state;
+}
+
+
+export {createTerminalQuick, removeTerminalQuick, terminalTitle, terminalTitleSetIfinIsStdin, terminalState}

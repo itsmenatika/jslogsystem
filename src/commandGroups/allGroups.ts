@@ -33,3 +33,8 @@ export {
     compounds as thatShellUserFriendly_compounds, 
     collection as thatShellUserFriendly_collection
 } from "./thatShellUserFriendly.js";
+export {
+    commandTable as filesystemGroup_commandTable, 
+    compounds as filesystemGroup_compounds, 
+    collection as filesystemGroup_collection
+} from "./filesystemGroup.js";

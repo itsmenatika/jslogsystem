@@ -1,5 +1,5 @@
 import { exit } from "process";
-import { askForBindApi, askForCommandApi, askForVersion, commandCompoundType, terminalApi } from "../apis/allApis.js";
+import { askForBindApi, askForCommandApi, askForTerminalApi, askForVersion, commandCompoundType, terminalApi } from "../apis/allApis.js";
 import { commandDividerInternal, pipeDividerInternal } from "../apis/commands/commandParser.js";
 import { consoleColors, multiLineConstructor } from "../texttools.js";
 import { smartArgs } from "../tools/argsManipulation.js";
@@ -86,6 +86,7 @@ const commandTable = quickCmdWithAliases("runtime", {
         const args = smartArgs(preargs, this);
 
         const verApi = askForVersion(this);
+        const config = askForTerminalApi(this).config;
 
         const toRet: Record<string, any> = {
             at: Date.now(),
@@ -100,8 +101,8 @@ const commandTable = quickCmdWithAliases("runtime", {
             endianness: endianness(),
             osVersion: version(),
 
-            execPath: process.execPath,
-            processCwd: process.cwd(),
+            execPath: config.useIsolatedCwd ? "[REDACTED]" : process.execPath,
+            processCwd: config.useIsolatedCwd ? "[REDACTED]" : process.cwd() ,
 
             
             pid: process.pid,
@@ -113,6 +114,8 @@ const commandTable = quickCmdWithAliases("runtime", {
             runtimeEdition: verApi.edition,
             isRuntimeExperimental: verApi.isExperimental,
             runtimeVersion: verApi.number,
+
+            isolatedCwd: config.useIsolatedCwd
 
 
         };

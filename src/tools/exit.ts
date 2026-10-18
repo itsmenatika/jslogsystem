@@ -17,9 +17,13 @@ function actualCrash(
 ){
     const terminalData = getTerminalOPJ(terminal);
 
-    crash(message, who, terminalData);
+    crash(message, who, terminalData).then(() => {
+        textboxVisibility(false, terminalData);
+        if(terminalData.procLinked){
+            terminalData.procLinked.exit(exitCode);
+        }
+    });
 
-    textboxVisibility(false, terminalData);
 
     // for(const trm of Object.keys(terminalSessionObjSaved)){
     //     const trmD = getTerminal(trm);
@@ -35,9 +39,6 @@ function actualCrash(
 
     
 
-    if(terminalData.procLinked){
-        terminalData.procLinked.exit(exitCode);
-    }
 }
 
 export {actualCrash}

@@ -1,3 +1,4 @@
+
 import { logSystemError, streamWrapper,uptimeVar } from "./ultrabasic.js";
 import { getCurrentVersionOfLogSystem, getTerminal, getTerminalOPJ, createNewTerminal, removeTerminal, connectedToSpecificTerminal, saveterminalSessionObj } from "./programdata.js";
 import { multiLineConstructor, consoleColor, consoleColorsMulti, consoleColors, consoleColorRGB, generateAnsiColor, combineColors, formatError, formatTaskError, printViewTextbox, textBoxPrefix, ansiEscape, clearEntireLineCODE, clearScrenDownCODE, clearEntireBuffer, hideCursorCODE,
@@ -30,6 +31,7 @@ import { STYLE_DEFAULT } from "./styles/default.js";
 import { STYLE_CLEAN } from "./styles/clean.js";
 import { STYLE_CLEANSIGNS } from "./styles/clean_signs.js";
 import { STYLE_CLASSIC } from "./styles/classic.js";
+import { runFrom } from "./apis/commands/osApis/orginalCwd.js";
 
 export {
     // *****
@@ -147,16 +149,38 @@ export * from "./apis/allApis.js";
 
 export { unregisterInterrups, setUpInterrupsForProcess} from "./interrup.js";
 
+runFrom(process.cwd());
+
 (async () => {
     // if it was not exported, then
 if(
     resolve(process.argv[1]) ==
     resolve(fileURLToPath(import.meta.url))
 ){
+
+    const grp = allGroup_collection.copy().extend(commandTableInternal);
+
+    // grp.registerCommand("ban", {
+    //     callback: (data: any[]) => {
+            
+    //         // skip the first parameter, because it's always the command name
+    //         for(const one of data.slice(1)){
+    //             // only accept numbers and text
+    //             if(typeof one !== "string" && typeof one !== "number") continue;
+
+    //             // skip -§ -> it's just an indicator that's it's the last command
+    //             if(one === "-§") continue;
+
+    //             // do ban thingy
+    //         }
+    //     }
+    // });
+
     await quickSetup({
-        commandTable: allGroup_collection.copy().extend(commandTableInternal),
+        commandTable: grp,
         addProcessEnvToSessionEnv: true,
-        styles: STYLE_CLASSIC
+        styles: STYLE_CLASSIC,
+        useIsolatedCwd: true
     });
 
 

@@ -1,3 +1,4 @@
+import { expectedError } from "../apis/allApis.js";
 import { smartArgs } from "../tools/argsManipulation.js";
 import { cleanReturner } from "../tools/cleanReturner.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
@@ -17,7 +18,10 @@ const commandTable = quickCmdWithAliases("string", {
 
 
         for(const obj of args){
-            await convertCurObj(obj, toReturn);
+            const g = await convertCurObj(obj, toReturn);
+            if(g){
+                return g;
+            }
             // if(typeof obj === "object"){
             //     if(Array.isArray(obj)){
             //         for(const one of obj){
@@ -42,9 +46,17 @@ const commandTable = quickCmdWithAliases("string", {
 async function convertCurObj(obj: any, toReturn: string[]){
     switch(typeof obj){
         case "object": {
-            if(Array.isArray(obj)){
+            if(isTextDecoderInput(obj)){
+
+                const decoder = new TextDecoder();
+    
+                const on = decoder.decode(obj);
+    
+                toReturn.push(on);
+            }
+            else if(Array.isArray(obj)){
                 for(const one of obj){
-                    convertCurObj(one, toReturn);
+                    await convertCurObj(one, toReturn);
                 }
             }
             else if(obj instanceof Blob){
@@ -53,8 +65,24 @@ async function convertCurObj(obj: any, toReturn: string[]){
             else if(obj instanceof Buffer){
                 toReturn.push(obj.toString());
             }
+            else if(obj.string){
+                if(typeof obj.string === "function"){
+                    toReturn.push(obj.string());
+                }
+                else toReturn.push(obj.string);
+            }
+            else if(obj.toString){
+                if(typeof obj.toString === "function"){
+                    toReturn.push(obj.toString());
+                }
+                else toReturn.push(obj.toString);
+            }
             else{
-                toReturn.push(String(obj));
+                try {
+                    toReturn.push(String(obj));
+                } catch (error) {
+                    return expectedError("It was not possible to convert one of the objects to a string");
+                }
             }
 
             break;
@@ -63,12 +91,29 @@ async function convertCurObj(obj: any, toReturn: string[]){
         case "string":
             toReturn.push(obj);
             break;
+
+        case "bigint":
+            toReturn.push(obj.toString());
+            break;
+
+        case "function":
+            return expectedError("functions are not supported by string command");
+        case "symbol":
+            return expectedError("symbols are not supported by string command");
+
         
         default:
             toReturn.push(String(obj));
 
         
     }
+}
+
+function isTextDecoderInput(x: any): boolean {
+  return (
+    x instanceof ArrayBuffer ||
+    ArrayBuffer.isView(x) // covers all TypedArrays + Buffer
+  );
 }
 
 const compounds = cmdTableToCommandCompounts(commandTable)

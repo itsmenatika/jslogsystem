@@ -7,6 +7,7 @@ import { smartArgs } from "../tools/argsManipulation.js";
 import { cmdTableToCommandCompounts, quickCmdWithAliases } from "../tools/commandCreatorTools.js";
 import { multiDisplayer } from "../tools/multiDisplayer.js";
 import { commandInternalExec } from "../apis/commands/commandExecute.js";
+import { terminalEnvGetWhole } from "../apis/allApis.js";
 
 
 const commandTable = quickCmdWithAliases("echo", {
@@ -99,6 +100,7 @@ const commandTable = quickCmdWithAliases("echo", {
 
 
         const varTable: Record<string, any> = {
+            ...terminalEnvGetWhole(this.sessionName),
             sessionName: this.sessionName,
             color: consoleColors,
             mcolors: minecraftColorPallete,
@@ -119,16 +121,24 @@ const commandTable = quickCmdWithAliases("echo", {
             }
         };
 
-        
+        const flatObj: Record<string, any> = {};
         
         for(let i = 0; i < Object.keys(psD).length; i++){
             varTable[String(i) as keyof typeof varTable] = psD[i];
+            
+            if(typeof psD[i] === "object"){
+                for(const key of Object.keys(psD[i])){
+                    flatObj[key] = psD[i][key];
+                }
+            }
         }
+
+        const FinVarTable = {...flatObj, ...varTable};
 
         let text;
         try {
             text = await templateReplacer(
-                toparse, varTable
+                toparse, FinVarTable
             );
         } catch (error) {
             if(error instanceof Error){

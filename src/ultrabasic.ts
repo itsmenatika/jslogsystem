@@ -1,7 +1,8 @@
 import { Socket } from "node:net";
 import Stream, { Duplex, Writable } from "node:stream";
 import type { terminalSession } from "./programdata.js";
-import { alternateBufferCODE, alternateBufferCODEExit } from "./texttools.js";
+import { alternateBufferCODE, alternateBufferCODEExit, clearEntireLineCODE, clearEntireLineCODECursorEnd, clearEntireLineCODEStartCursor, clearScrenDownCODE, cursorAbs } from "./texttools.js";
+import { WriteStream } from "node:tty";
 
 
 const uptimeVar = Date.now();
@@ -106,16 +107,91 @@ type listenersTable<T> = listenerPair<T>[];
 
 class streamWrapper<T extends (
     Writable | ReadableStream | allRoutes | Duplex | Socket | undefined
-)>{
+)> extends Duplex{
     session?: terminalSession;
     private stream?: T;
     #history: any[] = [];
     #historyAlt: any[] = [];
     #buffer: boolean = false;
-    private listeners: listenersTable<T> = [];
+    #expectedBufferMode: boolean | undefined = undefined;
+    private listenersSaved: listenersTable<T> = [];
 
+
+    listeners(eventName: string){
+        const s = this.listenersSaved.filter(
+            ([eventN, lis]) => {
+                return eventN === eventName
+            }
+        ).map(([eventName, lis]) => {
+            return lis
+        });
+
+        return s;
+
+       
+    }
+
+    get isTty(): boolean{
+        return true;
+    }
+
+    get columns(): number{
+        // i have error checking. Typescript doesn't understand it
+        // @ts-expect-error
+        if(this.stream && Object.hasOwn(this.stream, "columns") && typeof this.stream.columns === "number") return this.stream.columns;
+
+        return 80;
+    }
+
+    get rows(): number{
+        // i have error checking. Typescript doesn't understand it
+        // @ts-expect-error
+        if(this.stream && Object.hasOwn(this.stream, "rows") && typeof this.stream.rows === "number") return this.stream.rows;
+
+        return 24;        
+    }
+
+    cursorTo(x: number, y?: number | (() => void), callback?: () => void): boolean {
+        if (typeof y === "function") {
+            callback = y;
+            y = undefined;
+        }
+
+        this.write(cursorAbs(x, y as number));
+
+        callback?.();
+        return true;
+    }
+
+    clearLine(dir: number = 0, callback?: () => void): boolean {
+        let code: string;
+
+        switch (dir){
+            case 1:
+                code = clearEntireLineCODECursorEnd; // cursor end
+                break;
+            case -1:
+                code = clearEntireLineCODEStartCursor; // start cursor
+                break;
+            case 0:
+            default:
+                code = clearEntireLineCODE; // entire line
+                break;
+        }
+
+        this.write(code);
+        callback?.();
+        return true;
+    }
+
+    clearScreenDown(callback?: () => void): boolean {
+        this.write(clearScrenDownCODE);
+        callback?.();
+        return true;
+    }
 
     constructor(stream?: T){
+        super();
         this.stream = stream;
     }
 
@@ -187,36 +263,70 @@ class streamWrapper<T extends (
         return this.#buffer;
     }
 
-    write(
-        this: streamWrapper<withWriteFunc>,
-        chunk: any, callback?: any, buffer?: boolean
+    bufferMode(buffer?: boolean): typeof this{
+        this.#expectedBufferMode = buffer;
+
+        return this;
+    }
+
+    getBufferMode(): boolean | undefined{
+        return this.#expectedBufferMode;
+    }
+
+    _write(
+        chunk: any,
+        encoding: BufferEncoding,
+        callback: (error?: Error | null) => void
     ){
-        if(buffer === undefined) buffer = this.#buffer;
+
+
+        // if(buffer === undefined) buffer = this.#buffer;
+
+        const buffer = this.#expectedBufferMode === undefined ? this.#buffer : this.#expectedBufferMode;
+
+        let toWrt: string = "";
 
         if(buffer !== this.#buffer){
             if(buffer){
-                if(this.stream) this.stream.write(alternateBufferCODEExit);
+                if(this.stream && "write" in this.stream) toWrt += alternateBufferCODEExit;
             }
             else{
-                if(this.stream) this.stream.write(alternateBufferCODE);
+                if(this.stream && "write" in this.stream) toWrt += alternateBufferCODE;
             }
         }
 
 
-        if(this.stream) this.stream.write(chunk, callback);
-        else if(callback) callback();
-
+            if (Buffer.isBuffer(chunk)) {
+                toWrt += chunk.toString(
+                    // @ts-expect-error
+                    encoding && encoding !== "buffer" ? encoding : "utf8"
+                );
+            } else {
+                toWrt += String(chunk);
+            }
 
         if(buffer !== this.#buffer){
             if(buffer){
-                if(this.stream) this.stream.write(alternateBufferCODE);
+                if(this.stream  && "write" in this.stream) toWrt += alternateBufferCODE;
             }
             else{
-                if(this.stream) this.stream.write(alternateBufferCODEExit);
+                if(this.stream  && "write" in this.stream) toWrt += alternateBufferCODEExit;
             }
         }
 
         this.writeToHistory(chunk, buffer);
+
+        if(this.stream && "write" in this.stream){
+            const ok = this.stream.write(toWrt);
+
+            if (!ok) {
+                this.stream.once("drain", callback);
+            } else {
+                callback();
+            }
+
+        }
+        else if(callback) callback();
     }
 
     rewrite(
@@ -267,7 +377,7 @@ class streamWrapper<T extends (
 
     setStream(stream?: T, removeListeners: boolean = true){
         if(removeListeners){
-            for(const [name, listener] of this.listeners){
+            for(const [name, listener] of this.listenersSaved){
                 // @ts-ignore
                 this.stream?.removeListener(name, listener);
             }
@@ -276,17 +386,14 @@ class streamWrapper<T extends (
         this.stream = stream;
     }
 
-    addListener(
-        this: streamWrapper<Writable | allRoutes | undefined>,
+    // @ts-expect-error
+    addListener<W extends certainEvents<T>>(
         event: certainEvents<T>, listener: listenerFunction<T>
     ): void{
-        if(this.stream){
+        if(this.stream && "addListener" in this.stream){
             this.stream?.addListener(event, listener);
 
-            // typescript kill yourself
-
-            // @ts-expect-error
-            this.listeners.push([event, listener]);
+            this.listenersSaved.push([event, listener]);
         }
     }
 
@@ -320,9 +427,10 @@ class streamWrapper<T extends (
     }
 
     getAttachedListenersFromWrapper(): Readonly<listenersTable<T>>{
-        return this.listeners;
+        return this.listenersSaved;
     }
 
+    // @ts-expect-error
     removeListener<W extends certainEvents<T>>(
         this: streamWrapper<Writable | allRoutes>,
         event: W, listener: (...args: eventArgsMap[W]) => void
@@ -330,7 +438,7 @@ class streamWrapper<T extends (
         if(this.stream){
             this.stream?.removeListener(event, listener);
 
-            this.listeners = this.listeners.filter((obj) => {
+            this.listenersSaved = this.listenersSaved.filter((obj) => {
                 if(obj[0] !== event || obj[1] !== listener){
                     return true;
                 }
@@ -339,12 +447,13 @@ class streamWrapper<T extends (
         }
     }
 
+    // @ts-expect-error
     removeAllListeners<W extends certainEvents<T>>(
         this: streamWrapper<Writable | allRoutes>,
     ){
         this.stream?.removeAllListeners();
 
-        this.listeners = [];
+        this.listenersSaved = [];
         
     }
 
@@ -361,6 +470,80 @@ class streamWrapper<T extends (
     }
 }
 
+class StreamWrapperProxyOut extends Writable{
+    #target: streamWrapper<withWriteFunc>;
+
+    constructor(target: streamWrapper<withWriteFunc>){
+        super();
+
+        this.#target = target;
+    }
+
+    _write(chunk: any, encoding: any, callback: any) {
+        const ok = this.#target.write(chunk, encoding, callback);
+        if (ok) callback();
+        else this.#target.once?.('drain', callback);
+    }
+
+    setRawMode(){
+
+    }
+
+    get isTty(): boolean{
+        return this.#target.isTty;
+    }
+
+
+    get columns(): number{
+       return this.#target.columns;
+    }
+
+
+    get rows(): number{
+        return this.#target.rows;
+    }
+
+    cursorTo(x: number, y?: number | (() => void), callback?: () => void): boolean {
+        if (typeof y === "function") {
+            callback = y;
+            y = undefined;
+        }
+
+        this.write(cursorAbs(x, y as number));
+
+        callback?.();
+        return true;
+    }
+
+    clearLine(dir: number = 0, callback?: () => void): boolean {
+        let code: string;
+
+        switch (dir){
+            case 1:
+                code = clearEntireLineCODECursorEnd; // cursor end
+                break;
+            case -1:
+                code = clearEntireLineCODEStartCursor; // start cursor
+                break;
+            case 0:
+            default:
+                code = clearEntireLineCODE; // entire line
+                break;
+        }
+
+        this.write(code);
+        callback?.();
+        return true;
+    }
+
+    clearScreenDown(callback?: () => void): boolean {
+        this.write(clearScrenDownCODE);
+        callback?.();
+        return true;
+    }
+
+}
+
 type TTYLike = withWriteFunc & {
   isTTY: true
   columns?: number
@@ -373,5 +556,5 @@ function isTty(stream: withWriteFunc): stream is TTYLike{
 }
 
 
-export {uptimeVar, logSystemError, pseudoStreamWriteAble, pseudoStreamWriteAbleListenable, streamWrapper, isTty, listenersTable, listenerFunction, listenerPair}
+export {uptimeVar, logSystemError, pseudoStreamWriteAble, pseudoStreamWriteAbleListenable, streamWrapper, isTty, listenersTable, listenerFunction, listenerPair, StreamWrapperProxyOut}
 export type {withWriteFunc}

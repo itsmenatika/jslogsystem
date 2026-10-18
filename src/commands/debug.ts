@@ -8,7 +8,7 @@ import { askForEnvApi, expectedError, expectedErrorType } from "../apis/allApis.
 import { join } from "path";
 
 const commandTable = quickCmdWithAliases("debug", {
-    usageinfo: "debug [<s|status|on|off|true|false|t|f|toogle|tg>]",
+    usageinfo: "debug [<s|status|on|off|true|false|t|f|toogle|tg>] [<sessionName>]",
     desc: "allows you to change debug status",
     longdesc: multiLineConstructor(
         "allows you to toogle debug",
@@ -27,12 +27,17 @@ const commandTable = quickCmdWithAliases("debug", {
     callback(presArgs: any[]): string | boolean | expectedErrorType{
         const preArgs = removeInternalArguments(presArgs);
 
-        const s = askForEnvApi(this);
+
+        const sessionName: string = preArgs[2] ? preArgs[2] : this.sessionName;
+
+        const s = askForEnvApi(sessionName);
 
         if(preArgs.length > 1){
-            if(preArgs.length > 2 || typeof preArgs[1] !== "string"){
-                return expectedError("USAGE: DEBUG [<S|STATUS|TRUE|FALSE|ON|OFF>]");
+            if(preArgs.length > 3 || typeof preArgs[1] !== "string"){
+                return expectedError("USAGE: DEBUG [<S|STATUS|TRUE|FALSE|ON|OFF>] [<sessionName>]");
             }
+
+            
 
     
 
