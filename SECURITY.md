@@ -22,7 +22,7 @@ current version being watched:
 | 1.13    | :x:                | OUT OF DATE      |  
 | 1.12    | :x:                | OUT OF DATE      |  
 | 1.11    | :x:                | OUT OF DATE      |
-| 1.1 (LTS)     | :x:                | LEGACY           |
-| 1.0     | :x:                | LEGACY           |
+| 1.1 (LTS)     | :white_check_mark:/:x:                | LEGACY (only in VERY SERIOUS SITUATIONS)           |
+| 1.0     |  :white_check_mark:/:x:                |   LEGACY (only in VERY SERIOUS SITUATIONS)         |
 
 * legacy means that only security updates will be issued at best
